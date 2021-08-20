@@ -495,6 +495,14 @@ list(APPEND SOURCE_FILES
         components/heartrate/Biquad.cpp
         components/heartrate/Ptagc.cpp
         components/heartrate/HeartRateController.cpp
+
+        # cueband
+        components/ble/ActivityService.cpp
+        components/ble/UartService.cpp
+        components/activity/ActivityController.cpp
+        components/activity/resampler.c
+        components/cue/CueController.cpp
+        displayapp/screens/CueBandApp.cpp
         )
 
 list(APPEND RECOVERY_SOURCE_FILES
@@ -576,7 +584,6 @@ list(APPEND RECOVERYLOADER_SOURCE_FILES
 
 
 set(INCLUDE_FILES
-
         BootloaderVersion.h
         logging/Logger.h
         logging/NrfLogger.h
@@ -660,6 +667,15 @@ set(INCLUDE_FILES
         components/heartrate/Ptagc.h
         components/heartrate/HeartRateController.h
         components/motor/MotorController.h
+
+        # cueband
+        cueband.h
+        components/ble/ActivityService.h
+        components/ble/UartService.h
+        components/activity/ActivityController.h
+        components/activity/resampler.h
+        components/cue/CueController.h
+        displayapp/screens/CueBandApp.h
         )
 
 include_directories(

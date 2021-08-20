@@ -76,6 +76,18 @@ int FS::FileSeek(lfs_file_t* file_p, uint32_t pos) {
   return lfs_file_seek(&lfs, file_p, pos, LFS_SEEK_SET);
 }
 
+#ifdef CUEBAND_FS_FILESIZE_ENABLED
+int FS::FileSize(lfs_file_t* file_p) {
+  return lfs_file_size(&lfs, file_p);
+}
+#endif
+
+#ifdef CUEBAND_FS_FILETELL_ENABLED
+int FS::FileTell(lfs_file_t* file_p) {
+  return lfs_file_tell(&lfs, file_p);
+}
+#endif
+
 int FS::FileDelete(const char* fileName) {
   return lfs_remove(&lfs, fileName);
 }

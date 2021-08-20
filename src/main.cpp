@@ -1,3 +1,6 @@
+#define CUEBAND_CONFIGURATION_WARNINGS
+#include "cueband.h"
+
 // nrf
 #include <hal/nrf_rtc.h>
 #include <hal/nrf_wdt.h>
@@ -44,6 +47,13 @@
 #include "drivers/TwiMaster.h"
 #include "drivers/Cst816s.h"
 #include "systemtask/SystemTask.h"
+
+#ifdef CUEBAND_ACTIVITY_ENABLED
+#include "components/activity/ActivityController.h"
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+#include "components/cue/CueController.h"
+#endif
 
 #if NRF_LOG_ENABLED
   #include "logging/NrfLogger.h"
@@ -124,6 +134,12 @@ Pinetime::Controllers::FS fs {spiNorFlash};
 Pinetime::Controllers::Settings settingsController {fs};
 Pinetime::Controllers::MotorController motorController {settingsController};
 
+#ifdef CUEBAND_ACTIVITY_ENABLED
+Pinetime::Controllers::ActivityController activityController {settingsController, fs};
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+Pinetime::Controllers::CueController cueController {settingsController, activityController, motorController};
+#endif
 
 Pinetime::Applications::DisplayApp displayApp(lcd,
                                               lvgl,
@@ -137,7 +153,11 @@ Pinetime::Applications::DisplayApp displayApp(lcd,
                                               settingsController,
                                               motorController,
                                               motionController,
-                                              timerController);
+                                              timerController
+#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+                                              , activityController
+#endif
+                                              );
 
 Pinetime::System::SystemTask systemTask(spi,
                                         lcd,
@@ -159,7 +179,14 @@ Pinetime::System::SystemTask systemTask(spi,
                                         heartRateController,
                                         displayApp,
                                         heartRateApp,
-                                        fs);
+                                        fs
+#ifdef CUEBAND_ACTIVITY_ENABLED
+                                        , activityController
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+                                        , cueController
+#endif
+                                        );
 
 void nrfx_gpiote_evt_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
   if (pin == pinTouchIrq) {

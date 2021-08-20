@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <memory>
 
 #include "Screen.h"
@@ -26,10 +28,18 @@ namespace Pinetime {
         Pinetime::Controllers::Battery& batteryController;
         Controllers::DateTime& dateTimeController;
 
-        ScreenList<2> screens;
+        ScreenList<
+#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+        1
+#else
+        2
+#endif
+          > screens;
         std::unique_ptr<Screen> CreateScreen1();
+#ifndef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
         std::unique_ptr<Screen> CreateScreen2();
         // std::unique_ptr<Screen> CreateScreen3();
+#endif
       };
     }
   }

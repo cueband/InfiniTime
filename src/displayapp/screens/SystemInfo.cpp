@@ -10,6 +10,7 @@
 #include "components/datetime/DateTimeController.h"
 #include "components/motion/MotionController.h"
 #include "drivers/Watchdog.h"
+#include "cueband.h"
 
 using namespace Pinetime::Applications::Screens;
 
@@ -86,7 +87,11 @@ std::unique_ptr<Screen> SystemInfo::CreateScreen1() {
                         "#444444 Build date#\n"
                         "%s\n"
                         "%s\n\n"
-                        "#444444 Bootloader# %s",
+                        "#444444 Bootloader# %s"
+#ifdef CUEBAND_INFO_SYSTEM
+                        CUEBAND_INFO_SYSTEM
+#endif
+                        ,
                         Version::Major(),
                         Version::Minor(),
                         Version::Patch(),

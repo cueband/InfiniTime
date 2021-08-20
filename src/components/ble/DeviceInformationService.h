@@ -1,10 +1,14 @@
 #pragma once
+
+#include "cueband.h"
+
 #define min // workaround: nimble's min/max macros conflict with libstdc++
 #define max
 #include <host/ble_gap.h>
 #undef max
 #undef min
 #include "Version.h"
+#include "cueband.h"
 
 namespace Pinetime {
   namespace Controllers {
@@ -12,6 +16,9 @@ namespace Pinetime {
     public:
       DeviceInformationService();
       void Init();
+#ifdef CUEBAND_SERIAL_ADDRESS
+      void SetAddress(const char *address);
+#endif
 
       int OnDeviceInfoRequested(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt);
 
@@ -24,12 +31,28 @@ namespace Pinetime {
       static constexpr uint16_t hwRevisionId {0x2a27};
       static constexpr uint16_t swRevisionId {0x2a28};
 
-      static constexpr const char* manufacturerName = "PINE64";
-      static constexpr const char* modelNumber = "PineTime";
+      static constexpr const char* manufacturerName = "PINE64"
+#ifdef CUEBAND_VERSION_MANUFACTURER_EXTENSION
+      CUEBAND_VERSION_MANUFACTURER_EXTENSION
+#endif
+      ;
+      static constexpr const char* modelNumber = "PineTime"
+#ifdef CUEBAND_VERSION_MODEL_EXTENSION
+      CUEBAND_VERSION_MODEL_EXTENSION
+#endif
+      ;
       static constexpr const char* hwRevision = "1.0.0";
+#ifdef CUEBAND_SERIAL_ADDRESS
+      char serialNumber[32] = "0";
+#else
       static constexpr const char* serialNumber = "0";
+#endif
       static constexpr const char* fwRevision = Version::VersionString();
-      static constexpr const char* swRevision = "InfiniTime";
+      static constexpr const char* swRevision = "InfiniTime"
+#ifdef CUEBAND_VERSION_SOFTWARE_EXTENSION
+      CUEBAND_VERSION_SOFTWARE_EXTENSION
+#endif
+      ;
 
       static constexpr ble_uuid16_t deviceInfoUuid {.u {.type = BLE_UUID_TYPE_16}, .value = deviceInfoId};
 

@@ -1,3 +1,6 @@
+#include "cueband.h"
+#include "UartService.h"
+
 #include "NimbleController.h"
 #include <hal/nrf_rtc.h>
 #define min // workaround: nimble's min/max macros conflict with libstdc++
@@ -23,7 +26,19 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
                                    Pinetime::Controllers::NotificationManager& notificationManager,
                                    Controllers::Battery& batteryController,
                                    Pinetime::Drivers::SpiNorFlash& spiNorFlash,
-                                   Controllers::HeartRateController& heartRateController)
+                                   Controllers::HeartRateController& heartRateController
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+                                   , Controllers::Settings& settingsController
+                                   , Pinetime::Controllers::MotorController& motorController
+                                   , Pinetime::Controllers::MotionController& motionController
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+                                   , Pinetime::Controllers::ActivityController& activityController
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+                                   , Pinetime::Controllers::CueController& cueController
+#endif
+                                   )
   : systemTask {systemTask},
     bleController {bleController},
     dateTimeController {dateTimeController},
@@ -39,6 +54,30 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
     batteryInformationService {batteryController},
     immediateAlertService {systemTask, notificationManager},
     heartRateService {systemTask, heartRateController},
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+    uartService {
+      systemTask, 
+      bleController, 
+      settingsController, 
+      batteryController, 
+      dateTimeController, 
+      motorController, 
+      motionController
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      , activityController
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+      , cueController
+#endif
+    },
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+    activityService {
+      systemTask,
+      settingsController,
+      activityController
+    },
+#endif
     serviceDiscovery({&currentTimeClient, &alertNotificationClient}) {
 }
 
@@ -57,13 +96,25 @@ void NimbleController::Init() {
   deviceInformationService.Init();
   currentTimeClient.Init();
   currentTimeService.Init();
+#ifndef CUEBAND_SERVICE_MUSIC_DISABLED
   musicService.Init();
+#endif
+#ifndef CUEBAND_SERVICE_NAV_DISABLED
   navService.Init();
+#endif
   anService.Init();
   dfuService.Init();
   batteryInformationService.Init();
   immediateAlertService.Init();
+#ifndef CUEBAND_SERVICE_HR_DISABLED
   heartRateService.Init();
+#endif
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+  uartService.Init();
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+  activityService.Init();
+#endif
   int res;
   res = ble_hs_util_ensure_addr(0);
   ASSERT(res == 0);
@@ -76,6 +127,37 @@ void NimbleController::Init() {
   ASSERT(res == 0);
   bleController.AddressType((addrType == 0) ? Ble::AddressTypes::Public : Ble::AddressTypes::Random);
   bleController.Address(std::move(address));
+
+#ifdef CUEBAND_DEVICE_NAME
+  {
+    // deviceName = "Prefix-######";
+    strcpy(deviceName, CUEBAND_DEVICE_NAME);
+
+    // addr_str = "A0B1C2D3E4F5"; 
+    std::array<uint8_t, 6> addr = bleController.Address();        // using BleAddress = std::array<uint8_t, 6>;
+    char addr_str[12 + 1];
+    sprintf(addr_str, "%02X%02X%02X%02X%02X%02X", addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+
+    // Start at end of strings
+    char *src = addr_str + strlen(addr_str);
+    char *dst = deviceName + strlen(deviceName);
+
+    // Copy over any trailing '#' characters with address digits
+    while (src > addr_str && dst > deviceName && *(dst-1) == '#') {
+      *(--dst) = *(--src);
+    }
+  }
+#endif
+#ifdef CUEBAND_SERIAL_ADDRESS
+  {
+    // addr_str = "a0b1c2d3e4f5"; 
+    std::array<uint8_t, 6> addr = bleController.Address();        // using BleAddress = std::array<uint8_t, 6>;
+    char addr_str[12 + 1];
+    sprintf(addr_str, "%02x%02x%02x%02x%02x%02x", addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+
+    deviceInformationService.SetAddress(addr_str);
+  }
+#endif
 
   res = ble_gatts_start();
   ASSERT(res == 0);
@@ -161,6 +243,12 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
       /* Connection terminated; resume advertising. */
       currentTimeClient.Reset();
       alertNotificationClient.Reset();
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+      uartService.Disconnect();
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      activityService.Disconnect();
+#endif
       connectionHandle = BLE_HS_CONN_HANDLE_NONE;
       bleController.Disconnect();
       StartAdvertising();
@@ -221,6 +309,23 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
     }
       /* Attribute data is contained in event->notify_rx.attr_data. */
 
+#if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
+    case BLE_GAP_EVENT_NOTIFY_TX: {
+      // Transmission
+      // event->notify_tx.attr_handle; // attribute handle
+      // event->notify_tx.conn_handle; // connection handle
+      // event->notify_tx.indication;  // 0=notification, 1=indication
+      // event->notify_tx.status;      // 0=successful, BLE_HS_EDONE=indication ACK, BLE_HS_ETIMEOUT=indication ACK not received, other=error
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+      uartService.TxNotification(event);
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      activityService.TxNotification(event);
+#endif
+      return 0;
+    }
+#endif
+
     default:
       //      NRF_LOG_INFO("Advertising event : %d", event->type);
       break;
@@ -241,3 +346,28 @@ void NimbleController::NotifyBatteryLevel(uint8_t level) {
     batteryInformationService.NotifyBatteryLevel(connectionHandle, level);
   }
 }
+
+bool Pinetime::Controllers::NimbleController::IsSending() {
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+  if (uartService.IsSending()) return true;
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+  if (activityService.IsSending()) return true;
+#endif
+  return false;
+}
+
+#ifdef CUEBAND_STREAM_ENABLED
+bool Pinetime::Controllers::NimbleController::IsStreaming() {
+  return uartService.IsStreaming();
+}
+// Handle streaming
+bool Pinetime::Controllers::NimbleController::Stream() {
+#ifdef CUEBAND_ACTIVITY_ENABLED
+  activityService.Idle();
+#endif
+  bool isStreaming = uartService.Stream();
+  uartService.Idle();
+  return isStreaming;
+}
+#endif

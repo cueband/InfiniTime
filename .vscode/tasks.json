@@ -40,5 +40,27 @@
 			],
 			"problemMatcher": []
 		}
+        ,
+        {
+            "type": "cppbuild",
+            "label": "make -j pinetime-app",
+            "command": "make",
+            "args": [
+                "-j",
+                "pinetime-app"
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/build"
+            },
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": ["relative", "${workspaceFolder}/src"]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "make -j pinetime-app"
+        }
 	]
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "cueband.h"
 #include <drivers/Bma421_C/bma4_defs.h>
 
 namespace Pinetime {
@@ -17,6 +18,9 @@ namespace Pinetime {
         int16_t y;
         int16_t z;
       };
+#ifdef CUEBAND_BUFFER_ENABLED
+      void GetBufferData(int16_t **accelValues, unsigned int *lastCount, unsigned int *totalSamples);
+#endif
       Bma421(TwiMaster& twiMaster, uint8_t twiAddress);
       Bma421(const Bma421&) = delete;
       Bma421& operator=(const Bma421&) = delete;
@@ -45,6 +49,19 @@ namespace Pinetime {
       bool isOk = false;
       bool isResetOk = false;
       DeviceTypes deviceType = DeviceTypes::Unknown;
+
+#ifdef CUEBAND_FIFO_ENABLED
+      // Static storage buffers for the FIFO buffer
+      static uint8_t fifo_buff[];
+      struct bma4_fifo_frame fifo_frame;
+#endif
+
+#ifdef CUEBAND_BUFFER_ENABLED
+      static int16_t accel_buffer[]; // Flat array of data, CUEBAND_AXES width
+      unsigned int totalSamples;
+      unsigned int totalDropped;
+      unsigned int lastCount;
+#endif
     };
   }
 }

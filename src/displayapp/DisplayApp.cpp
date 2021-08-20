@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "DisplayApp.h"
 #include <libraries/log/nrf_log.h>
 #include <displayapp/screens/HeartRate.h>
@@ -28,6 +30,10 @@
 #include "displayapp/screens/FlashLight.h"
 #include "displayapp/screens/BatteryInfo.h"
 #include "displayapp/screens/Steps.h"
+
+#ifdef CUEBAND_APP_ENABLED
+#include "displayapp/screens/CueBandApp.h"
+#endif
 
 #include "drivers/Cst816s.h"
 #include "drivers/St7789.h"
@@ -91,7 +97,11 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
                        Controllers::Settings& settingsController,
                        Pinetime::Controllers::MotorController& motorController,
                        Pinetime::Controllers::MotionController& motionController,
-                       Pinetime::Controllers::TimerController& timerController)
+                       Pinetime::Controllers::TimerController& timerController
+#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+                       , Pinetime::Controllers::ActivityController& activityController
+#endif
+                       )
   : lcd {lcd},
     lvgl {lvgl},
     touchPanel {touchPanel},
@@ -104,7 +114,11 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
     settingsController {settingsController},
     motorController {motorController},
     motionController {motionController},
-    timerController {timerController} {
+    timerController {timerController}
+#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+    , activityController {activityController}
+#endif
+    {
 }
 
 void DisplayApp::Start() {
@@ -422,6 +436,16 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
     case Apps::Steps:
       currentScreen = std::make_unique<Screens::Steps>(this, motionController, settingsController);
       break;
+#ifdef CUEBAND_APP_ENABLED
+    case Apps::CueBand:
+      currentScreen = std::make_unique<Screens::CueBandApp>(
+        this, *systemTask, motionController, settingsController
+#ifdef CUEBAND_ACTIVITY_ENABLED
+        , activityController
+#endif
+      );
+      break;
+#endif
   }
   currentApp = app;
 }

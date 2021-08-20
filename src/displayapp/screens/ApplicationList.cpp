@@ -22,10 +22,12 @@ ApplicationList::ApplicationList(Pinetime::Applications::DisplayApp* app,
                [this]() -> std::unique_ptr<Screen> {
                  return CreateScreen1();
                },
+#ifndef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
                [this]() -> std::unique_ptr<Screen> {
                  return CreateScreen2();
                },
                //[this]() -> std::unique_ptr<Screen> { return CreateScreen3(); }
+#endif
              },
              Screens::ScreenListModes::UpDown} {
 }
@@ -46,29 +48,63 @@ bool ApplicationList::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
 
 std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   std::array<Screens::Tile::Applications, 6> applications {{
+#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+    {Symbols::stopWatch, Apps::StopWatch},
+    {Symbols::hourGlass, Apps::Timer},
+#ifdef CUEBAND_APP_ENABLED
+    {"C", Apps::CueBand},
+#else
+    {"", Apps::None},
+#endif
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+#else
     {Symbols::stopWatch, Apps::StopWatch},
     {Symbols::music, Apps::Music},
     {Symbols::map, Apps::Navigation},
     {Symbols::shoe, Apps::Steps},
     {Symbols::heartBeat, Apps::HeartRate},
     {Symbols::hourGlass, Apps::Timer},
+#endif
   }};
 
-  return std::make_unique<Screens::Tile>(0, 2, app, settingsController, batteryController, dateTimeController, applications);
+  return std::make_unique<Screens::Tile>(0, 
+#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+    1,  // Scrollbar suitable for only one screen of apps
+#else
+    2, 
+#endif
+    app, settingsController, batteryController, dateTimeController, applications);
 }
 
+#ifndef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
 std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
   std::array<Screens::Tile::Applications, 6> applications {{
+#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+#else
     {Symbols::paintbrush, Apps::Paint},
     {Symbols::paddle, Apps::Paddle},
     {"2", Apps::Twos},
     {Symbols::chartLine, Apps::Motion},
     {Symbols::drum, Apps::Metronome},
+#ifdef CUEBAND_APP_ENABLED
+    {"C", Apps::CueBand},
+#else
     {"", Apps::None},
+#endif
+#endif
   }};
 
   return std::make_unique<Screens::Tile>(1, 2, app, settingsController, batteryController, dateTimeController, applications);
 }
+#endif
 
 /*std::unique_ptr<Screen> ApplicationList::CreateScreen3() {
   std::array<Screens::Tile::Applications, 6> applications {

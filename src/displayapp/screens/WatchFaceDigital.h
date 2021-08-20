@@ -59,10 +59,14 @@ namespace Pinetime {
         lv_obj_t* batteryIcon;
         lv_obj_t* bleIcon;
         lv_obj_t* batteryPlug;
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
         lv_obj_t* heartbeatIcon;
         lv_obj_t* heartbeatValue;
+#endif
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
         lv_obj_t* stepIcon;
         lv_obj_t* stepValue;
+#endif
         lv_obj_t* notificationIcon;
 
         Controllers::DateTime& dateTimeController;

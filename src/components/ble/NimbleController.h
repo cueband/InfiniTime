@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <cstdint>
 
 #define min // workaround: nimble's min/max macros conflict with libstdc++
@@ -19,6 +21,21 @@
 #include "NavigationService.h"
 #include "ServiceDiscovery.h"
 #include "HeartRateService.h"
+
+#include "cueband.h"
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+#include "UartService.h"
+#include "components/settings/Settings.h"
+#include "components/motor/MotorController.h"
+#include "components/motion/MotionController.h"
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+#include "components/activity/ActivityController.h"
+#include "components/ble/ActivityService.h"
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+#include "components/cue/CueController.h"
+#endif
 
 namespace Pinetime {
   namespace Drivers {
@@ -43,7 +60,19 @@ namespace Pinetime {
                        Pinetime::Controllers::NotificationManager& notificationManager,
                        Controllers::Battery& batteryController,
                        Pinetime::Drivers::SpiNorFlash& spiNorFlash,
-                       Controllers::HeartRateController& heartRateController);
+                       Controllers::HeartRateController& heartRateController
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+                       , Controllers::Settings& settingsController
+                       , Pinetime::Controllers::MotorController& motorController
+                       , Pinetime::Controllers::MotionController& motionController
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+                       , Pinetime::Controllers::ActivityController& activityController
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+                       , Pinetime::Controllers::CueController& cueController
+#endif
+                       );
       void Init();
       void StartAdvertising();
       int OnGAPEvent(ble_gap_event* event);
@@ -72,8 +101,18 @@ namespace Pinetime {
       uint16_t connHandle();
       void NotifyBatteryLevel(uint8_t level);
 
+      bool IsSending();
+#ifdef CUEBAND_STREAM_ENABLED
+      bool IsStreaming();
+      bool Stream();
+#endif
+
     private:
+#ifdef CUEBAND_DEVICE_NAME
+      char deviceName[32] = CUEBAND_DEVICE_NAME;
+#else
       static constexpr const char* deviceName = "InfiniTime";
+#endif
       Pinetime::System::SystemTask& systemTask;
       Pinetime::Controllers::Ble& bleController;
       DateTime& dateTimeController;
@@ -91,6 +130,12 @@ namespace Pinetime {
       BatteryInformationService batteryInformationService;
       ImmediateAlertService immediateAlertService;
       HeartRateService heartRateService;
+#ifdef CUEBAND_SERVICE_UART_ENABLED
+      UartService uartService;
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      ActivityService activityService;
+#endif
 
       uint8_t addrType; // 1 = Random, 0 = PUBLIC
       uint16_t connectionHandle = BLE_HS_CONN_HANDLE_NONE;
