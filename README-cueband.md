@@ -1,5 +1,10 @@
 # Cue.band InfiniTime Firmware
 
+Test firmware: 
+
+  * [cueband/InfiniTime/releases](https://github.com/cueband/InfiniTime/releases)
+
+
 ## Overview
 
 "Cue.band" firmware for the PineTime device.
