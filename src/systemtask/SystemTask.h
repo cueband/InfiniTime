@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <memory>
 
 #include <FreeRTOS.h>
@@ -17,6 +19,13 @@
 #include "components/motor/MotorController.h"
 #include "components/timer/TimerController.h"
 #include "components/fs/FS.h"
+
+#ifdef CUEBAND_ACTIVITY_ENABLED
+#include "components/activity/ActivityController.h"
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+#include "components/cue/CueController.h"
+#endif
 
 #ifdef PINETIME_IS_RECOVERY
   #include "displayapp/DisplayAppRecovery.h"
@@ -62,7 +71,14 @@ namespace Pinetime {
                  Pinetime::Controllers::HeartRateController& heartRateController,
                  Pinetime::Applications::DisplayApp& displayApp,
                  Pinetime::Applications::HeartRateTask& heartRateApp,
-                 Pinetime::Controllers::FS& fs);
+                 Pinetime::Controllers::FS& fs
+#ifdef CUEBAND_ACTIVITY_ENABLED
+                 , Pinetime::Controllers::ActivityController& activityController
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+                 , Pinetime::Controllers::CueController& cueController
+#endif
+                 );
 
       void Start();
       void PushMessage(Messages msg);
@@ -80,6 +96,12 @@ namespace Pinetime {
       bool IsSleeping() const {
         return isSleeping;
       }
+
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      void CommsActivity() {
+            commsCount++;
+      }
+#endif
 
     private:
       TaskHandle_t taskHandle;
@@ -113,6 +135,12 @@ namespace Pinetime {
       Pinetime::Applications::DisplayApp& displayApp;
       Pinetime::Applications::HeartRateTask& heartRateApp;
       Pinetime::Controllers::FS& fs;
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      Pinetime::Controllers::ActivityController& activityController;
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+      Pinetime::Controllers::CueController& cueController;
+#endif
       Pinetime::Controllers::NimbleController nimbleController;
 
       static constexpr uint8_t pinSpiSck = 2;
@@ -138,6 +166,40 @@ namespace Pinetime {
       bool stepCounterMustBeReset = false;
       static constexpr TickType_t batteryNotificationPeriod = 1000 * 60 * 10; // 1 tick ~= 1ms. 1ms * 60 * 10 = 10 minutes
       TickType_t batteryNotificationTick = 0;
+
+#if defined(CUEBAND_CUE_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED) 
+      int delayStart = 10;
+#endif
+
+#ifdef CUEBAND_CUE_ENABLED
+      uint32_t cueLastSecond = 0;
+#endif
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      uint32_t activityLastSecond = 0;                // Last time activity updated
+
+      #define CUEBAND_STEPS_INVALID 0xffffffff
+      uint32_t currentSteps = CUEBAND_STEPS_INVALID;  // Current step counter
+      uint32_t previousSteps = CUEBAND_STEPS_INVALID; // Last known step counter
+
+      uint32_t interactionCount = 0;                  // Count of interaction events
+      uint32_t lastInteractionCount = 0;              // Last recorded count of interaction events
+
+      uint32_t commsCount = 0;                        // Count of communication event
+      uint32_t lastCommsCount = 0;                    // Last recorded count of communication events
+
+      uint8_t lastBattery = 0xff;                     // 0xff = unknown
+      uint8_t lastTemperature = 0x80;                 // 0x80 = unknown
+
+      bool latterEpoch = false;
+      bool wasConnected = false;
+      bool wasPowered = false;
+      bool wasSleeping = false;
+#endif
+
+#if defined(CUEBAND_POLLED_ENABLED) || defined(CUEBAND_FIFO_ENABLED)
+      bool IsSampling();
+      uint32_t samplingTickIndex = 0;
+#endif
 
 #if configUSE_TRACE_FACILITY == 1
       SystemMonitor<FreeRtosMonitor> monitor;

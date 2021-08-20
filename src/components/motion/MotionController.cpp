@@ -40,4 +40,24 @@ void MotionController::Init(Pinetime::Drivers::Bma421::DeviceTypes types) {
     case Drivers::Bma421::DeviceTypes::BMA425: this->deviceType = DeviceTypes::BMA425; break;
     default: this->deviceType = DeviceTypes::Unknown; break;
   }
+#ifdef CUEBAND_BUFFER_ENABLED
+  accelValues = NULL;
+  totalSamples = 0;
+  lastCount = 0;
+#endif
 }
+
+#ifdef CUEBAND_BUFFER_ENABLED
+void MotionController::GetBufferData(int16_t **accelValues, unsigned int *lastCount, unsigned int *totalSamples) {
+  *accelValues = this->accelValues;
+  *lastCount = this->lastCount;
+  *totalSamples = this->totalSamples;
+  return;
+}
+
+void MotionController::SetBufferData(int16_t *accelValues, unsigned int lastCount, unsigned int totalSamples) {
+  this->accelValues = accelValues;
+  this->lastCount = lastCount;
+  this->totalSamples = totalSamples;
+}
+#endif

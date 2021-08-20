@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "Metronome.h"
 #include "Symbols.h"
 
@@ -78,7 +80,14 @@ Metronome::~Metronome() {
 
 bool Metronome::Refresh() {
   if (metronomeStarted) {
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
     if (xTaskGetTickCount() - startTime > 60 * configTICK_RATE_HZ / bpm) {
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic pop
+#endif
       startTime += 60 * configTICK_RATE_HZ / bpm;
       counter--;
       if (counter == 0) {

@@ -16,6 +16,10 @@
 #include "components/timer/TimerController.h"
 #include "Messages.h"
 
+#ifdef CUEBAND_ACTIVITY_ENABLED
+#include "components/activity/ActivityController.h"
+#endif
+
 namespace Pinetime {
 
   namespace Drivers {
@@ -55,7 +59,11 @@ namespace Pinetime {
                  Controllers::Settings& settingsController,
                  Pinetime::Controllers::MotorController& motorController,
                  Pinetime::Controllers::MotionController& motionController,
-                 Pinetime::Controllers::TimerController& timerController);
+                 Pinetime::Controllers::TimerController& timerController
+#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+                 , Pinetime::Controllers::ActivityController& activityController
+#endif
+                 );
       void Start();
       void PushMessage(Display::Messages msg);
 
@@ -81,6 +89,9 @@ namespace Pinetime {
       Pinetime::Controllers::MotorController& motorController;
       Pinetime::Controllers::MotionController& motionController;
       Pinetime::Controllers::TimerController& timerController;
+#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+      Pinetime::Controllers::ActivityController& activityController;
+#endif
 
       Pinetime::Controllers::FirmwareValidator validator;
       Controllers::BrightnessController brightnessController;

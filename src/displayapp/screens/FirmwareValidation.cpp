@@ -3,6 +3,7 @@
 #include "Version.h"
 #include "components/firmwarevalidator/FirmwareValidator.h"
 #include "../DisplayApp.h"
+#include "cueband.h"
 
 using namespace Pinetime::Applications::Screens;
 
@@ -19,7 +20,11 @@ FirmwareValidation::FirmwareValidation(Pinetime::Applications::DisplayApp* app, 
   labelVersion = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_text_fmt(labelVersion,
                         "Version : %d.%d.%d\n"
-                        "ShortRef : %s",
+                        "ShortRef : %s"
+#ifdef CUEBAND_INFO_FIRMWARE
+                        CUEBAND_INFO_FIRMWARE
+#endif
+                        ,
                         Version::Major(),
                         Version::Minor(),
                         Version::Patch(),

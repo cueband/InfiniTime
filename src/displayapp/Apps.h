@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 namespace Pinetime {
   namespace Applications {
     enum class Apps {
@@ -30,7 +32,10 @@ namespace Pinetime {
       SettingTimeFormat,
       SettingDisplay,
       SettingWakeUp,
-      SettingSteps
+      SettingSteps,
+#ifdef CUEBAND_APP_ENABLED
+      CueBand,
+#endif
     };
   }
 }

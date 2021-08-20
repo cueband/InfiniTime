@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <cstdint>
 #include "drivers/SpiNorFlash.h"
 #include <littlefs/lfs.h>
@@ -18,6 +20,12 @@ namespace Pinetime {
       int FileRead(lfs_file_t* file_p, uint8_t* buff, uint32_t size);
       int FileWrite(lfs_file_t* file_p, const uint8_t* buff, uint32_t size);
       int FileSeek(lfs_file_t* file_p, uint32_t pos);
+#ifdef CUEBAND_FS_FILESIZE_ENABLED
+      int FileSize(lfs_file_t* file_p);
+#endif
+#ifdef CUEBAND_FS_FILETELL_ENABLED
+      int FileTell(lfs_file_t* file_p);
+#endif
 
       int FileDelete(const char* fileName);
 

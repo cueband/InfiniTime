@@ -1,3 +1,9 @@
+# cue.band InfiniTime Firmware
+
+**IMPORTANT:** See [README-cueband.md](README-cueband.md) for further information -- this page is for the main *InfiniTime* firmware.
+
+---
+
 # PineTime
 
 [![Build PineTime Firmware](https://github.com/JF002/InfiniTime/workflows/Build%20PineTime%20Firmware/badge.svg?branch=master)](https://github.com/JF002/InfiniTime/actions)

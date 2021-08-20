@@ -100,3 +100,9 @@ DeviceInformationService::DeviceInformationService()
       {0},
     } {
 }
+
+#ifdef CUEBAND_SERIAL_ADDRESS
+void DeviceInformationService::SetAddress(const char *address) {
+  strcpy(serialNumber, address);
+}
+#endif
