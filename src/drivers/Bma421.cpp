@@ -141,7 +141,12 @@ void Bma421::Write(uint8_t registerAddress, const uint8_t* data, size_t size) {
 Bma421::Values Bma421::Process() {
   if (not isOk)
     return {};
+#ifdef CUEBAND_FIFO_ENABLED
+  // TODO: Fix properly!  A quick hack to make this static if using FIFO, so the old value can be retained even if no new data was read
+  static struct bma4_accel data;
+#else
   struct bma4_accel data;
+#endif
 
 #ifdef CUEBAND_BUFFER_ENABLED
 
