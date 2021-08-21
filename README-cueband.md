@@ -205,7 +205,7 @@ struct {
     uint16_t blockSize = 256;           // @8  Size (bytes) of each block
     uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
     uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
-} // @12
+} // @14
 ```
 
 #### Characteristic: Activity Block
