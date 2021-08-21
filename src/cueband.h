@@ -145,6 +145,8 @@
     #define CUEBAND_FS_FILETELL_ENABLED
 #endif
 
+#define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
+
 #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60 // 60
 #define ACTIVITY_BLOCK_SIZE 256
 #define ACTIVITY_MAXIMUM_BLOCKS 512  // 512 = 128 kB, ~10 days;  

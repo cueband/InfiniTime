@@ -61,7 +61,13 @@ namespace Pinetime {
       *
       */
       static constexpr size_t startAddress = 0x0B4000;
+#ifdef CUEBAND_POSSIBLE_FIX_FS
+      // This value looks like it might've been incorrect (unless this variable isn't really the size in bytes?) 
+      // ...anyway, this value is just smaller so shouldn't do any harm.
+      static constexpr size_t size = 0x34C000;    // (0x400000 - 0x0B4000 =)
+#else
       static constexpr size_t size = 0x3C0000;
+#endif
       static constexpr size_t blockSize = 4096;
 
       bool resourcesValid = false;
