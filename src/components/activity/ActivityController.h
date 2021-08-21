@@ -144,10 +144,9 @@ namespace Pinetime {
       bool isReading = false;
       lfs_file_t file_p = {0};
 
-      // Error tracking
-      uint32_t errWrite = 0;
-      uint32_t errRead = 0;
-      uint32_t errReadLast = 0;
+      // Debug error tracking
+      uint32_t errWrite = 0, errWriteLast = 0, errWriteLastAppend = 0, errWriteLastWithin = 0;
+      uint32_t errRead = 0, errReadLast = 0;
       char debugText[160];
 
       // Resample buffer

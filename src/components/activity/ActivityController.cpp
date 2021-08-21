@@ -343,24 +343,24 @@ uint32_t ActivityController::ReadPhysicalBlock(uint32_t physicalBlockNumber, uin
   // Must not be asking for the invalid block
   if (physicalBlockNumber == ACTIVITY_BLOCK_INVALID) {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
-errRead++;
-errReadLast = 1;
+    errRead++;
+    errReadLast = 1;
     return ACTIVITY_BLOCK_INVALID;
   }
 
   // The file must be successfully open for reading
   if (!OpenFileReading()) {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
-errRead++;
-errReadLast = 2;
+    errRead++;
+    errReadLast = 2;
     return ACTIVITY_BLOCK_INVALID;
   }
 
   // If out of range of whole blocks present
   if (physicalBlockNumber >= blockCount) {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
-errRead++;
-errReadLast = 3;
+    errRead++;
+    errReadLast = 3;
     return ACTIVITY_BLOCK_INVALID;
   }
   
@@ -373,8 +373,8 @@ errReadLast = 3;
     location = fs.FileSeek(&file_p, offset);
     if (location != offset) {
       if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
-errRead++;
-errReadLast = 4;
+      errRead++;
+      errReadLast = 4;
       return ACTIVITY_BLOCK_INVALID;
     }
   }
@@ -385,8 +385,8 @@ errReadLast = 4;
     // Just read header
     ret = fs.FileRead(&file_p, headerBuffer, sizeof(headerBuffer));
     if (ret != sizeof(headerBuffer)) {
-errRead++;
-errReadLast = 5;
+      errRead++;
+      errReadLast = 5;
       return ACTIVITY_BLOCK_INVALID;
     }
     header = headerBuffer;
@@ -395,8 +395,8 @@ errReadLast = 5;
     ret = fs.FileRead(&file_p, buffer, ACTIVITY_BLOCK_SIZE);
     if (ret != ACTIVITY_BLOCK_SIZE) {
       memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
-errRead++;
-errReadLast = 6;
+      errRead++;
+      errReadLast = 6;
       return ACTIVITY_BLOCK_INVALID;
     }
     header = buffer;
@@ -405,8 +405,8 @@ errReadLast = 6;
   // Check header
   if (header[0] != 'A' || header[1] != 'D' || header[2] + (header[3] << 8) != (ACTIVITY_BLOCK_SIZE - 4)) {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
-errRead++;
-errReadLast = 7;
+    errRead++;
+    errReadLast = 7;
     return ACTIVITY_BLOCK_INVALID;
   }
 
@@ -460,11 +460,13 @@ bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_
 
   // Must be initialized, and not writing the invalid block, and have a valid buffer
   if (!isInitialized || physicalBlockNumber == ACTIVITY_BLOCK_INVALID || buffer == nullptr) {
+    errWriteLast = 1;
     return false;
   }
 
   // If out of range of whole blocks present + 1
   if (physicalBlockNumber > blockCount) {
+    errWriteLast = 2;
     return false;
   }
 
@@ -476,7 +478,10 @@ bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_
 
   // Open for writing
   ret = fs.FileOpen(&file_p, ACTIVITY_DATA_FILENAME, LFS_O_WRONLY|LFS_O_CREAT);
-  if (ret != LFS_ERR_OK) return false;
+  if (ret != LFS_ERR_OK) {
+    errWriteLast = 3;
+    return false;
+  }
 
   // Seek to location (if required)
   uint32_t location = fs.FileTell(&file_p);
@@ -484,22 +489,25 @@ bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_
     location = fs.FileSeek(&file_p, offset);
     if (location != offset) {
       fs.FileClose(&file_p);
+      errWriteLast = 4;
       return false;
     }
   }
 
   // Write block
   ret = fs.FileWrite(&file_p, buffer, ACTIVITY_BLOCK_SIZE);
-  
-  // Update size and block count
-  fileSize = fs.FileSize(&file_p);
-  blockCount = fileSize / ACTIVITY_BLOCK_SIZE;
-
-  fs.FileClose(&file_p);
 
   if (ret != ACTIVITY_BLOCK_SIZE) {
+    fs.FileClose(&file_p);
+    errWriteLast = 5;
     return false;
   }
+
+  // Update size and block count
+  fileSize = fs.FileSize(&file_p);
+  fs.FileClose(&file_p);
+  blockCount = fileSize / ACTIVITY_BLOCK_SIZE;
+
   return true;
 }
 
@@ -508,10 +516,11 @@ const char * ActivityController::DebugText() {
   p += sprintf(p, "I:%s BC:%lu\n", isInitialized ? "t" : "f", blockCount);
   p += sprintf(p, "Al:%lu Ap:%lu\n", ActiveLogicalBlock(), activeBlockPhysicalIndex);
   p += sprintf(p, "F:%lu\n", EarliestLogicalBlock());
-  p += sprintf(p, "S:%lu N:%lu\n", blockStartTime, currentTime);
+  p += sprintf(p, "S:%lu\n", blockStartTime);
+  p += sprintf(p, "N:%lu\n", currentTime);
   p += sprintf(p, "E:%lu C:%lu\n", countEpochs, epochSumCount);
   p += sprintf(p, "sum:%lu\n", epochSumSvm);
-  p += sprintf(p, "I:%lu e:%lu/%lu/%lu\n", epochInterval, errWrite, errRead, errReadLast);
+  p += sprintf(p, "I:%lu er:%lu/%lu ew:%lu/%lu/%lu\n", epochInterval, errRead, errReadLast, errWrite, errWriteLastAppend, errWriteLastWithin);
   int elapsed = currentTime - epochStartTime;
   int estimatedRate = -1;
   if (elapsed > 0) estimatedRate = epochSumCount / elapsed;
@@ -528,14 +537,21 @@ bool ActivityController::WriteActiveBlock() {
   // If the index is just past the end of the file, and not greater than maximum size...
   if (activeBlockPhysicalIndex >= blockCount && activeBlockPhysicalIndex < ACTIVITY_MAXIMUM_BLOCKS) {
     // Try to append past the end of the file
+    errWriteLast = 0;
     written = WritePhysicalBlock(activeBlockPhysicalIndex, activeBlock);
+    if (!written) errWriteLastAppend = errWriteLast;
   }
 
   // If not appended, we'll be writing within the file
   if (!written) {
     // Write inside file, wrapping-around if needed
-    if (blockCount > 0) activeBlockPhysicalIndex %= blockCount;
+    if (blockCount > 0) {
+      activeBlockPhysicalIndex %= blockCount;
+    } else {
+      activeBlockPhysicalIndex = 0;
+    }
     written = WritePhysicalBlock(activeBlockPhysicalIndex, activeBlock);
+    if (!written) errWriteLastWithin = errWriteLast;
   }
 
   return written;
