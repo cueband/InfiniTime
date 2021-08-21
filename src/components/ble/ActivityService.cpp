@@ -165,26 +165,31 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
         if (attr_handle == statusHandle) {
             uint8_t status[14];
 
+            // @0 Earliest available logical block ID
             uint32_t earliestBlockId = activityController.EarliestLogicalBlock();
             status[0] = (uint8_t)(earliestBlockId >> 0);
             status[1] = (uint8_t)(earliestBlockId >> 8);
             status[2] = (uint8_t)(earliestBlockId >> 16);
             status[3] = (uint8_t)(earliestBlockId >> 24);
 
+            // @4 Last available logical block ID (the active block -- partially written)
             uint32_t activeBlockId = activityController.ActiveLogicalBlock();
             status[4] = (uint8_t)(activeBlockId >> 0);
             status[5] = (uint8_t)(activeBlockId >> 8);
             status[6] = (uint8_t)(activeBlockId >> 16);
             status[7] = (uint8_t)(activeBlockId >> 24);
 
+            // @8 Size (bytes) of each block
             uint16_t blockSize = activityController.BlockSize(); 
             status[8] = (uint8_t)(blockSize >> 0);
             status[9] = (uint8_t)(blockSize >> 8);
 
+            // @10  Size of each epoch (seconds)
             uint16_t epochInterval = activityController.EpochInterval(); 
             status[10] = (uint8_t)(epochInterval >> 0);
             status[11] = (uint8_t)(epochInterval >> 8);
 
+            // @12 Maximum number of epoch samples in each block
             uint16_t maxSamplesPerBlock = activityController.MaxSamplesPerBlock(); 
             status[12] = (uint8_t)(maxSamplesPerBlock >> 0);
             status[13] = (uint8_t)(maxSamplesPerBlock >> 8);

@@ -200,11 +200,11 @@ Where `status` is:
 
 ```c
 struct {
-    uint32_t earliestBlockId;           // @0
-    uint32_t activeBlockId;             // @4
-    uint16_t blockSize = 256;           // @6
-    uint16_t epochInterval = 60;        // @8
-    uint16_t maxSamplesPerBlock = 28;   // @10
+    uint32_t earliestBlockId;           // @0  Earliest available logical block ID
+    uint32_t activeBlockId;             // @4  Last available logical block ID (the active block -- partially written)
+    uint16_t blockSize = 256;           // @8  Size (bytes) of each block
+    uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
+    uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
 } // @12
 ```
 
