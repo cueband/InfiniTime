@@ -33,8 +33,9 @@ namespace Pinetime {
       SettingDisplay,
       SettingWakeUp,
       SettingSteps,
+      SettingPineTimeStyle
 #ifdef CUEBAND_APP_ENABLED
-      CueBand,
+      , CueBand
 #endif
     };
   }

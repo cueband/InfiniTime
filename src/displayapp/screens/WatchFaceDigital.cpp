@@ -97,13 +97,17 @@ WatchFaceDigital::WatchFaceDigital(DisplayApp* app,
   lv_label_set_text(stepIcon, Symbols::shoe);
   lv_obj_align(stepIcon, stepValue, LV_ALIGN_OUT_LEFT_MID, -5, 0);
 #endif
+
+  taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
+  Refresh();
 }
 
 WatchFaceDigital::~WatchFaceDigital() {
+  lv_task_del(taskRefresh);
   lv_obj_clean(lv_scr_act());
 }
 
-bool WatchFaceDigital::Refresh() {
+void WatchFaceDigital::Refresh() {
   batteryPercentRemaining = batteryController.PercentRemaining();
   if (batteryPercentRemaining.IsUpdated()) {
     auto batteryPercent = batteryPercentRemaining.Get();
@@ -229,6 +233,4 @@ bool WatchFaceDigital::Refresh() {
     lv_obj_align(stepIcon, stepValue, LV_ALIGN_OUT_LEFT_MID, -5, 0);
   }
 #endif
-
-  return running;
 }

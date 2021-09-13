@@ -33,7 +33,7 @@ namespace Pinetime {
                          Controllers::MotionController& motionController);
         ~WatchFaceDigital() override;
 
-        bool Refresh() override;
+        void Refresh() override;
 
       private:
         char displayedChar[5] {};
@@ -76,6 +76,8 @@ namespace Pinetime {
         Controllers::Settings& settingsController;
         Controllers::HeartRateController& heartRateController;
         Controllers::MotionController& motionController;
+
+        lv_task_t* taskRefresh;
       };
     }
   }
