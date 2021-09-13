@@ -49,8 +49,8 @@ bool CueBandApp::Update() {
   return false;
 }
 
-bool CueBandApp::Refresh() {
-  return true;
+void CueBandApp::Refresh() {
+  return;
 }
 
 #endif

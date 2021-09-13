@@ -5,8 +5,10 @@
 
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
 
-#define CUEBAND_VERSION "1"             // User-visible string
-#define CUEBAND_VERSION_NUMBER 0x01     // 1-byte public firmware release serial number
+#define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
+#define CUEBAND_REVISION_NUMBER 0       // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_STRINGIZE(S) #S
+#define CUEBAND_VERSION "" CUEBAND_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE(CUEBAND_REVISION_NUMBER) ""  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002
 
 #define CUEBAND_DEVICE_NAME "InfiniTime-######"  // "InfiniTime"

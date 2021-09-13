@@ -18,7 +18,15 @@
 
 #include "components/ble/BleController.h"
 #include "components/settings/Settings.h"
-#include "components/battery/BatteryController.h"
+
+// Avoid circular dependency
+//#include "components/battery/BatteryController.h"
+namespace Pinetime {
+  namespace Controllers {
+    class Battery;
+  }
+}
+
 #include "components/datetime/DateTimeController.h"
 #include "components/motor/MotorController.h"
 #include "components/motion/MotionController.h"

@@ -22,7 +22,6 @@
 #include "ServiceDiscovery.h"
 #include "HeartRateService.h"
 
-#include "cueband.h"
 #ifdef CUEBAND_SERVICE_UART_ENABLED
 #include "UartService.h"
 #include "components/settings/Settings.h"

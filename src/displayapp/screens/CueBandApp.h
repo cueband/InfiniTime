@@ -34,7 +34,7 @@ namespace Pinetime {
 
           ~CueBandApp() override;
 
-          bool Refresh() override;
+          void Refresh() override;
           bool Update();
 
         private:
