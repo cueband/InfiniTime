@@ -638,10 +638,14 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
 
         if (startBlockLogicalIndex + (midBlockPhysicalIndex - startBlockPhysicalIndex) != midBlockLogicalIndex) {
           // If the discontinuity is in the first half, bisect to the first half
+          // ...short-circuit if we'd be checking the same interval again (should not happen as mid point rounds down)
+          if (endBlockPhysicalIndex == midBlockPhysicalIndex) break;
           endBlockPhysicalIndex = midBlockPhysicalIndex;
           endBlockLogicalIndex = midBlockLogicalIndex;
         } else if (midBlockLogicalIndex + (endBlockPhysicalIndex - midBlockPhysicalIndex) != endBlockPhysicalIndex) {
           // If the discontinuity is in the second half, bisect to the second half
+          // ...short-circuit if we'd be checking the same interval again (will happen when start/end are only one index apart as mid point rounds down)
+          if (startBlockPhysicalIndex == midBlockPhysicalIndex) break;
           startBlockPhysicalIndex = midBlockPhysicalIndex;
           startBlockLogicalIndex = midBlockLogicalIndex;
         } else {
@@ -653,6 +657,11 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
   }
 
   FinishedReading();
+
+#if (CUEBAND_ACTIVITY_EPOCH_INTERVAL < 60)
+  // If using a debug epoch size, and our data is larger than the maximum size, fake an initialization error so the data is wiped
+  if (blockCount > ACTIVITY_MAXIMUM_BLOCKS) err = true;
+#endif
 
   // If errors exist, start new data file
   if (err) {
