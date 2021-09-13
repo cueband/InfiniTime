@@ -42,15 +42,14 @@ CueBandApp::~CueBandApp() {
   lv_obj_clean(lv_scr_act());
 }
 
-bool CueBandApp::Update() {
+void CueBandApp::Update() {
 #ifdef CUEBAND_ACTIVITY_ENABLED
   lv_label_set_text_fmt(lInfo, "%s", activityController.DebugText());
 #endif
-  return false;
 }
 
 void CueBandApp::Refresh() {
-  return;
+  ;
 }
 
 #endif

@@ -35,7 +35,7 @@ namespace Pinetime {
           ~CueBandApp() override;
 
           void Refresh() override;
-          bool Update();
+          void Update();
 
         private:
           Pinetime::System::SystemTask& systemTask;
