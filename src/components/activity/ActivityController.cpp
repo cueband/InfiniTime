@@ -132,7 +132,6 @@ bool ActivityController::WriteEpoch() {
     // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
     data[2] = (uint8_t)steps; data[3] = (uint8_t)(steps >> 8);
 
-#if 1
     // Calculate the mean SVM value
     uint32_t meanSvm;
     if (epochSumCount >= ACTIVITY_RATE * epochInterval * 50 / 100) {
@@ -152,11 +151,6 @@ bool ActivityController::WriteEpoch() {
     // TODO: Calculate an alternative activity value
     uint32_t movement = 0;
     data[6] = (uint8_t)movement; data[7] = (uint8_t)(movement >> 8);
-#else
-    // @4 (OLD) Sum of the SVM values for the entire epoch
-    data[4] = (uint8_t)epochSumSvm; data[5] = (uint8_t)(epochSumSvm >> 8);
-    data[6] = (uint8_t)(epochSumSvm >> 16); data[7] = (uint8_t)(epochSumSvm >> 24);
-#endif
 
     countEpochs++;
   }
