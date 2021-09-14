@@ -103,8 +103,10 @@ namespace Pinetime {
       bool WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_t *buffer);
 
       void StartNewBlock();
-      bool WriteActiveBlock();    // Write active block
-      bool FinalizeBlock();       // Write into buffer (even if partial) before storing/transmitting
+      bool WriteActiveBlock();                    // Write active block
+      bool FinalizeBlock(uint32_t logicalIndex);  // Write into buffer (even if partial) -- used before storing/transmitting
+
+      bool InitialFileScan();
 
       void StartEpoch();
       bool WriteEpoch();
@@ -147,6 +149,7 @@ namespace Pinetime {
       // Debug error tracking
       uint32_t errWrite = 0, errWriteLast = 0, errWriteLastAppend = 0, errWriteLastWithin = 0;
       uint32_t errRead = 0, errReadLast = 0;
+      int errScan = 0;
       char debugText[160];
 
       // Resample buffer
@@ -154,8 +157,14 @@ namespace Pinetime {
       unsigned int totalSamples = 0;
       unsigned int lastCount = 0;
 
-#if defined(CUEBAND_BUFFER_ENABLED)
+#ifdef CUEBAND_BUFFER_ENABLED
       unsigned int lastTotalSamples = 0;
+#endif
+
+#ifdef CUEBAND_WRITE_TEST_FILE
+      void AppendTestFile();
+      int testWrite = -1;         // Before-start
+      int errTest = 0;
 #endif
     };
   }

@@ -149,9 +149,18 @@
 
 #define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
 
-#define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60 // 60
+
+#define CUEBAND_WRITE_TEST_FILE 2000        // If defined, create a test file of ACTIVITY_MAXIMUM_BLOCKS using this value as an offset for the logical sectors (set to a new value to recreate the test file)
+
+#if defined(CUEBAND_WRITE_TEST_FILE)   // These values for debugging only
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 2
+    #define ACTIVITY_MAXIMUM_BLOCKS 512
+#else
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60 // 60
+    #define ACTIVITY_MAXIMUM_BLOCKS 512  // 512 = 128 kB, ~10 days;  
+#endif
+
 #define ACTIVITY_BLOCK_SIZE 256
-#define ACTIVITY_MAXIMUM_BLOCKS 512  // 512 = 128 kB, ~10 days;  
 
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS
 

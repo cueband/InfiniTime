@@ -221,14 +221,15 @@ void ActivityController::DestroyData() {
   StartNewBlock();
 }
 
-bool ActivityController::FinalizeBlock() {
+bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
   uint16_t formatVersion = 0x0000;
 
+  // Header
   activeBlock[0] = 'A'; activeBlock[1] = 'D';                                                                           // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
   activeBlock[2] = (uint8_t)(ACTIVITY_BLOCK_SIZE - 4); activeBlock[3] = (uint8_t)((ACTIVITY_BLOCK_SIZE - 4) >> 8);      // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
   activeBlock[4] = (uint8_t)formatVersion; activeBlock[5] = (uint8_t)(formatVersion >> 8);                              // @4  0x00 = current format (8-bytes per sample)
-  activeBlock[6] = (uint8_t)activeBlockLogicalIndex; activeBlock[7] = (uint8_t)(activeBlockLogicalIndex >> 8);          // @6  Logical block identifier
-  activeBlock[8] = (uint8_t)(activeBlockLogicalIndex >> 16); activeBlock[9] = (uint8_t)(activeBlockLogicalIndex >> 24); //     ...
+  activeBlock[6] = (uint8_t)logicalIndex; activeBlock[7] = (uint8_t)(logicalIndex >> 8);                                // @6  Logical block identifier
+  activeBlock[8] = (uint8_t)(logicalIndex >> 16); activeBlock[9] = (uint8_t)(logicalIndex >> 24);                       //     ...
   activeBlock[10] = deviceAddress[5]; activeBlock[11] = deviceAddress[4]; activeBlock[12] = deviceAddress[3];           // @10 Device ID (address)
   activeBlock[13] = deviceAddress[2]; activeBlock[14] = deviceAddress[1]; activeBlock[15] = deviceAddress[0];           //     ...
   activeBlock[16] = (uint8_t)blockStartTime; activeBlock[17] = (uint8_t)(blockStartTime >> 8);                          // @16 Seconds since epoch for the first sample
@@ -242,7 +243,7 @@ bool ActivityController::FinalizeBlock() {
   activeBlock[28] = lastTemperature;                                                                                    // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
   activeBlock[29] = CUEBAND_VERSION_NUMBER;                                                                             // @29 Firmware version
 
-  // Data
+  // Payload
   //memset(activeBlock + ACTIVITY_HEADER_SIZE, 0x00, ACTIVITY_PAYLOAD_SIZE);
 
   // Checksum
@@ -265,10 +266,10 @@ void ActivityController::StartNewBlock() {
     activeBlockPhysicalIndex = 0;
   }
 
-  // Erase block
-  memset(activeBlock, 0x00, ACTIVITY_HEADER_SIZE);
-  memset(activeBlock + ACTIVITY_HEADER_SIZE, 0xff, ACTIVITY_PAYLOAD_SIZE);
-  memset(activeBlock + ACTIVITY_BLOCK_SIZE - 2, 0x00, 2);
+  // Erase block data
+  memset(activeBlock, 0x00, ACTIVITY_HEADER_SIZE);                          // Header
+  memset(activeBlock + ACTIVITY_HEADER_SIZE, 0xff, ACTIVITY_PAYLOAD_SIZE);  // Payload
+  memset(activeBlock + ACTIVITY_BLOCK_SIZE - 2, 0x00, 2);                   // Checksum
 
   blockStartTime = currentTime;
   countEpochs = 0;
@@ -429,7 +430,7 @@ bool ActivityController::ReadLogicalBlock(uint32_t logicalBlockNumber, uint8_t *
 
   // Allow read of current active block
   if (logicalBlockNumber == activeBlockLogicalIndex) {
-    FinalizeBlock();  // Update header and checksum
+    FinalizeBlock(activeBlockLogicalIndex);  // Update header and checksum
     memcpy(buffer, activeBlock, ACTIVITY_BLOCK_SIZE);
     return true;
   }
@@ -507,9 +508,12 @@ bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_
 
 const char * ActivityController::DebugText() {
   char *p = debugText;
-  p += sprintf(p, "I:%s BC:%lu\n", isInitialized ? "t" : "f", blockCount);
-  p += sprintf(p, "Al:%lu Ap:%lu\n", ActiveLogicalBlock(), activeBlockPhysicalIndex);
-  p += sprintf(p, "F:%lu\n", EarliestLogicalBlock());
+#ifdef CUEBAND_WRITE_TEST_FILE
+  p += sprintf(p, "TW:%d et:%d\n", testWrite, errTest);
+#endif
+  p += sprintf(p, "I:%s BC:%lu es:%d\n", isInitialized ? "t" : "f", blockCount, errScan);
+  p += sprintf(p, "Al:%ld Ap:%ld\n", ActiveLogicalBlock(), activeBlockPhysicalIndex);   // debug output as signed to spot invalid=-1
+  p += sprintf(p, "F:%ld\n", EarliestLogicalBlock());   // debug as signed to spot invalid=-1
   p += sprintf(p, "S:%lu\n", blockStartTime);
   p += sprintf(p, "N:%lu\n", currentTime);
   p += sprintf(p, "E:%lu C:%lu\n", countEpochs, epochSumCount);
@@ -524,7 +528,7 @@ const char * ActivityController::DebugText() {
 
 // Write block: seek to block location (append additional bytes if location after end, or wrap-around if file maximum size or no more drive space)
 bool ActivityController::WriteActiveBlock() {
-  FinalizeBlock();
+  FinalizeBlock(activeBlockLogicalIndex);
 
   bool written = false;
   
@@ -551,7 +555,92 @@ bool ActivityController::WriteActiveBlock() {
   return written;
 }
 
+
+#ifdef CUEBAND_WRITE_TEST_FILE
+#warning "This build replaces the data with a test file of a specific configuration."
+// Writing dummy data file for testing
+void ActivityController::AppendTestFile() {
+    int ret;
+
+    // State: finished or error
+    if (testWrite < 0) {
+      return;
+    }
+
+    // Initial state
+    if (testWrite == 0) {
+      // Check the current file
+      if (OpenFileReading()) {
+        // If the file is the required size...
+        if (blockCount > 0) {
+          // Check the first and last blocks
+          uint32_t firstBlock = ReadPhysicalBlock(0, nullptr);
+          uint32_t lastBlock = ReadPhysicalBlock(blockCount - 1, nullptr);
+
+          // It appears to match the test file we'd like -- do not rewite
+          if (blockCount == ACTIVITY_MAXIMUM_BLOCKS && firstBlock == CUEBAND_WRITE_TEST_FILE && lastBlock == CUEBAND_WRITE_TEST_FILE + ACTIVITY_MAXIMUM_BLOCKS - 1) {
+            FinishedReading();
+            testWrite = -3;       // not rewriting existing test file of correct specification
+            InitialFileScan();    // Only now scan the file
+            return;
+          } else {
+            errTest = 9000;       // diagnostic: reason the existing file was discarded
+            if (blockCount != ACTIVITY_MAXIMUM_BLOCKS) errTest += 100;
+            if (firstBlock != CUEBAND_WRITE_TEST_FILE) errTest += 10;
+            if (lastBlock != CUEBAND_WRITE_TEST_FILE + ACTIVITY_MAXIMUM_BLOCKS - 1) errTest += 1;
+          }
+        } else errTest = -1;    // diagnostic: existing file was empty
+
+        FinishedReading();
+      } else errTest = -2;  // diagnostic: existing file could not be opened
+
+      // DestroyData();
+      fs.FileDelete(ACTIVITY_DATA_FILENAME);
+
+      // Create file for writing
+      ret = fs.FileOpen(&file_p, ACTIVITY_DATA_FILENAME, LFS_O_WRONLY|LFS_O_CREAT);
+      if (ret != LFS_ERR_OK) {
+        testWrite = -10; // error opening file
+        return;
+      }
+    }
+
+    // Check current file size
+    ret = fs.FileSize(&file_p);
+    if (ret < 0) {
+      testWrite = -11; // error getting size of file
+      fs.FileClose(&file_p);
+      return;
+    }
+
+    // If finished...
+    if (ret >= ACTIVITY_MAXIMUM_BLOCKS * ACTIVITY_BLOCK_SIZE) {
+      testWrite = -2;       // finished test write
+      fs.FileClose(&file_p);
+      InitialFileScan();    // Only now scan the file
+      return;
+    }
+
+    // Write the next block
+    memset(activeBlock + ACTIVITY_HEADER_SIZE, 0xff, ACTIVITY_PAYLOAD_SIZE);  // Payload
+    FinalizeBlock(testWrite + CUEBAND_WRITE_TEST_FILE);
+    ret = fs.FileWrite(&file_p, activeBlock, ACTIVITY_BLOCK_SIZE);
+    if (ret != ACTIVITY_BLOCK_SIZE) {
+      testWrite = -12;       // error writing to file
+      fs.FileClose(&file_p);
+      return;
+    }
+
+    testWrite++;
+}
+#endif
+
+
 bool ActivityController::IsSampling() {
+#ifdef CUEBAND_WRITE_TEST_FILE
+  // HACK: Use this as an opportunity to make progress writing the test file
+  this->AppendTestFile();
+#endif
   return isInitialized;
 }
 
@@ -580,29 +669,26 @@ void ActivityController::SensorValues(int8_t battery, int8_t temperature) { // (
   lastTemperature = temperature; // 0x80;
 }
 
-void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddress, uint8_t accelerometerInfo) {
-  this->currentTime = time;
-  this->deviceAddress = deviceAddress;
-  this->accelerometerInfo = accelerometerInfo;
-
-  isInitialized = false;
-
+// Scan for most recent logical block and its physical index, returns if data successfully continued
+bool ActivityController::InitialFileScan() {
   uint32_t lastBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
   uint32_t lastBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
 
   bool err = false;
   if (!OpenFileReading()) {
+    if (!err) errScan = -1;    // diagnostic: error opening for reading or determining file size
     err = true;
   } else {
 
-    // Scan for most recent logical block, store its value and physical index
-    if (blockCount > 0)
-    {
+    // Begin scan for most recent logical block and its physical index
+    if (blockCount != 0) {
       // Read start block
       uint32_t startBlockPhysicalIndex = 0;
       uint32_t startBlockLogicalIndex = ReadPhysicalBlock(startBlockPhysicalIndex, nullptr);
-      if (startBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) err = true;
-      if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || startBlockLogicalIndex > lastBlockLogicalIndex) {
+      if (startBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
+        if (!err) errScan = 1000 + startBlockPhysicalIndex;    // diagnostic: error reading start block
+        err = true;
+      } else if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || startBlockLogicalIndex > lastBlockLogicalIndex) {
         lastBlockLogicalIndex = startBlockLogicalIndex;
         lastBlockPhysicalIndex = startBlockPhysicalIndex;
       }
@@ -610,8 +696,10 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
       // Read end block
       uint32_t endBlockPhysicalIndex = blockCount - 1;
       uint32_t endBlockLogicalIndex = ReadPhysicalBlock(endBlockPhysicalIndex, nullptr);
-      if (endBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) err = true;
-      if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || endBlockLogicalIndex > lastBlockLogicalIndex) {
+      if (endBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
+        if (!err) errScan = 2000 + endBlockPhysicalIndex;    // diagnostic: error reading end block
+        err = true;
+      } else if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || endBlockLogicalIndex > lastBlockLogicalIndex) {
         lastBlockLogicalIndex = endBlockLogicalIndex;
         lastBlockPhysicalIndex = endBlockPhysicalIndex;
       }
@@ -624,22 +712,23 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
         // Find the mid-point
         uint32_t midBlockPhysicalIndex = startBlockPhysicalIndex + ((endBlockPhysicalIndex - startBlockPhysicalIndex) / 2);
         uint32_t midBlockLogicalIndex = ReadPhysicalBlock(midBlockPhysicalIndex, nullptr);
-        if (midBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) err = true;
-        if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || midBlockLogicalIndex > lastBlockLogicalIndex) {
+        if (midBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
+          if (!err) errScan = 3000 + midBlockPhysicalIndex;    // diagnostic: error reading end block
+          err = true;
+          break;
+        } else if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || midBlockLogicalIndex > lastBlockLogicalIndex) {
           lastBlockLogicalIndex = midBlockLogicalIndex;
           lastBlockPhysicalIndex = midBlockPhysicalIndex;
         }
 
         if (startBlockLogicalIndex + (midBlockPhysicalIndex - startBlockPhysicalIndex) != midBlockLogicalIndex) {
           // If the discontinuity is in the first half, bisect to the first half
-          // ...short-circuit if we'd be checking the same interval again (should not happen as mid point rounds down)
-          if (endBlockPhysicalIndex == midBlockPhysicalIndex) break;
+          if (endBlockPhysicalIndex == midBlockPhysicalIndex) break;  // Don't check the same interval again (mid point rounds down)
           endBlockPhysicalIndex = midBlockPhysicalIndex;
           endBlockLogicalIndex = midBlockLogicalIndex;
-        } else if (midBlockLogicalIndex + (endBlockPhysicalIndex - midBlockPhysicalIndex) != endBlockPhysicalIndex) {
+        } else if (midBlockLogicalIndex + (endBlockPhysicalIndex - midBlockPhysicalIndex) != endBlockLogicalIndex) {
           // If the discontinuity is in the second half, bisect to the second half
-          // ...short-circuit if we'd be checking the same interval again (will happen when start/end are only one index apart as mid point rounds down)
-          if (startBlockPhysicalIndex == midBlockPhysicalIndex) break;
+          if (startBlockPhysicalIndex == midBlockPhysicalIndex) break;  // Don't check the same interval again (mid point rounds down)
           startBlockPhysicalIndex = midBlockPhysicalIndex;
           startBlockLogicalIndex = midBlockLogicalIndex;
         } else {
@@ -652,31 +741,55 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
 
   FinishedReading();
 
-#if (CUEBAND_ACTIVITY_EPOCH_INTERVAL < 60)
-  // If using a debug epoch size, and our data is larger than the maximum size, fake an initialization error so the data is wiped
-  if (blockCount > ACTIVITY_MAXIMUM_BLOCKS) err = true;
-#endif
+  // #if (CUEBAND_ACTIVITY_EPOCH_INTERVAL < 60)
+  //   // If using a debug epoch size, and our data is larger than the maximum size, fake an initialization error so the data is wiped
+  //   if (blockCount > ACTIVITY_MAXIMUM_BLOCKS) err = true;
+  // #endif
 
-  // If errors exist, start new data file
-  if (err) {
+  // If we located the last logical block (and its physical location), the active block will be the next block index
+  if (!err && lastBlockLogicalIndex != ACTIVITY_BLOCK_INVALID && lastBlockPhysicalIndex != ACTIVITY_BLOCK_INVALID) {
+    activeBlockLogicalIndex = lastBlockLogicalIndex + 1;
+    activeBlockPhysicalIndex = lastBlockPhysicalIndex + 1;
+    isInitialized = true;
+  } else if (!err && blockCount == 0) {
+    // ...otherwise, if the file is empty, we're good to go from the start condition (these indexes are set to zero later)
+    activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
+    activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
+    isInitialized = true;
+    if (errScan == 0) errScan = -123;    // diagnostic: no other issue reported, but the data file seems to be empty
+  } else {
+    // ...otherwise, we have a problem -- start a new data file
+    if (errScan == 0) { // diagnostic: the data had to be destroyed
+      errScan = 90000;
+      if (lastBlockPhysicalIndex == ACTIVITY_BLOCK_INVALID) errScan += 1000;
+      if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) errScan += 100;
+      if (blockCount == 0) errScan += 10;
+      if (err) errScan += 1;
+    }
     DestroyData();
   }
 
-  // The active block is the next logical/physical block index
-  if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
-    activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
-  } else {
-    activeBlockLogicalIndex = lastBlockLogicalIndex + 1;
-  }
-  if (lastBlockPhysicalIndex == ACTIVITY_BLOCK_INVALID) {
-    activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
-  } else {
-    activeBlockPhysicalIndex = lastBlockPhysicalIndex + 1;
-  }
-
-  isInitialized = true;
-
   StartNewBlock();
+
+  return !err;
+}
+
+
+void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddress, uint8_t accelerometerInfo) {
+  this->currentTime = time;
+  this->deviceAddress = deviceAddress;
+  this->accelerometerInfo = accelerometerInfo;
+
+  activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
+  activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
+  isInitialized = false;
+
+#ifdef CUEBAND_WRITE_TEST_FILE
+  // If writing a test file (incrementally, as it may be large), don't perform the initial scan until after that is done
+  testWrite = 0;
+#else
+  InitialFileScan();
+#endif
 }
 
 #endif
