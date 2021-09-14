@@ -160,7 +160,7 @@
 #elif 1 // Multi-day debugging
     #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 1-minute
     #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 52  // 1 day
-    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files of debug data giving 2-3 days
+    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files of debug data giving 3-4 days
 #else
     #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
     #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 256 // 256 = 64 kB, ~5 days/file;  
