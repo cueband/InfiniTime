@@ -3,12 +3,15 @@
 
 #pragma once
 
+// Preprocessor fun
+#define CUEBAND_STRINGIZE(S) #S
+#define CUEBAND_STRINGIZE_STRINGIZE(S) CUEBAND_STRINGIZE(S)
+
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
 
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
 #define CUEBAND_REVISION_NUMBER 0       // Revision number (appears in user-visible version string, but not in block format)
-#define CUEBAND_STRINGIZE(S) #S
-#define CUEBAND_VERSION "" CUEBAND_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE(CUEBAND_REVISION_NUMBER) ""  // User-visible revision string
+#define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) ""  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002
 
 #define CUEBAND_DEVICE_NAME "InfiniTime-######"  // "InfiniTime"
@@ -149,17 +152,19 @@
 
 #define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
 
-
-//#define CUEBAND_WRITE_TEST_FILE 2000        // If defined, create a test file of ACTIVITY_MAXIMUM_BLOCKS using this value as an offset for the logical sectors (set to a new value to recreate the test file)
-
-#if defined(CUEBAND_WRITE_TEST_FILE)   // These values for debugging only
-    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 2
-    #define ACTIVITY_MAXIMUM_BLOCKS 512
-
-    #define CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK 5   // Only for debugging (normally derived from available space)
+#if 0   // Fast debugging
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 2   // 2-second epoch
+    #define CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK 5 // 5 samples per block (10 seconds) -- override for debugging (normally derived from available space)
+    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 4   // 6 blocks per file (60 seconds)
+    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 3-4 minutes
+#elif 1 // Multi-day debugging
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 1-minute
+    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 52  // 1 day
+    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files of debug data giving 2-3 days
 #else
-    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60 // 60
-    #define ACTIVITY_MAXIMUM_BLOCKS 512  // 512 = 128 kB, ~10 days;  
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
+    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 256 // 256 = 64 kB, ~5 days/file;  
+    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 15-20 days
 #endif
 
 #define ACTIVITY_BLOCK_SIZE 256
@@ -216,8 +221,8 @@
 #if (ACTIVITY_BLOCK_SIZE != 256)
     #warning "ACTIVITY_BLOCK_SIZE non-standard value (usually 256)"
 #endif
-#if (ACTIVITY_MAXIMUM_BLOCKS != 512)
-    #warning "ACTIVITY_MAXIMUM_BLOCKS non-standard value (usually 512)"     // approx. 10 days when 28 minutes per block (256-byte blocks, 8-bytes per sample, 60 second epoch)
+#if (CUEBAND_ACTIVITY_MAXIMUM_BLOCKS != 256)
+    #warning "CUEBAND_ACTIVITY_MAXIMUM_BLOCKS non-standard value (usually 256)"     // approx. 5 days per 64kB file when 28 minutes per block (256-byte blocks, 8-bytes per sample, 60 second epoch)
 #endif
 #if defined(CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS)
     #warning "CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS should not normally be defined"

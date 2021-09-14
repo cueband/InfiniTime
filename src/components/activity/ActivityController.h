@@ -54,6 +54,15 @@
   #define ACTIVITY_RESAMPLE_BUFFER_SIZE   8
 #endif
 
+// Per-file metadata
+struct ActivityMeta {
+      uint32_t blockCount;
+      uint32_t lastLogicalBlock;
+      int err;                      // diagnostic
+};
+
+
+
 namespace Pinetime {
   namespace Controllers {
     class ActivityController {
@@ -74,6 +83,7 @@ namespace Pinetime {
       const char *DebugText();
 
       // Get range of blocks available, read
+      uint32_t BlockCount();
       uint32_t EarliestLogicalBlock();
       uint32_t ActiveLogicalBlock();
       uint32_t EpochIndex() { return countEpochs; }
@@ -103,10 +113,11 @@ namespace Pinetime {
 
       std::array<uint8_t, 6> deviceAddress;
 
-      bool OpenFileReading();
-      uint32_t LogicalBlockToPhysicalBlock(uint32_t logicalBlockNumber);
-      uint32_t ReadPhysicalBlock(uint32_t physicalBlockNumber, uint8_t *buffer);  // Get physical block number and, if buffer given, read block data
-      bool WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_t *buffer);
+      bool DeleteFile(int file);
+      bool OpenFileReading(int file);
+      uint32_t LogicalBlockToPhysicalBlock(uint32_t logicalBlockNumber, int *physicalFile);
+      uint32_t ReadPhysicalBlock(int physicalFile, uint32_t physicalBlockNumber, uint8_t *buffer);  // Get physical block number and, if buffer given, read block data
+      bool AppendPhysicalBlock(int physicalFile, uint32_t logicalBlockNumber, uint8_t *buffer);
 
       void StartNewBlock();
       bool WriteActiveBlock();                    // Write active block
@@ -118,10 +129,11 @@ namespace Pinetime {
       bool WriteEpoch();
 
       bool isInitialized = false;
-      uint32_t fileSize = 0;
-      uint32_t blockCount = 0;
+
+      ActivityMeta meta[CUEBAND_ACTIVITY_FILES] = {0};
+
       uint32_t activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
-      uint32_t activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
+      int activeFile = 0;
 
       uint32_t currentTime = 0;
       uint8_t accelerometerInfo = 0;
@@ -149,13 +161,13 @@ namespace Pinetime {
       uint32_t epochMutedPromptCount = 0;
 
       // Reading (file stays open until written to, or FinishedReading() called)
-      bool isReading = false;
+      int readingFile = -1;
       lfs_file_t file_p = {0};
 
       // Debug error tracking
-      uint32_t errWrite = 0, errWriteLast = 0, errWriteLastAppend = 0, errWriteLastWithin = 0;
-      uint32_t errRead = 0, errReadLast = 0;
-      int errScan = 0;
+      uint32_t errWrite = 0, errWriteLast = 0, errWriteLastInitial=0;
+      uint32_t errRead = 0, errReadLast = 0, errReadLogicalLast = 0;
+      uint32_t errScan = 0;
       char debugText[160];
 
       // Resample buffer
@@ -167,11 +179,6 @@ namespace Pinetime {
       unsigned int lastTotalSamples = 0;
 #endif
 
-#ifdef CUEBAND_WRITE_TEST_FILE
-      void AppendTestFile();
-      int testWrite = -1;         // Before-start
-      int errTest = 0;
-#endif
     };
   }
 }

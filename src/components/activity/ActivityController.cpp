@@ -6,7 +6,7 @@
 
 using namespace Pinetime::Controllers;
 
-#define ACTIVITY_DATA_FILENAME "ACTIVITY.BIN"
+#define ACTIVITY_DATA_FILENAME "ACTV%04d.BIN"
 
 
 ActivityController::ActivityController(Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs) : settingsController {settingsController}, fs {fs} {
@@ -179,7 +179,6 @@ void ActivityController::TimeChanged(uint32_t time) {
       // Advance
       if (written) {
         activeBlockLogicalIndex++;
-        activeBlockPhysicalIndex++;
       } else {
         errWrite++;
       }
@@ -195,26 +194,36 @@ void ActivityController::TimeChanged(uint32_t time) {
 
 
 void ActivityController::FinishedReading() {
-  if (isReading) {
+  if (readingFile >= 0) {
     fs.FileClose(&file_p);
-    isReading = false;
+    readingFile = -1;
   }
 }
 
-void ActivityController::DestroyData() {
-  // Ensure we've not got the file open for reading
+bool ActivityController::DeleteFile(int file) {
+  // Ensure we've not got any files open for reading
   FinishedReading();
 
-  // Remove activity file
-  fs.FileDelete(ACTIVITY_DATA_FILENAME);
+  char filename[16] = {0};
+  sprintf(filename, ACTIVITY_DATA_FILENAME, file);
 
-  // Clear stats
-  fileSize = 0;
-  blockCount = 0;
+  int ret = fs.FileDelete(filename);
+
+  meta[file].blockCount = 0;
+  meta[file].lastLogicalBlock = ACTIVITY_BLOCK_INVALID;
+  //meta[file].err    // leave diagnostic error values to be sticky
+
+  return (ret == LFS_ERR_OK);
+}
+
+void ActivityController::DestroyData() {
+  for (int file = 0; file < CUEBAND_ACTIVITY_FILES; file++) {
+    DeleteFile(file);
+  }
 
   // Reset active block
-  activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
-  activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
+  activeBlockLogicalIndex = 0;
+  activeFile = 0;
 
   isInitialized = true;
 
@@ -257,15 +266,6 @@ bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
 void ActivityController::StartNewBlock() {
   if (!isInitialized) return;
 
-  // Bootstrap empty system
-  if (activeBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
-    // CONSIDER: Randomize top bits of block index when data is cleared?
-    activeBlockLogicalIndex = 0;
-  }
-  if (activeBlockPhysicalIndex == ACTIVITY_BLOCK_INVALID) {
-    activeBlockPhysicalIndex = 0;
-  }
-
   // Erase block data
   memset(activeBlock, 0x00, ACTIVITY_HEADER_SIZE);                          // Header
   memset(activeBlock + ACTIVITY_HEADER_SIZE, 0xff, ACTIVITY_PAYLOAD_SIZE);  // Payload
@@ -277,32 +277,39 @@ void ActivityController::StartNewBlock() {
   StartEpoch();
 }
 
-bool ActivityController::OpenFileReading() {
+bool ActivityController::OpenFileReading(int file) {
   int ret;
-  if (isReading) return true;
-  ret = fs.FileOpen(&file_p, ACTIVITY_DATA_FILENAME, LFS_O_RDONLY|LFS_O_CREAT);
+  if (readingFile == file) return true;
+  FinishedReading();
+  char filename[16] = {0};
+  sprintf(filename, ACTIVITY_DATA_FILENAME, file);
+  ret = fs.FileOpen(&file_p, filename, LFS_O_RDONLY|LFS_O_CREAT);
+  if (ret == LFS_ERR_CORRUPT) fs.FileDelete(filename);    // No other sensible action?
   if (ret != LFS_ERR_OK) return false;
-  ret = fs.FileSize(&file_p);
-  if (ret < 0) {
-    fs.FileClose(&file_p);
-    return false;
-  }
-  fileSize = ret;
-  blockCount = fileSize / ACTIVITY_BLOCK_SIZE;
-  isReading = true;
+  readingFile = file;
   return true;
 }
 
+uint32_t ActivityController::BlockCount() {
+  uint32_t countBlocks = 0;
+  for (int file = 0; file < CUEBAND_ACTIVITY_FILES; file++) {
+    countBlocks += meta[file].blockCount;
+  }
+  return countBlocks;
+}
+
 uint32_t ActivityController::EarliestLogicalBlock() {
-  uint32_t earliestLogicalBlock = activeBlockLogicalIndex - blockCount;
-  return earliestLogicalBlock;
+  if (activeFile < 0 || activeBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) return ACTIVITY_BLOCK_INVALID;
+  uint32_t countBlocks = BlockCount();
+  if (countBlocks == 0) return ACTIVITY_BLOCK_INVALID;
+  return activeBlockLogicalIndex - countBlocks;
 }
 
 uint32_t ActivityController::ActiveLogicalBlock() {
   return activeBlockLogicalIndex;
 }
 
-uint32_t ActivityController::LogicalBlockToPhysicalBlock(uint32_t logicalBlockNumber) {
+uint32_t ActivityController::LogicalBlockToPhysicalBlock(uint32_t logicalBlockNumber, int *physicalFile) {
   // Must be initialized
   if (!isInitialized) return ACTIVITY_BLOCK_INVALID;
 
@@ -310,29 +317,27 @@ uint32_t ActivityController::LogicalBlockToPhysicalBlock(uint32_t logicalBlockNu
   if (logicalBlockNumber == ACTIVITY_BLOCK_INVALID) return ACTIVITY_BLOCK_INVALID;
 
   // If there is no active block...
-  if (activeBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || activeBlockPhysicalIndex == ACTIVITY_BLOCK_INVALID) return ACTIVITY_BLOCK_INVALID;
+  if (activeBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || activeFile < 0) return ACTIVITY_BLOCK_INVALID;
 
-  // If we have no physical blocks, the block cannot be found
-  if (blockCount == 0) return ACTIVITY_BLOCK_INVALID;
-
-  // The currently-active logical block is activeBlockLogicalIndex, stored at activeBlockPhysicalIndex.
-  uint32_t earliestLogicalBlock = activeBlockLogicalIndex - blockCount;
-  uint32_t earliestPhysicalBlock = activeBlockPhysicalIndex % blockCount;
-
-  // Logical block before the earliest available, or at or after the current active block
-  if (logicalBlockNumber < earliestLogicalBlock || logicalBlockNumber >= activeBlockLogicalIndex) {
-    return ACTIVITY_BLOCK_INVALID;
+  // Scan through the files to find the correct range
+  for (int file = 0; file < CUEBAND_ACTIVITY_FILES; file++) {
+    if (meta[file].blockCount > 0) {
+      uint32_t firstBlockLogicalIndex = meta[file].lastLogicalBlock + 1 - meta[file].blockCount;
+      uint32_t lastBlockLogicalIndex = meta[file].lastLogicalBlock;
+      if (logicalBlockNumber >= firstBlockLogicalIndex && logicalBlockNumber <= lastBlockLogicalIndex) {
+        uint32_t physicalBlockNumber = logicalBlockNumber - firstBlockLogicalIndex;
+        *physicalFile = file;
+        return physicalBlockNumber;
+      }
+    }
   }
 
-  // Logical-to-physical mapping
-  uint32_t offset = logicalBlockNumber - earliestLogicalBlock;
-  uint32_t physicalBlockNumber = (earliestPhysicalBlock + offset) % blockCount;
-
-  return physicalBlockNumber;
+  // Not found
+  return ACTIVITY_BLOCK_INVALID;
 }
 
 // Always fills buffer if specified (0xff not found), returns id of block actually read, otherwise ACTIVITY_BLOCK_INVALID.
-uint32_t ActivityController::ReadPhysicalBlock(uint32_t physicalBlockNumber, uint8_t *buffer) {
+uint32_t ActivityController::ReadPhysicalBlock(int physicalFile, uint32_t physicalBlockNumber, uint8_t *buffer) {
   int ret;
 
   // Must not be asking for the invalid block
@@ -344,7 +349,7 @@ uint32_t ActivityController::ReadPhysicalBlock(uint32_t physicalBlockNumber, uin
   }
 
   // The file must be successfully open for reading
-  if (!OpenFileReading()) {
+  if (!OpenFileReading(physicalFile)) {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
     errRead++;
     errReadLast = 2;
@@ -352,6 +357,14 @@ uint32_t ActivityController::ReadPhysicalBlock(uint32_t physicalBlockNumber, uin
   }
 
   // If out of range of whole blocks present
+  ret = fs.FileSize(&file_p);
+  if (ret < 0) {
+    if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
+    errRead++;
+    errReadLast = 8;
+    return ACTIVITY_BLOCK_INVALID;
+  }
+  uint32_t blockCount = ret / ACTIVITY_BLOCK_SIZE;
   if (physicalBlockNumber >= blockCount) {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
     errRead++;
@@ -414,16 +427,21 @@ uint32_t ActivityController::ReadPhysicalBlock(uint32_t physicalBlockNumber, uin
 
 // Read logical block, can include active block, always fills buffer (0xff if not found), returns true if requested block was read correctly.
 bool ActivityController::ReadLogicalBlock(uint32_t logicalBlockNumber, uint8_t *buffer) {
+  errReadLogicalLast = 0;   // diagnostic
+
   if (buffer == nullptr) {
+    errReadLogicalLast = 1;
     return false;
   }
 
   if (!isInitialized) {
+    errReadLogicalLast = 2;
     return false;
   }
 
   // Catch a read for the invalid block
   if (logicalBlockNumber == ACTIVITY_BLOCK_INVALID) {
+    errReadLogicalLast = 3;
     memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
     return false;
   }
@@ -436,31 +454,39 @@ bool ActivityController::ReadLogicalBlock(uint32_t logicalBlockNumber, uint8_t *
   }
 
   // Find physical block location
-  uint32_t physicalBlockNumber = LogicalBlockToPhysicalBlock(logicalBlockNumber);
-  if (physicalBlockNumber == ACTIVITY_BLOCK_INVALID) {
+  int physicalFile = -1;
+  uint32_t physicalBlockNumber = LogicalBlockToPhysicalBlock(logicalBlockNumber, &physicalFile);
+  if (physicalBlockNumber == ACTIVITY_BLOCK_INVALID || physicalFile < 0 || physicalFile >= CUEBAND_ACTIVITY_FILES) {
+    errReadLogicalLast = 4;
     memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
     return false;
   }
 
   // Read the block
-  uint32_t readBlockId = ReadPhysicalBlock(physicalBlockNumber, buffer);
-  if (readBlockId != logicalBlockNumber) return false;
+  uint32_t readBlockId = ReadPhysicalBlock(physicalFile, physicalBlockNumber, buffer);
+  if (readBlockId != logicalBlockNumber) {
+    errReadLogicalLast = 5;
+    memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
+    return false;
+  }
 
   return true;
 }
 
 
-bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_t *buffer) {
+bool ActivityController::AppendPhysicalBlock(int physicalFile, uint32_t logicalBlockNumber, uint8_t *buffer) {
   int ret;
 
   // Must be initialized, and not writing the invalid block, and have a valid buffer
-  if (!isInitialized || physicalBlockNumber == ACTIVITY_BLOCK_INVALID || buffer == nullptr) {
+  if (!isInitialized || logicalBlockNumber == ACTIVITY_BLOCK_INVALID || buffer == nullptr || physicalFile < 0 || physicalFile >= CUEBAND_ACTIVITY_FILES) {
     errWriteLast = 1;
     return false;
   }
 
-  // If out of range of whole blocks present + 1
-  if (physicalBlockNumber > blockCount) {
+  // Can only append to the file
+  uint32_t physicalBlockNumber = meta[physicalFile].blockCount;
+
+  if (meta[physicalFile].lastLogicalBlock != ACTIVITY_BLOCK_INVALID && logicalBlockNumber != meta[physicalFile].lastLogicalBlock + 1) {
     errWriteLast = 2;
     return false;
   }
@@ -472,13 +498,15 @@ bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_
   FinishedReading();
 
   // Open for writing
-  ret = fs.FileOpen(&file_p, ACTIVITY_DATA_FILENAME, LFS_O_WRONLY|LFS_O_CREAT);
+  char filename[16] = {0};
+  sprintf(filename, ACTIVITY_DATA_FILENAME, physicalFile);
+  ret = fs.FileOpen(&file_p, filename, LFS_O_WRONLY|LFS_O_CREAT|LFS_O_APPEND);
   if (ret != LFS_ERR_OK) {
     errWriteLast = 3;
     return false;
   }
 
-  // Seek to location (if required)
+  // Check (append) location is the end of the file, seek if not
   uint32_t location = fs.FileTell(&file_p);
   if (location != offset) {
     location = fs.FileSeek(&file_p, offset);
@@ -499,26 +527,44 @@ bool ActivityController::WritePhysicalBlock(uint32_t physicalBlockNumber, uint8_
   }
 
   // Update size and block count
-  fileSize = fs.FileSize(&file_p);
+  ret = fs.FileSize(&file_p);
+  if (ret < 0) { ret = location + ACTIVITY_BLOCK_SIZE; }    // should probably be an error...
+  meta[physicalFile].blockCount = ret / ACTIVITY_BLOCK_SIZE;
+  meta[physicalFile].lastLogicalBlock = logicalBlockNumber;
+
   fs.FileClose(&file_p);
-  blockCount = fileSize / ACTIVITY_BLOCK_SIZE;
 
   return true;
 }
 
 const char * ActivityController::DebugText() {
   char *p = debugText;
-#ifdef CUEBAND_WRITE_TEST_FILE
-  p += sprintf(p, "TW:%d et:%d\n", testWrite, errTest);
-#endif
-  p += sprintf(p, "I:%s BC:%lu es:%d\n", isInitialized ? "t" : "f", blockCount, errScan);
-  p += sprintf(p, "Al:%ld Ap:%ld\n", ActiveLogicalBlock(), activeBlockPhysicalIndex);   // debug output as signed to spot invalid=-1
-  p += sprintf(p, "F:%ld\n", EarliestLogicalBlock());   // debug as signed to spot invalid=-1
-  p += sprintf(p, "S:%lu\n", blockStartTime);
-  p += sprintf(p, "N:%lu\n", currentTime);
+
+  p += sprintf(p, "bc:");
+  for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+    p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].blockCount);
+  }
+  p += sprintf(p, "\n");
+
+  p += sprintf(p, "L:");
+  for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+    p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].lastLogicalBlock);
+  }
+  p += sprintf(p, "\n");
+  
+  //p += sprintf(p, "es:%lx\n", errScan);
+  p += sprintf(p, "es:");
+  for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+    p += sprintf(p, "%s%02x", f > 0 ? "/" : "", meta[f].err);
+  }
+  p += sprintf(p, "\n");
+  
+  p += sprintf(p, "Al:%ld Af:%d bc:%ld\n", ActiveLogicalBlock(), activeFile, (activeFile < 0 ? -1 : meta[activeFile].blockCount));   // debug output as signed to spot invalid=-1
+  p += sprintf(p, "F:%ld BC:%ld\n", EarliestLogicalBlock(), BlockCount());   // debug as signed to spot invalid=-1
+  p += sprintf(p, "I:%s S:%lu\n", isInitialized ? "t" : "f", blockStartTime);
   p += sprintf(p, "E:%lu C:%lu\n", countEpochs, epochSumCount);
-  p += sprintf(p, "sum:%lu\n", epochSumSvm);
-  p += sprintf(p, "I:%lu er:%lu/%lu ew:%lu/%lu/%lu\n", epochInterval, errRead, errReadLast, errWrite, errWriteLastAppend, errWriteLastWithin);
+  p += sprintf(p, "I:%lu sum:%lu\n", epochInterval, epochSumSvm);
+  p += sprintf(p, "er:%lu/%lu/%lu ew:%lu/%lu/%lu\n", errRead, errReadLast, errReadLogicalLast, errWrite, errWriteLastInitial, errWriteLast);
   int elapsed = currentTime - epochStartTime;
   int estimatedRate = -1;
   if (elapsed > 0) estimatedRate = epochSumCount / elapsed;
@@ -528,119 +574,46 @@ const char * ActivityController::DebugText() {
 
 // Write block: seek to block location (append additional bytes if location after end, or wrap-around if file maximum size or no more drive space)
 bool ActivityController::WriteActiveBlock() {
-  FinalizeBlock(activeBlockLogicalIndex);
 
-  bool written = false;
-  
-  // If the index is just past the end of the file, and not greater than maximum size...
-  if (activeBlockPhysicalIndex >= blockCount && activeBlockPhysicalIndex < ACTIVITY_MAXIMUM_BLOCKS) {
-    // Try to append past the end of the file
-    errWriteLast = 0;
-    written = WritePhysicalBlock(activeBlockPhysicalIndex, activeBlock);
-    if (!written) errWriteLastAppend = errWriteLast;
+  // Cannot write
+  if (activeFile < 0 || activeBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
+    errWriteLast = 10;  // diagnostic: invalid state
+    return false;
   }
 
-  // If not appended, we'll be writing within the file
-  if (!written) {
-    // Write inside file, wrapping-around if needed
-    if (blockCount > 0) {
-      activeBlockPhysicalIndex %= blockCount;
-    } else {
-      activeBlockPhysicalIndex = 0;
+  FinalizeBlock(activeBlockLogicalIndex);
+
+  // If the index is just past the end of the file, and not greater than maximum size...
+  if (meta[activeFile].blockCount >= CUEBAND_ACTIVITY_MAXIMUM_BLOCKS) {
+    // Wrap to oldest file
+    activeFile = (activeFile + 1) % CUEBAND_ACTIVITY_FILES;
+    // Remove that file (if exists)
+    DeleteFile(activeFile);
+  }
+
+  // Retry as required until all old files are removed (in case storage is full)
+  bool written = false;
+  errWriteLastInitial = 0;
+  for (int f = 0; f < CUEBAND_ACTIVITY_FILES && !written; f++) {
+    // Try to append past the end of the file
+    errWriteLast = 0;
+    written = AppendPhysicalBlock(activeFile, activeBlockLogicalIndex, activeBlock);
+    if (f == 0) { errWriteLastInitial = errWriteLast; }
+    if (written) break;
+
+    // Otherwise, if not written, assume storage could be full, so need to erase next block
+    if (!written) {
+      // Wrap to oldest file
+      activeFile = (activeFile + 1) % CUEBAND_ACTIVITY_FILES;
+      // Remove that file (if exists)
+      DeleteFile(activeFile);
     }
-    written = WritePhysicalBlock(activeBlockPhysicalIndex, activeBlock);
-    if (!written) errWriteLastWithin = errWriteLast;
   }
 
   return written;
 }
 
-
-#ifdef CUEBAND_WRITE_TEST_FILE
-#warning "This build replaces the data with a test file of a specific configuration."
-// Writing dummy data file for testing
-void ActivityController::AppendTestFile() {
-    int ret;
-
-    // State: finished or error
-    if (testWrite < 0) {
-      return;
-    }
-
-    // Initial state
-    if (testWrite == 0) {
-      // Check the current file
-      if (OpenFileReading()) {
-        // If the file is the required size...
-        if (blockCount > 0) {
-          // Check the first and last blocks
-          uint32_t firstBlock = ReadPhysicalBlock(0, nullptr);
-          uint32_t lastBlock = ReadPhysicalBlock(blockCount - 1, nullptr);
-
-          // It appears to match the test file we'd like -- do not rewite
-          if (blockCount == ACTIVITY_MAXIMUM_BLOCKS && firstBlock == CUEBAND_WRITE_TEST_FILE && lastBlock == CUEBAND_WRITE_TEST_FILE + ACTIVITY_MAXIMUM_BLOCKS - 1) {
-            FinishedReading();
-            testWrite = -3;       // not rewriting existing test file of correct specification
-            InitialFileScan();    // Only now scan the file
-            return;
-          } else {
-            errTest = 9000;       // diagnostic: reason the existing file was discarded
-            if (blockCount != ACTIVITY_MAXIMUM_BLOCKS) errTest += 100;
-            if (firstBlock != CUEBAND_WRITE_TEST_FILE) errTest += 10;
-            if (lastBlock != CUEBAND_WRITE_TEST_FILE + ACTIVITY_MAXIMUM_BLOCKS - 1) errTest += 1;
-          }
-        } else errTest = -1;    // diagnostic: existing file was empty
-
-        FinishedReading();
-      } else errTest = -2;  // diagnostic: existing file could not be opened
-
-      // DestroyData();
-      fs.FileDelete(ACTIVITY_DATA_FILENAME);
-
-      // Create file for writing
-      ret = fs.FileOpen(&file_p, ACTIVITY_DATA_FILENAME, LFS_O_WRONLY|LFS_O_CREAT);
-      if (ret != LFS_ERR_OK) {
-        testWrite = -10; // error opening file
-        return;
-      }
-    }
-
-    // Check current file size
-    ret = fs.FileSize(&file_p);
-    if (ret < 0) {
-      testWrite = -11; // error getting size of file
-      fs.FileClose(&file_p);
-      return;
-    }
-
-    // If finished...
-    if (ret >= ACTIVITY_MAXIMUM_BLOCKS * ACTIVITY_BLOCK_SIZE) {
-      testWrite = -2;       // finished test write
-      fs.FileClose(&file_p);
-      InitialFileScan();    // Only now scan the file
-      return;
-    }
-
-    // Write the next block
-    memset(activeBlock + ACTIVITY_HEADER_SIZE, 0xff, ACTIVITY_PAYLOAD_SIZE);  // Payload
-    FinalizeBlock(testWrite + CUEBAND_WRITE_TEST_FILE);
-    ret = fs.FileWrite(&file_p, activeBlock, ACTIVITY_BLOCK_SIZE);
-    if (ret != ACTIVITY_BLOCK_SIZE) {
-      testWrite = -12;       // error writing to file
-      fs.FileClose(&file_p);
-      return;
-    }
-
-    testWrite++;
-}
-#endif
-
-
 bool ActivityController::IsSampling() {
-#ifdef CUEBAND_WRITE_TEST_FILE
-  // HACK: Use this as an opportunity to make progress writing the test file
-  this->AppendTestFile();
-#endif
   return isInitialized;
 }
 
@@ -671,107 +644,102 @@ void ActivityController::SensorValues(int8_t battery, int8_t temperature) { // (
 
 // Scan for most recent logical block and its physical index, returns if data successfully continued
 bool ActivityController::InitialFileScan() {
-  uint32_t lastBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
-  uint32_t lastBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
 
-  bool err = false;
-  if (!OpenFileReading()) {
-    if (!err) errScan = -1;    // diagnostic: error opening for reading or determining file size
-    err = true;
-  } else {
+  // Determine metadata for each file
+  for (int file = 0; file < CUEBAND_ACTIVITY_FILES; file++) {
+    int err = 0;
+    uint32_t fileSize = 0;
+    uint32_t blockCount = 0;
+    uint32_t firstBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
+    uint32_t lastBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
 
-    // Begin scan for most recent logical block and its physical index
-    if (blockCount != 0) {
-      // Read start block
-      uint32_t startBlockPhysicalIndex = 0;
-      uint32_t startBlockLogicalIndex = ReadPhysicalBlock(startBlockPhysicalIndex, nullptr);
-      if (startBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
-        if (!err) errScan = 1000 + startBlockPhysicalIndex;    // diagnostic: error reading start block
-        err = true;
-      } else if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || startBlockLogicalIndex > lastBlockLogicalIndex) {
-        lastBlockLogicalIndex = startBlockLogicalIndex;
-        lastBlockPhysicalIndex = startBlockPhysicalIndex;
+    if (OpenFileReading(file)) {
+      int ret = fs.FileSize(&file_p);
+      if (ret >= 0) {
+        fileSize = ret;
+        if (fileSize > 0) {
+          blockCount = fileSize / ACTIVITY_BLOCK_SIZE;
+          firstBlockLogicalIndex = ReadPhysicalBlock(file, 0, nullptr);
+          lastBlockLogicalIndex = ReadPhysicalBlock(file, blockCount - 1, nullptr);
+        } // else: empty file is valid
+      } else {
+        err |= 0x02;  // diagnostic: file size could not be determined
       }
+      FinishedReading();
+    } else {
+      err |= 0x01;  // diagnostic: file could not be opened
+    }
 
-      // Read end block
-      uint32_t endBlockPhysicalIndex = blockCount - 1;
-      uint32_t endBlockLogicalIndex = ReadPhysicalBlock(endBlockPhysicalIndex, nullptr);
-      if (endBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
-        if (!err) errScan = 2000 + endBlockPhysicalIndex;    // diagnostic: error reading end block
-        err = true;
-      } else if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || endBlockLogicalIndex > lastBlockLogicalIndex) {
-        lastBlockLogicalIndex = endBlockLogicalIndex;
-        lastBlockPhysicalIndex = endBlockPhysicalIndex;
-      }
+    if (fileSize > 0) {
+      uint32_t logicalCount = lastBlockLogicalIndex - firstBlockLogicalIndex + 1;
+      if (firstBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) { err |= 0x04; }    // diagnostic: first block could not be read or is invalid
+      if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) { err |= 0x08; }     // diagnostic: last block could not be read or is invalid
+      if (fileSize != logicalCount * ACTIVITY_BLOCK_SIZE || logicalCount != blockCount) { err |= 0x10; }  // diagnostic: logical block range does not match physical block range
+    }
+    
+    // Store metadata
+    meta[file].blockCount = blockCount;
+    meta[file].lastLogicalBlock = lastBlockLogicalIndex;
+    meta[file].err = err;
+  }
 
-      // Recursively bisect the range to find any discontinuity
-      for (int maxIterations = 24; maxIterations > 0; maxIterations--) {    // safety in the event of a logical error
-        // If there are errors or no interval left, stop
-        if (err || startBlockPhysicalIndex >= endBlockPhysicalIndex) break;
-
-        // Find the mid-point
-        uint32_t midBlockPhysicalIndex = startBlockPhysicalIndex + ((endBlockPhysicalIndex - startBlockPhysicalIndex) / 2);
-        uint32_t midBlockLogicalIndex = ReadPhysicalBlock(midBlockPhysicalIndex, nullptr);
-        if (midBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) {
-          if (!err) errScan = 3000 + midBlockPhysicalIndex;    // diagnostic: error reading end block
-          err = true;
-          break;
-        } else if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID || midBlockLogicalIndex > lastBlockLogicalIndex) {
-          lastBlockLogicalIndex = midBlockLogicalIndex;
-          lastBlockPhysicalIndex = midBlockPhysicalIndex;
-        }
-
-        if (startBlockLogicalIndex + (midBlockPhysicalIndex - startBlockPhysicalIndex) != midBlockLogicalIndex) {
-          // If the discontinuity is in the first half, bisect to the first half
-          if (endBlockPhysicalIndex == midBlockPhysicalIndex) break;  // Don't check the same interval again (mid point rounds down)
-          endBlockPhysicalIndex = midBlockPhysicalIndex;
-          endBlockLogicalIndex = midBlockLogicalIndex;
-        } else if (midBlockLogicalIndex + (endBlockPhysicalIndex - midBlockPhysicalIndex) != endBlockLogicalIndex) {
-          // If the discontinuity is in the second half, bisect to the second half
-          if (startBlockPhysicalIndex == midBlockPhysicalIndex) break;  // Don't check the same interval again (mid point rounds down)
-          startBlockPhysicalIndex = midBlockPhysicalIndex;
-          startBlockLogicalIndex = midBlockLogicalIndex;
-        } else {
-          // Otherwise there is no discontinuity within the interval, stop
-          break;
-        }
+  // Find maximum logical index and associated file
+  uint32_t maxLogicalIndex = ACTIVITY_BLOCK_INVALID;
+  int maxLogicalFile = -1;
+  for (int file = 0; file < CUEBAND_ACTIVITY_FILES; file++) {
+    if (meta[file].err == 0 && meta[file].blockCount > 0 && meta[file].lastLogicalBlock != ACTIVITY_BLOCK_INVALID) {
+      if (maxLogicalIndex == ACTIVITY_BLOCK_INVALID || meta[file].lastLogicalBlock > maxLogicalIndex) {
+        maxLogicalIndex = meta[file].lastLogicalBlock;
+        maxLogicalFile = file;
       }
     }
   }
 
-  FinishedReading();
-
-  // #if (CUEBAND_ACTIVITY_EPOCH_INTERVAL < 60)
-  //   // If using a debug epoch size, and our data is larger than the maximum size, fake an initialization error so the data is wiped
-  //   if (blockCount > ACTIVITY_MAXIMUM_BLOCKS) err = true;
-  // #endif
-
-  // If we located the last logical block (and its physical location), the active block will be the next block index
-  if (!err && lastBlockLogicalIndex != ACTIVITY_BLOCK_INVALID && lastBlockPhysicalIndex != ACTIVITY_BLOCK_INVALID) {
-    activeBlockLogicalIndex = lastBlockLogicalIndex + 1;
-    activeBlockPhysicalIndex = lastBlockPhysicalIndex + 1;
-    isInitialized = true;
-  } else if (!err && blockCount == 0) {
-    // ...otherwise, if the file is empty, we're good to go from the start condition (these indexes are set to zero later)
-    activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
-    activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
-    isInitialized = true;
-    if (errScan == 0) errScan = -123;    // diagnostic: no other issue reported, but the data file seems to be empty
-  } else {
-    // ...otherwise, we have a problem -- start a new data file
-    if (errScan == 0) { // diagnostic: the data had to be destroyed
-      errScan = 90000;
-      if (lastBlockPhysicalIndex == ACTIVITY_BLOCK_INVALID) errScan += 1000;
-      if (lastBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) errScan += 100;
-      if (blockCount == 0) errScan += 10;
-      if (err) errScan += 1;
+  // If we have any blocks, check all files fit the sequence
+  if (maxLogicalFile != -1 && maxLogicalIndex != ACTIVITY_BLOCK_INVALID) {
+    // Starting at the current file and working backwards...
+    uint32_t lastBlockLogicalIndex = maxLogicalIndex;
+    for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+      int file = (maxLogicalFile + CUEBAND_ACTIVITY_FILES - f) % CUEBAND_ACTIVITY_FILES;
+      if (meta[file].lastLogicalBlock != lastBlockLogicalIndex) {
+        meta[file].err |= 0x20; // diagnostic: file does not fit sequence
+      }
+      lastBlockLogicalIndex -= meta[file].blockCount;
     }
+  }
+
+  // Check if any files have an error
+  bool anyErrors = false;
+  errScan = 0;
+  for (int file = 0; file < CUEBAND_ACTIVITY_FILES; file++) {
+    errScan <<= 8;  // diagnostic value
+    if (meta[file].err != 0) {
+      anyErrors = true;
+      errScan |= meta[file].err;
+    }
+  }
+
+  // Any errors: remove all data
+  if (anyErrors) {
     DestroyData();
+  } else {
+
+    // If we have data, continue with next logical block for the current file
+    if (maxLogicalFile != -1 && maxLogicalIndex != ACTIVITY_BLOCK_INVALID) {
+      activeBlockLogicalIndex = maxLogicalIndex + 1;
+      activeFile = maxLogicalFile;
+    } else {
+      // If no data, start from scratch
+      activeBlockLogicalIndex = 0;
+      activeFile = 0;
+    }
+
+    isInitialized = true;
+
+    StartNewBlock();    
   }
 
-  StartNewBlock();
-
-  return !err;
+  return !anyErrors;
 }
 
 
@@ -781,15 +749,10 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
   this->accelerometerInfo = accelerometerInfo;
 
   activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
-  activeBlockPhysicalIndex = ACTIVITY_BLOCK_INVALID;
+  activeFile = -1;
   isInitialized = false;
 
-#ifdef CUEBAND_WRITE_TEST_FILE
-  // If writing a test file (incrementally, as it may be large), don't perform the initial scan until after that is done
-  testWrite = 0;
-#else
   InitialFileScan();
-#endif
 }
 
 #endif
