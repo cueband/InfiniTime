@@ -217,6 +217,13 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             tx_conn_handle = conn_handle;
             readPending = true;
             // StartRead() is called in idle
+
+        } else if (attr_handle == statusHandle) {
+            const char *confirmation = "Erase!";
+            if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
+                activityController.DestroyData();
+            }
+
         }
 
     }

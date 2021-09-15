@@ -200,6 +200,7 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Name                          | Activity Status Characteristic                   |
 | UUID                          | `0e1d0001-9d33-4e5e-aead-e062834bd8bb`           |
 | Read `status`                 | Query current activity log status.               |
+| Write `uint8_t[6]`            | Resets the activity log when sent "Erase!"       |
 
 Where `status` is:
 
@@ -399,6 +400,12 @@ A response may be prefixed with:
   B
   ```
   > `B:<battery_percentage>%`
+
+* Erase
+  ```
+  E
+  ```
+  > `Erase all`
 
 * Stream sensor data
   ```

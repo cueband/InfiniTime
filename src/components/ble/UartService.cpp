@@ -23,7 +23,7 @@
 
 uint8_t Pinetime::Controllers::UartService::streamBuffer[Pinetime::Controllers::UartService::sendCapacity];
 
-// Simple function to write capitalised hex to a buffer from binary
+// (Compatibility for AxLE) Simple function to write capitalised hex to a buffer from binary
 // adds no spaces, adds a terminating null, returns chars written
 // Endianess specified, for little endian, read starts at last ptr pos backwards
 uint16_t WriteBinaryToHex(char* dest, void* source, uint16_t len, uint8_t littleEndian)
@@ -50,7 +50,7 @@ uint16_t WriteBinaryToHex(char* dest, void* source, uint16_t len, uint8_t little
 	return ret;
 }
 
-// Simple function to read an ascii string of hex chars from a buffer 
+// (Compatibility for AxLE) Simple function to read an ascii string of hex chars from a buffer 
 // For each hex pair, a byte is written to the out buffer
 // Returns number read, earlys out on none hex char (caps not important)
 uint16_t ReadHexToBinary(uint8_t* dest, const char* source, uint16_t maxLen)
@@ -332,6 +332,24 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
             } else if (data[0] == 'B') {  // Battery
                 sprintf(resp, "B:%d%%\r\n", batteryController.PercentRemaining());
+
+            } else if (data[0] == 'E') {  // Erase (E<passcode>)
+#if defined(CUEBAND_ACTIVITY_ENABLED) || defined(CUEBAND_CUE_ENABLED)
+                if (data[1] == '!' && data[2] == '\0') {
+                    sprintf(resp, "Erase all\r\n");
+#ifdef CUEBAND_ACTIVITY_ENABLED
+                    activityController.DestroyData();
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+                    // TODO: Clear cue data
+#endif
+                    // TODO: Reset watch settings?
+                } else {
+                    sprintf(resp, "?!\r\n");
+                }
+#else
+                sprintf(resp, "?Disabled\r\n");
+#endif
 
             } else if (data[0] == 'I') {  // Stream sensor data
 #ifdef CUEBAND_STREAM_ENABLED
