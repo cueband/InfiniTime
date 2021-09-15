@@ -175,7 +175,7 @@ namespace Pinetime {
       TickType_t lastBatteryNotificationTime = 0;
 
 #if defined(CUEBAND_CUE_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED) 
-      int delayStart = 10;
+      int delayStart = CUEBAND_DELAY_START;
 #endif
 
 #ifdef CUEBAND_CUE_ENABLED
