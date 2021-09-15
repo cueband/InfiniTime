@@ -301,7 +301,6 @@ uint32_t ActivityController::BlockCount() {
 uint32_t ActivityController::EarliestLogicalBlock() {
   if (activeFile < 0 || activeBlockLogicalIndex == ACTIVITY_BLOCK_INVALID) return ACTIVITY_BLOCK_INVALID;
   uint32_t countBlocks = BlockCount();
-  if (countBlocks == 0) return ACTIVITY_BLOCK_INVALID;
   return activeBlockLogicalIndex - countBlocks;
 }
 
