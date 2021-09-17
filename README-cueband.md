@@ -200,7 +200,9 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Name                          | Activity Status Characteristic                   |
 | UUID                          | `0e1d0001-9d33-4e5e-aead-e062834bd8bb`           |
 | Read `status`                 | Query current activity log status.               |
-| Write `uint8_t[6]`            | Resets the activity log when sent "Erase!"       |
+| Write `uint8_t[6]`            | `"Erase!"`: resets the activity log.             |
+|                               | `"Validate!"`: remotely validates the firmware (risky)  |
+|                               | `"Reset!"`: remotely resets the device (risky?)  |
 
 Where `status` is:
 
@@ -211,6 +213,7 @@ struct {
     uint16_t blockSize = 256;           // @8  Size (bytes) of each block
     uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
     uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
+    uint8_t  flags;                     // @14 Status flags (b0 = firmware validated)
 } // @14
 ```
 
@@ -479,6 +482,26 @@ A response may be prefixed with:
 * `R<id>` - Read block id (Base-16 hex encoded) -- can be interpreted as `activity_log` (see above: *Device Activity Log Block Format*).
 
 * `R+<id>` - Read block id (Base-64 encoded) -- can be interpreted as `activity_log` (see above: *Device Activity Log Block Format*).
+
+* Remotely reset device (risky?)
+  ```
+  X!
+  ```
+  > (resets device)
+
+* Query firmware validation
+  ```
+  XV?
+  ```
+  > `XV:<firmware_validated>`
+  ...where `firmware_validated` is `0` if not validated, or `1` if validated.
+
+* Remotely validate firmware (risky)
+  ```
+  XV
+  ```
+  > `XV:1`
+
 
 <!--
 

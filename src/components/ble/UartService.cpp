@@ -235,8 +235,10 @@ void Pinetime::Controllers::UartService::Idle() {
 }
 
 void Pinetime::Controllers::UartService::SendNextPacket() {
+#ifdef CUEBAND_SLOW_UNCONDITIONAL_TX
 // HACK: TxNotification not working?
 packetTransmitting = false;
+#endif
     if (IsSending() && !packetTransmitting) {
         if (blockOffset >= sendCapacity) blockOffset = 0;
         size_t len = sendCapacity - blockOffset;
@@ -540,6 +542,37 @@ if (!read) {
                 sprintf(resp, "?Disabled\r\n");
 #endif
 
+            } else if (data[0] == 'X') { // Remote admin
+
+                if (data[1] == 'V') {   // Remote validate (risky)
+                    if (data[2] == '?') {
+                        if (firmwareValidator.IsValidated()) {
+                            sprintf(resp, "XV:1\r\n");
+                        } else {
+                            sprintf(resp, "XV:0\r\n");
+                        }
+                    } else if (data[2] == '!') {
+#ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
+                        firmwareValidator.Validate();
+                        sprintf(resp, "XV:1\r\n");
+#else
+                        sprintf(resp, "?Disabled\r\n");
+#endif
+                    } else {
+                        sprintf(resp, "?!\r\n");
+                    }
+                }
+                else if (data[1] == '!') {  // Remote reset (risky?)
+#ifdef CUEBAND_ALLOW_REMOTE_RESET
+                    sprintf(resp, "X!:Reset\r\n"); // never sent
+                    firmwareValidator.Reset();
+#else
+                    sprintf(resp, "?Disabled\r\n");
+#endif
+                }
+                else {
+                    sprintf(resp, "?!\r\n");
+                }
 
             } else { // Unhandled
                 sprintf(resp, "?\r\n");

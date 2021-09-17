@@ -19,6 +19,7 @@
 #include "components/ble/BleController.h"
 #include "components/settings/Settings.h"
 #include "components/activity/ActivityController.h"
+#include "../firmwarevalidator/FirmwareValidator.h"
 
 
 // 0e1d0000-9d33-4e5e-aead-e062834bd8bb
@@ -68,6 +69,8 @@ namespace Pinetime {
       Pinetime::Controllers::Settings& settingsController;
       Pinetime::Controllers::ActivityController& activityController;
 
+      Pinetime::Controllers::FirmwareValidator firmwareValidator;
+
       uint16_t statusHandle;
       uint16_t transmitHandle;
 
@@ -79,7 +82,7 @@ namespace Pinetime {
       uint8_t *blockBuffer = nullptr;
       size_t blockLength = 0;
       size_t blockOffset = 0;
-      bool packetTransmitting = false;
+      volatile bool packetTransmitting = false;
       uint16_t tx_conn_handle;
 
     };

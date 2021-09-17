@@ -348,7 +348,7 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
       // Transmission
       // event->notify_tx.attr_handle; // attribute handle
       // event->notify_tx.conn_handle; // connection handle
-      // event->notify_tx.indication;  // 0=notification, 1=indication
+      // event->notify_tx.indication;  // 0=notification(unacknowledged), 1=indication(acknowledged)
       // event->notify_tx.status;      // 0=successful, BLE_HS_EDONE=indication ACK, BLE_HS_ETIMEOUT=indication ACK not received, other=error
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       uartService.TxNotification(event);

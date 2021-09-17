@@ -107,6 +107,9 @@ namespace Pinetime {
       void GetBufferData(int16_t **accelValues, unsigned int *lastCount, unsigned int *totalSamples);
 #endif
 
+      uint32_t temp_transmit_count_all = 0;   // TODO: Remove this
+      uint32_t temp_transmit_count = 0;   // TODO: Remove this
+
     private:
       Pinetime::Controllers::Settings& settingsController;
       Pinetime::Controllers::FS& fs;

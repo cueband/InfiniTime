@@ -30,6 +30,7 @@ namespace Pinetime {
 #include "components/datetime/DateTimeController.h"
 #include "components/motor/MotorController.h"
 #include "components/motion/MotionController.h"
+#include "../firmwarevalidator/FirmwareValidator.h"
 #ifdef CUEBAND_ACTIVITY_ENABLED
 #include "components/activity/ActivityController.h"
 #endif
@@ -110,6 +111,8 @@ namespace Pinetime {
       Pinetime::Controllers::CueController& cueController;
 #endif
 
+      Pinetime::Controllers::FirmwareValidator firmwareValidator;
+
       uint16_t transmitHandle;
 
       void SendNextPacket();
@@ -122,7 +125,7 @@ namespace Pinetime {
       static const size_t sendCapacity = 512 + 32;
       size_t blockLength = 0;
       size_t blockOffset = 0;
-      bool packetTransmitting = false;
+      volatile bool packetTransmitting = false;
       uint16_t tx_conn_handle;
       unsigned int transmitErrorCount = 0;
 

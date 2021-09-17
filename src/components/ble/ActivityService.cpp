@@ -85,13 +85,15 @@ void Pinetime::Controllers::ActivityService::Idle() {
 }
 
 void Pinetime::Controllers::ActivityService::SendNextPacket() {
+#ifdef CUEBAND_SLOW_UNCONDITIONAL_TX
 // HACK: TxNotification not working?
 packetTransmitting = false;
+#endif
     if (IsSending() && !packetTransmitting) {
         size_t len = blockLength - blockOffset;
         if (len > MAX_PACKET) len = MAX_PACKET;
         auto* om = ble_hs_mbuf_from_flat(blockBuffer + blockOffset, len);
-        if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) {
+        if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) { // BLE_HS_ENOMEM / os_msys_num_free()
             packetTransmitting = true;
             blockOffset += len;
         }
@@ -104,7 +106,9 @@ void Pinetime::Controllers::ActivityService::TxNotification(ble_gap_event* event
   // event->notify_tx.conn_handle; // connection handle
   // event->notify_tx.indication;  // 0=notification, 1=indication
   // event->notify_tx.status;      // 0=successful, BLE_HS_EDONE=indication ACK, BLE_HS_ETIMEOUT=indication ACK not received, other=error
+activityController.temp_transmit_count_all++;   // TODO: remove
   if (event->notify_tx.attr_handle == transmitHandle) {
+activityController.temp_transmit_count++;   // TODO: remove
       packetTransmitting = false;
       //tx_conn_handle = event->notify_tx.conn_handle;
       //SendNextPacket();
@@ -163,7 +167,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) { // Reading
 
         if (attr_handle == statusHandle) {
-            uint8_t status[14];
+            uint8_t status[15];
 
             // @0 Earliest available logical block ID
             uint32_t earliestBlockId = activityController.EarliestLogicalBlock();
@@ -194,6 +198,10 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             status[12] = (uint8_t)(maxSamplesPerBlock >> 0);
             status[13] = (uint8_t)(maxSamplesPerBlock >> 8);
 
+            // @14 Flags
+            status[14] = 0;
+            status[14] |= (uint8_t)(firmwareValidator.IsValidated() ? 0x01 : 0x00);  // Firmware validated flag
+
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
@@ -222,6 +230,20 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             const char *confirmation = "Erase!";
             if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
                 activityController.DestroyData();
+            }
+
+        } else if (attr_handle == statusHandle) {
+            const char *confirmation = "Validate!";
+            if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
+#ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
+                firmwareValidator.Validate();
+#endif
+            }
+
+        } else if (attr_handle == statusHandle) {
+            const char *confirmation = "Reset!";
+            if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
+                firmwareValidator.Reset();
             }
 
         }

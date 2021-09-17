@@ -51,6 +51,10 @@
 #define CUEBAND_AXES 3          // Must be 3
 
 
+#define CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE  // risky
+#define CUEBAND_ALLOW_REMOTE_RESET
+
+
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
 
@@ -172,6 +176,9 @@
 
 #define ACTIVITY_BLOCK_SIZE 256
 
+
+// TODO: 
+#define CUEBAND_SLOW_UNCONDITIONAL_TX
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS
 
 
@@ -232,6 +239,11 @@
 #endif
 #if defined(CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK)
     #warning "CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK should not normally be defined (usually all available space is used)"
+#endif
+#if defined(CUEBAND_SLOW_UNCONDITIONAL_TX)
+    #warning "CUEBAND_SLOW_UNCONDITIONAL_TX is defined -- transmission will be slow"
+#else
+    #warning "CUEBAND_SLOW_UNCONDITIONAL_TX is NOT defined -- untested"
 #endif
 #endif
 

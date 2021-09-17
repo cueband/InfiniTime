@@ -567,7 +567,7 @@ const char * ActivityController::DebugText() {
   int elapsed = currentTime - epochStartTime;
   int estimatedRate = -1;
   if (elapsed > 0) estimatedRate = epochSumCount / elapsed;
-  p += sprintf(p, "e:%d r:%d\n", elapsed, estimatedRate);
+  p += sprintf(p, "e:%d r:%d %ld/%ld", elapsed, estimatedRate, temp_transmit_count, temp_transmit_count_all);
   return debugText;
 }
 
