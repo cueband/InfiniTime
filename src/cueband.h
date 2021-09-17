@@ -11,7 +11,7 @@
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 1       // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 2       // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002
 
@@ -243,6 +243,9 @@
 #endif
 #if !defined(CUEBAND_UNCONDITIONAL_TX)
     #warning "CUEBAND_UNCONDITIONAL_TX is NOT defined -- untested"
+#endif
+#if (CUEBAND_TX_COUNT > 1)
+    #warning "CUEBAND_TX_COUNT > 1 is untested"
 #endif
 #endif
 
