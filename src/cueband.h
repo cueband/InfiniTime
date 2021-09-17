@@ -9,9 +9,10 @@
 
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
 
+// This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 0       // Revision number (appears in user-visible version string, but not in block format)
-#define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) ""  // User-visible revision string
+#define CUEBAND_REVISION_NUMBER 1       // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002
 
 #define CUEBAND_DEVICE_NAME "InfiniTime-######"  // "InfiniTime"
@@ -152,7 +153,7 @@
 
 #define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
 
-#define CUEBAND_DELAY_START 250         // Delay cue.band service intialization (main loop iterations) -- 250 from start = approx. 15-25 seconds.
+#define CUEBAND_DELAY_START 50          // Delay cue.band service intialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
 #if 0   // Fast debugging
     #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 2   // 2-second epoch
