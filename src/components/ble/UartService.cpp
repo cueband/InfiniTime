@@ -235,28 +235,37 @@ void Pinetime::Controllers::UartService::Idle() {
 }
 
 void Pinetime::Controllers::UartService::SendNextPacket() {
-#ifdef CUEBAND_SLOW_UNCONDITIONAL_TX
-// HACK: TxNotification not working?
+#ifdef CUEBAND_UNCONDITIONAL_TX
+// HACK: TxNotification called when queued rather than sent
 packetTransmitting = false;
 #endif
     if (IsSending() && !packetTransmitting) {
-        if (blockOffset >= sendCapacity) blockOffset = 0;
-        size_t len = sendCapacity - blockOffset;
-        if (len > blockLength) len = blockLength;
-        if (len > MAX_PACKET) len = MAX_PACKET;
-        auto* om = ble_hs_mbuf_from_flat(sendBuffer + blockOffset, len);
-        if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) {
-            packetTransmitting = true;
-            blockOffset += len;
-            blockLength -= len;
-            transmitErrorCount = 0;
-        } else {
-            if (transmitErrorCount++ > 10) {
-                // TODO: Stop streaming (if streaming)?
-                streamFlag = false;
-                blockLength = 0;
+
+        for (int i = 0; i < CUEBAND_TX_COUNT; i++) {
+            if (sendBuffer == nullptr || blockLength <= 0) break;
+
+            if (blockOffset >= sendCapacity) blockOffset = 0;  // wrap around
+            size_t len = sendCapacity - blockOffset;
+            if (len > blockLength) len = blockLength;
+            if (len > MAX_PACKET) len = MAX_PACKET;
+            auto* om = ble_hs_mbuf_from_flat(sendBuffer + blockOffset, len);
+            packetTransmitting = true;  // BLE_GAP_EVENT_NOTIFY_TX event is called before transmission
+            if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) {
+                blockOffset += len;
+                blockLength -= len;
+                transmitErrorCount = 0;
+            } else {
+                packetTransmitting = false;
+                if (transmitErrorCount++ > 10) {
+                    // TODO: Stop streaming (if streaming)?
+                    streamFlag = false;
+                    blockLength = 0;
+                }
+                break;
             }
+
         }
+
     }
 }
 

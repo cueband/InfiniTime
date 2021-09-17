@@ -85,17 +85,23 @@ void Pinetime::Controllers::ActivityService::Idle() {
 }
 
 void Pinetime::Controllers::ActivityService::SendNextPacket() {
-#ifdef CUEBAND_SLOW_UNCONDITIONAL_TX
-// HACK: TxNotification not working?
+#ifdef CUEBAND_UNCONDITIONAL_TX
+// HACK: TxNotification called when queued rather than sent
 packetTransmitting = false;
 #endif
     if (IsSending() && !packetTransmitting) {
-        size_t len = blockLength - blockOffset;
-        if (len > MAX_PACKET) len = MAX_PACKET;
-        auto* om = ble_hs_mbuf_from_flat(blockBuffer + blockOffset, len);
-        if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) { // BLE_HS_ENOMEM / os_msys_num_free()
-            packetTransmitting = true;
-            blockOffset += len;
+        for (int i = 0; i < CUEBAND_TX_COUNT; i++) {
+            if (blockBuffer == nullptr || blockLength <= 0 || blockOffset >= blockLength) break;
+            size_t len = blockLength - blockOffset;
+            if (len > MAX_PACKET) len = MAX_PACKET;
+            auto* om = ble_hs_mbuf_from_flat(blockBuffer + blockOffset, len);
+            packetTransmitting = true;  // BLE_GAP_EVENT_NOTIFY_TX event is called before transmission
+            if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) { // BLE_HS_ENOMEM / os_msys_num_free()
+                blockOffset += len;
+            } else {
+                packetTransmitting = false;
+                break;
+            }
         }
     }
 }

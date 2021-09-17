@@ -62,7 +62,8 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "ble_uuid.h": "c"
     },
     "cmake.configureOnOpen": true
 }

@@ -178,7 +178,8 @@
 
 
 // TODO: 
-#define CUEBAND_SLOW_UNCONDITIONAL_TX
+#define CUEBAND_UNCONDITIONAL_TX
+#define CUEBAND_TX_COUNT 26                     // TODO: Experimental
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS
 
 
@@ -240,10 +241,8 @@
 #if defined(CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK)
     #warning "CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK should not normally be defined (usually all available space is used)"
 #endif
-#if defined(CUEBAND_SLOW_UNCONDITIONAL_TX)
-    #warning "CUEBAND_SLOW_UNCONDITIONAL_TX is defined -- transmission will be slow"
-#else
-    #warning "CUEBAND_SLOW_UNCONDITIONAL_TX is NOT defined -- untested"
+#if !defined(CUEBAND_UNCONDITIONAL_TX)
+    #warning "CUEBAND_UNCONDITIONAL_TX is NOT defined -- untested"
 #endif
 #endif
 
