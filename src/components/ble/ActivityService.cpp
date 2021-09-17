@@ -28,20 +28,20 @@ Pinetime::Controllers::ActivityService::ActivityService(Pinetime::System::System
         .uuid = (ble_uuid_t*) (&activityStatusCharUuid), 
         .access_cb = ActivityCallback, 
         .arg = this, 
-        .flags = BLE_GATT_CHR_F_READ,
+        .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
         .val_handle = &statusHandle
     };
     characteristicDefinition[1] = {
         .uuid = (ble_uuid_t*) (&activityBlockIdCharUuid), 
         .access_cb = ActivityCallback, 
         .arg = this, 
-        .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_READ
+        .flags = BLE_GATT_CHR_F_WRITE, // | BLE_GATT_CHR_F_READ
     };
     characteristicDefinition[2] = {
         .uuid = (ble_uuid_t*) (&activityBlockDataCharUuid),
         .access_cb = ActivityCallback,
         .arg = this,
-        .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
+        .flags = BLE_GATT_CHR_F_NOTIFY, // | BLE_GATT_CHR_F_READ
         .val_handle = &transmitHandle
     };
     characteristicDefinition[3] = {0};
