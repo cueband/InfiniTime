@@ -167,6 +167,9 @@ void NimbleController::Init() {
     while (src > addr_str && dst > deviceName && *(dst-1) == '#') {
       *(--dst) = *(--src);
     }
+
+    // Reset the device name
+    rc = ble_svc_gap_device_name_set(deviceName);
   }
 #endif
 #ifdef CUEBAND_SERIAL_ADDRESS
