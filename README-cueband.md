@@ -368,47 +368,26 @@ A response may be prefixed with:
 
 #### UART Commands
 
-* Device ID query
-  ```
-  #
-  ```
+* `#` - Device ID query
   > `AP:<application_type>,<cueband_version>`
   > `#:<12-hex-digit Bluetooth address>`
 
-* Outputs (motor) off
-  ```
-  0
-  ```
+* `0` - Outputs (motor) off
   > OFF
 
-* Vibrate motor (50 ms)
-  ```
-  1
-  ``` 
+* `1` - Vibrate motor (50 ms)
   > `MOT`
 
-* Accelerometer single sample
-  ```
-  A
-  ```
+* `A` - Accelerometer single sample
   > `A:<Ax>,<Ay>,<Az>,<reg=00>,<chip=BMA421|BMA425|Unknown>,<ee_level=0>`
 
-* Battery
-  ```
-  B
-  ```
+* `B` - Battery
   > `B:<battery_percentage>%`
 
-* Erase
-  ```
-  E
-  ```
+* `E` - Erase
   > `Erase all`
 
-* Stream sensor data
-  ```
-  I <rate=50> <range=8>
-  ```
+* `I <rate=50> <range=8>` - Stream sensor data
   > `OP:<mode=00>, <rate>, <range>`
   >
   > `<stream_packet>`
@@ -450,7 +429,6 @@ A response may be prefixed with:
 
   Streaming ends when any other packet is sent to the device.
 
-
 * `J <interval=0> <maximum_runtime=4294967295> <motor_pulse_width=50>` - Set temporary queueing interval (seconds)
   > `J:<interval>,<maximum_runtime>,<motor_pulse_width>`
 
@@ -463,7 +441,7 @@ A response may be prefixed with:
 * `T` - Query time
   > `T:<seconds_since_epoch_year_2000>`
 
-* `T$<YY>/<MM>/<DD>,<hh>:<mm>:<ss>` - Set time
+* `T$<YY>/<MM>/<DD>,<hh>:<mm>:<ss>` - Set time. Also accepts variations such as: `T$<YYYY>-<MM>-<DD> <hh>:<mm>` or `T$<YY>-<MM>-<DD> <hh>:<mm>:<ss>`.
   > `T:<seconds_since_epoch_year_2000>`
 
 * `Q` - Query status (mostly AxLE-compatible)
@@ -478,23 +456,14 @@ A response may be prefixed with:
 
 * `R+<id>` - Read block id (Base-64 encoded) -- can be interpreted as `activity_log` (see above: *Device Activity Log Block Format*).
 
-* Remotely reset device (risky?)
-  ```
-  X!
-  ```
+* `X!` - Remotely reset device (risky?)
   > (resets device)
 
-* Query firmware validation
-  ```
-  XV?
-  ```
+* `XV?` - Query firmware validation
   > `XV:<firmware_validated>`
   ...where `firmware_validated` is `0` if not validated, or `1` if validated.
 
-* Remotely validate firmware (risky)
-  ```
-  XV
-  ```
+* `XV` - Remotely validate firmware (risky)
   > `XV:1`
 
 
@@ -502,23 +471,23 @@ A response may be prefixed with:
 
 Control point commands used in TC project:
 
-KQ -- Prompt query
-  KQ:<version>,<window-size>,<minimum-interval>,<image>,<max-controls>
+* `KQ` - Prompt query
+  > `KQ:<version>,<window-size>,<minimum-interval>,<image>,<max-controls>`
 
-KC VVVV -- Prompt clear (if not on specified version `VVVV`, or version=0 for always clear)
-  KC:<version>
+* `KC VVVV` - Prompt clear (if not on specified version `VVVV`, or version=0 for always clear)
+  > `KC:<version>`
 
-KA II DD TTTT VVVV -- Prompt add control point (I=index, D=day mask, T=time of day minutes, V=threshold value)
-  KA:? -- format
-  KA:+ -- added
-  KA:! -- failed to add
+* `KA II DD TTTT VVVV` - Prompt add control point (`I`=index, `D`=day mask, `T`=time of day minutes, `V`=threshold value)
+  > `KA:?` - format
+  > `KA:+` - added
+  > `KA:!` - failed to add
 
-KR II -- Prompt read (I=index)
-  KR:<index>,<day-mask>,<time-minutes>,<threshold-value>
-  KR:! -- failed
+* `KR II` - Prompt read (`I`=index)
+  > `KR:<index>,<day-mask>,<time-minutes>,<threshold-value>`
+  > `KR:!` - failed
 
-KS VVVV WW II GG -- Prompt save control points (V=version, W=window size, I=minimum interval, G=image)
-  KS:<version>,<window-size>,<minimum-interval>,<image>
+* `KS VVVV WW II GG` - Prompt save control points (V=version, W=window size, I=minimum interval, G=image)
+  > `KS:<version>,<window-size>,<minimum-interval>,<image>`
 
 -->
 
