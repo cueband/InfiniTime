@@ -14,7 +14,9 @@
 #include "components/settings/Settings.h"
 #include "displayapp/screens/Screen.h"
 #include "components/timer/TimerController.h"
+#include "components/alarm/AlarmController.h"
 #include "touchhandler/TouchHandler.h"
+
 #include "Messages.h"
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
@@ -61,6 +63,7 @@ namespace Pinetime {
                  Pinetime::Controllers::MotorController& motorController,
                  Pinetime::Controllers::MotionController& motionController,
                  Pinetime::Controllers::TimerController& timerController,
+                 Pinetime::Controllers::AlarmController& alarmController,
                  Pinetime::Controllers::TouchHandler& touchHandler
 #if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
                  , Pinetime::Controllers::ActivityController& activityController
@@ -90,6 +93,7 @@ namespace Pinetime {
       Pinetime::Controllers::MotorController& motorController;
       Pinetime::Controllers::MotionController& motionController;
       Pinetime::Controllers::TimerController& timerController;
+      Pinetime::Controllers::AlarmController& alarmController;
       Pinetime::Controllers::TouchHandler& touchHandler;
 #if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
       Pinetime::Controllers::ActivityController& activityController;

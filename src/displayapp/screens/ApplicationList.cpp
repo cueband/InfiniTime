@@ -45,12 +45,12 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
 #ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
     {Symbols::stopWatch, Apps::StopWatch},
     {Symbols::hourGlass, Apps::Timer},
+    {Symbols::clock, Apps::Alarm},
 #ifdef CUEBAND_APP_ENABLED
     {CUEBAND_APP_SYMBOL, Apps::CueBand},
 #else
     {"", Apps::None},
 #endif
-    {"", Apps::None},
     {"", Apps::None},
     {"", Apps::None},
 #else
@@ -85,14 +85,14 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
 #else
     {Symbols::paintbrush, Apps::Paint},
     {Symbols::paddle, Apps::Paddle},
+#ifdef CUEBAND_APP_ENABLED
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},    //{"", Apps::None},
+#else
     {"2", Apps::Twos},
+#endif
     {Symbols::chartLine, Apps::Motion},
     {Symbols::drum, Apps::Metronome},
-#ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},
-#else
-    {"", Apps::None},
-#endif
+    {Symbols::clock, Apps::Alarm},
 #endif
   }};
 

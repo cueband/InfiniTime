@@ -8,6 +8,18 @@
 #define CUEBAND_STRINGIZE_STRINGIZE(S) CUEBAND_STRINGIZE(S)
 
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
+/*
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
+  // ...
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic pop
+#endif
+*/
+
+
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)

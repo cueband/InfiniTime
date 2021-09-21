@@ -80,14 +80,7 @@ Metronome::~Metronome() {
 
 void Metronome::Refresh() {
   if (metronomeStarted) {
-#ifdef CUEBAND_FIX_WARNINGS
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#endif
-    if (xTaskGetTickCount() - startTime > 60 * configTICK_RATE_HZ / bpm) {
-#ifdef CUEBAND_FIX_WARNINGS
-#pragma GCC diagnostic pop
-#endif
+    if (xTaskGetTickCount() - startTime > 60u * configTICK_RATE_HZ / static_cast<uint16_t>(bpm)) {
       startTime += 60 * configTICK_RATE_HZ / bpm;
       counter--;
       if (counter == 0) {

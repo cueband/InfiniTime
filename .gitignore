@@ -40,11 +40,12 @@ Testing/Temporary/
 # Windows
 **/thumbs.db
 
+.vscode/.cortex-debug.registers.state.json
+.vscode/.cortex-debug.peripherals.state.json
+
 # 
 .vscode/tasks.json
 post_build.sh
 
 # cue.band
 compile_commands.json
-.vscode/.cortex-debug.peripherals.state.json
-.vscode/.cortex-debug.registers.state.json
