@@ -85,10 +85,9 @@ void Pinetime::Controllers::ActivityService::Idle() {
 }
 
 void Pinetime::Controllers::ActivityService::SendNextPacket() {
-#ifdef CUEBAND_UNCONDITIONAL_TX
-// HACK: TxNotification called when queued rather than sent
-packetTransmitting = false;
-#endif
+    // TODO: Remove this flag as not used properly (TxNotification called when queued rather than sent)
+    packetTransmitting = false;
+
     if (IsSending() && !packetTransmitting) {
         for (int i = 0; i < CUEBAND_TX_COUNT; i++) {
             if (blockBuffer == nullptr || blockLength <= 0 || blockOffset >= blockLength) break;

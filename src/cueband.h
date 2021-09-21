@@ -191,12 +191,8 @@
 
 #define ACTIVITY_BLOCK_SIZE 256
 
-
-// TODO: 
-#define CUEBAND_UNCONDITIONAL_TX
-#define CUEBAND_TX_COUNT 26                     // TODO: Experimental
+#define CUEBAND_TX_COUNT 26    // Queue multiple notifications at once (hopefully to send more than one per connection interval)
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS
-
 
 // Config compatibility checks
 #if defined(CUEBAND_FIFO_ENABLED) && !defined(CUEBAND_BUFFER_ENABLED)
@@ -255,12 +251,6 @@
 #endif
 #if defined(CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK)
     #warning "CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK should not normally be defined (usually all available space is used)"
-#endif
-#if !defined(CUEBAND_UNCONDITIONAL_TX)
-    #warning "CUEBAND_UNCONDITIONAL_TX is NOT defined -- untested"
-#endif
-#if (CUEBAND_TX_COUNT > 1)
-    #warning "CUEBAND_TX_COUNT > 1 is untested"
 #endif
 #endif
 

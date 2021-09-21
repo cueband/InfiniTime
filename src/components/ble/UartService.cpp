@@ -261,10 +261,9 @@ void Pinetime::Controllers::UartService::Idle() {
 }
 
 void Pinetime::Controllers::UartService::SendNextPacket() {
-#ifdef CUEBAND_UNCONDITIONAL_TX
-// HACK: TxNotification called when queued rather than sent
-packetTransmitting = false;
-#endif
+    // TODO: Remove this flag as not used properly (TxNotification called when queued rather than sent)
+    packetTransmitting = false;
+
     if (IsSending() && !packetTransmitting) {
 
         for (int i = 0; i < CUEBAND_TX_COUNT; i++) {
@@ -466,7 +465,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                         uint8_t hour = dateTimeController.Hours();
                         uint8_t minute = dateTimeController.Minutes();
                         uint8_t second = dateTimeController.Seconds();
-                        uint8_t millis = 0;
+                        //uint8_t millis = 0;
                         
                         // Extract date
                         year = (uint16_t)values[0];
@@ -486,11 +485,11 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                         }
 
                         // (Optional) milliseconds -- currently unused
-                        if (count > 6) {
-                            millis = (uint8_t)values[6];
-                        } else {
-                            millis = 0;
-                        }
+                        // if (count > 6) {
+                        //     millis = (uint8_t)values[6];
+                        // } else {
+                        //     millis = 0;
+                        // }
 
                         uint32_t systickCounter = nrf_rtc_counter_get(portNRF_RTC_REG); // preserve
                         dateTimeController.SetTime(year, month, day, 0, hour, minute, second, systickCounter);
