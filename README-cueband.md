@@ -104,7 +104,7 @@ The BLE service can be used to:
 * store the *scratch* schedule as active one (specifying a unique schedule ID so that this can be later queried to check that the schedule is the current one)
 
 
-#### (*) Service: Schedule
+#### Service: Schedule
 
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
@@ -112,7 +112,7 @@ The BLE service can be used to:
 | UUID                          | *(TBD)*                                          |
 
 
-#### (*) Characteristic: Schedule Status
+#### Characteristic: Schedule Status
 
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
@@ -140,7 +140,7 @@ struct {
 ```
 
 
-#### (*) Characteristic: Schedule Control Point
+#### Characteristic: Schedule Control Point
 
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
@@ -271,10 +271,10 @@ struct {
     uint32_t   timestamp;               // @16 Seconds since epoch for the first sample
     uint8_t    count;                   // @20 Number of valid samples (up to 28 samples when 8-bytes each in a 256-byte block)
     uint8_t    epoch_interval;          // @21 Epoch interval (seconds, = 60)
-    uint32_t   prompt_configuration;    // @22 (*) Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
+    uint32_t   prompt_configuration;    // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
     uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=charging, lower 7-bits: percentage)
     uint8_t    accelerometer;           // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
-    int8_t     temperature;             // @28 (*) Temperature (degrees C, signed 8-bit value, 0x80=unknown)
+    int8_t     temperature;             // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
     uint8_t    firmware;                // @29 Firmware version
 
     // @30 Body (BLOCK_SIZE-30-2=224 bytes)
@@ -291,13 +291,8 @@ Each sample is of the form `activity_sample`:
 struct {
     uint16_t events;                    // @0 Event flags (see below)
     uint16_t prompts_steps;             // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
-
-    // Currently:
-    uint32_t sum_svm;                   // @4 Sum of the SVM values for the entire epoch
-
-    // ...but will substitute for:
-    //uint16_t mean_svm;                  // @4 Mean of the SVM values for the entire epoch (0xffff = invalid, e.g. to few samples; 0xfffe = saturated/clipped value)
-    //uint16_t activity;                  // @6 (*) Alternative activity calculation (e.g. for sleep or PAEE; possibly heart-rate?)
+    uint16_t mean_svm;                  // @4 Mean of the SVM values for the entire epoch (0xffff = invalid, e.g. to few samples; 0xfffe = saturated/clipped value)
+    uint16_t activity;                  // @6 (TBD?) Alternative activity/movement calculation (e.g. for sleep or PAEE; possibly heart-rate?)
 } // @8
 ```
 
@@ -308,17 +303,17 @@ const uint16_t ACTIVITY_EVENT_POWER_CONNECTED     = 0x0001;  // @b0  Connected t
 const uint16_t ACTIVITY_EVENT_POWER_CHANGED       = 0x0002;  // @b1  Power connection status changed during the epoch
 const uint16_t ACTIVITY_EVENT_BLUETOOTH_CONNECTED = 0x0004;  // @b2  Connected to Bluetooth for at least part the epoch
 const uint16_t ACTIVITY_EVENT_BLUETOOTH_CHANGED   = 0x0008;  // @b3  Bluetooth connection status changed during the epoch
-const uint16_t ACTIVITY_EVENT_BLUETOOTH_COMMS     = 0x0010;  // @b4  (*) Communication protocol activity
+const uint16_t ACTIVITY_EVENT_BLUETOOTH_COMMS     = 0x0010;  // @b4  Communication protocol activity
 const uint16_t ACTIVITY_EVENT_WATCH_AWAKE         = 0x0020;  // @b5  Watch was awoken at least once during the epoch
 const uint16_t ACTIVITY_EVENT_WATCH_INTERACTION   = 0x0040;  // @b6  Watch screen interaction (button or touch)
 const uint16_t ACTIVITY_EVENT_RESTART             = 0x0080;  // @b7  First epoch after device restart (or event logging restarted?)
-const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (*) Activity: Device considered not worn
-const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (*) Activity: Wearer considered asleep
+const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn
+const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer considered asleep
 const uint16_t ACTIVITY_EVENT_RESERVED_1          = 0x0400;  // @b10 (Reserved 1)
-const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 (*) Cue: new configuration written
-const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (*) Cue: user opened app
-const uint16_t ACTIVITY_EVENT_CUE_TEMPORARY       = 0x2000;  // @b13 (*) Cue: temporary changed of prompting configuration
-const uint16_t ACTIVITY_EVENT_CUE_SNOOZED         = 0x4000;  // @b14 (*) Cue: user snoozed cueing
+const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 (TBD?) Cue: new configuration written
+const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (TBD?) Cue: user opened app
+const uint16_t ACTIVITY_EVENT_CUE_TEMPORARY       = 0x2000;  // @b13 Cue: temporary changed of prompting configuration
+const uint16_t ACTIVITY_EVENT_CUE_SNOOZED         = 0x4000;  // @b14 (TBD?) Cue: user snoozed cueing
 const uint16_t ACTIVITY_EVENT_RESERVED_2          = 0x8000;  // @b15 (Reserved 2)
 ```
 
