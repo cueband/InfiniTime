@@ -23,6 +23,32 @@
 
 uint8_t Pinetime::Controllers::UartService::streamBuffer[Pinetime::Controllers::UartService::sendCapacity];
 
+// Parse multiple numbers in a given string
+static size_t parseNumbers(const char *input, int *values, size_t max) {
+    size_t count = 0;
+    bool inValue = false;
+    int value = 0;
+    for (const char *p = input; ; p++) {
+        if (*p >= '0' && *p <= '9') {
+            if (!inValue) {
+                inValue = true;
+                value = 0;
+            }
+            value = (10 * value) + (*p - '0');
+        } else if (inValue) {
+            if (values == NULL) {       // When not outputting indexes...
+                count++;                // ...unconditionally count numbers...
+            } else if (count < max) {   // ...otherwise, only count returned values.
+                values[count] = value;
+                count++;
+            }
+            inValue = false;
+        }
+        if (*p == '\0') break;
+    }
+    return count;
+}
+
 // (Compatibility for AxLE) Simple function to write capitalised hex to a buffer from binary
 // adds no spaces, adds a terminating null, returns chars written
 // Endianess specified, for little endian, read starts at last ptr pos backwards
@@ -423,25 +449,56 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
             } else if (data[0] == 'T') {  // Time
                 bool err = false;
-                if (data[1] == '$') { // Set time "T$YY/MM/DD,hh:mm:ss"
+                if (data[1] == '$') { // Set time "T$YY/MM/DD,hh:mm:ss" (original format) -- also accept variations e.g. "T$YYYY-MM-DD hh:mm" or "T$YY-MM-DD hh:mm:ss"
                                       //           0123456789012345678
-                    if (data[4] == '/' && data[7] == '/' && data[10] == ',' && data[13] == ':' && data[16] == ':') {
-                        uint16_t year = 2000 + 10 * (data[2] - '0') + (data[3] - '0');
-                        uint8_t month = 10 * (data[5] - '0') + (data[6] - '0');
-                        uint8_t day = 10 * (data[8] - '0') + (data[9] - '0');
-                        uint8_t hour = 10 * (data[11] - '0') + (data[12] - '0');
-                        uint8_t minute = 10 * (data[14] - '0') + (data[15] - '0');
-                        uint8_t second = 10 * (data[17] - '0') + (data[18] - '0');
 
-                        uint8_t dayOfWeek = 0;
-                        uint32_t systickCounter = nrf_rtc_counter_get(portNRF_RTC_REG);
+                    // Parse incoming values
+                    int values[7] = {0};
+                    size_t count = parseNumbers((const char *)data + 2, values, sizeof(values)/sizeof(values[0]));
 
-                        dateTimeController.SetTime(year, month, day, dayOfWeek, hour, minute, second, systickCounter);
+                    // Enough values for the date (y-m-d) and at least minute-time (hours:minutes)
+                    if (count > 4) {
+                        // Get current date/time
+                        // ? Presume this is ok to access each field sequentially as it is used like this in CurrentTimeService.cpp
+                        uint16_t year = dateTimeController.Year();
+                        uint8_t month = static_cast<u_int8_t>(dateTimeController.Month());
+                        uint8_t day = dateTimeController.Day();
+                        uint8_t hour = dateTimeController.Hours();
+                        uint8_t minute = dateTimeController.Minutes();
+                        uint8_t second = dateTimeController.Seconds();
+                        uint8_t millis = 0;
+                        
+                        // Extract date
+                        year = (uint16_t)values[0];
+                        if (year <= 99) year += 2000;   // 2-digit year?
+                        month = (uint8_t)values[1];
+                        day = (uint8_t)values[2];
 
+                        // Extract hour/minute
+                        hour = (uint8_t)values[3];
+                        minute = (uint8_t)values[4];
+
+                        // (Optional) seconds
+                        if (count > 5) {
+                            second = (uint8_t)values[5];
+                        } else {
+                            second = 0;
+                        }
+
+                        // (Optional) milliseconds -- currently unused
+                        if (count > 6) {
+                            millis = (uint8_t)values[6];
+                        } else {
+                            millis = 0;
+                        }
+
+                        uint32_t systickCounter = nrf_rtc_counter_get(portNRF_RTC_REG); // preserve
+                        dateTimeController.SetTime(year, month, day, 0, hour, minute, second, systickCounter);
                     } else {
                         sprintf(resp, "?!\r\n");
                         err = true;
                     }
+
                 } else if (data[0] != '\0') {
                     sprintf(resp, "?!\r\n");
                     err = true;
