@@ -20,6 +20,75 @@
 
 using namespace Pinetime::Controllers;
 
+
+// --- temporary debugging info for advertising ---
+#ifdef CUEBAND_DEBUG_ADV
+  #define CUEBAND_DEBUG_ADV_NOT_SET 999
+
+  // Event ordering
+  volatile int debugAdvSequence = 0;
+
+  // Init
+  int debugAdvInitTime = -1;
+  int debugAdvInitCount = 0;
+
+  // Reset
+  int debugAdvResetTime = -1;
+  int debugAdvResetCount = 0;
+  int debugAdvResetLastReason = CUEBAND_DEBUG_ADV_NOT_SET;
+
+  // Sync
+  int debugAdvSyncTime = -1;
+  int debugAdvSyncCount = 0;
+  // ble_hs_synced()
+
+  // Connected
+  // bleController.IsConnected()
+
+  // Is advertising
+  // ble_gap_adv_active()
+
+  // StartAdvertising()
+  // fastAdvCount
+  int debugAdvLastStartTime = -1;
+  int debugAdvCount = 0;
+  int debugAdvLastStartResult = CUEBAND_DEBUG_ADV_NOT_SET;
+
+  // Advertising complete
+  int debugAdvCompleteTime = -1;
+  int debugAdvCompleteCount = 0;
+  int debugAdvCompleteLastReason = CUEBAND_DEBUG_ADV_NOT_SET;
+
+  // Connect
+  int debugAdvConnectTime = -1;
+  int debugAdvConnectCount = 0;
+  int debugAdvConnectLastStatus = CUEBAND_DEBUG_ADV_NOT_SET;
+
+  // Disconnect
+  int debugAdvDisconnectTime = -1;
+  int debugAdvDisconnectCount = 0;
+  int debugAdvDisconnectLastReason = CUEBAND_DEBUG_ADV_NOT_SET;
+
+
+  static char debugText[200];
+  const char * NimbleController::DebugText() {
+    char *p = debugText;
+
+    p += sprintf(p, "I:@%d ##%d | %d\n", debugAdvInitTime, debugAdvInitCount, debugAdvSequence);
+    p += sprintf(p, "R:@%d ##%d %d\n", debugAdvResetTime, debugAdvResetCount, debugAdvResetLastReason);
+    p += sprintf(p, "S:@%d ##%d %s\n", debugAdvSyncTime, debugAdvSyncCount, ble_hs_synced() ? "t" : "f");
+    p += sprintf(p, "+:a=%s c=%s f=%d\n", ble_gap_adv_active() ? "t" : "f", bleController.IsConnected() ? "t" : "f", (int)fastAdvCount);
+    p += sprintf(p, "A:@%d ##%d %d\n", debugAdvLastStartTime, debugAdvCount, debugAdvLastStartResult);
+    p += sprintf(p, "a:@%d ##%d %d\n", debugAdvCompleteTime, debugAdvCompleteCount, debugAdvCompleteLastReason);
+    p += sprintf(p, "C:@%d ##%d %d\n", debugAdvConnectTime, debugAdvConnectCount, debugAdvConnectLastStatus);
+    p += sprintf(p, "D:@%d ##%d %d\n", debugAdvDisconnectTime, debugAdvDisconnectCount, debugAdvDisconnectLastReason);
+
+    return debugText;
+  }
+
+#endif
+
+
 NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
                                    Pinetime::Controllers::Ble& bleController,
                                    DateTime& dateTimeController,
@@ -83,6 +152,11 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
 
 void nimble_on_reset(int reason) {
   NRF_LOG_INFO("Resetting state; reason=%d\n", reason);
+#ifdef CUEBAND_DEBUG_ADV
+  debugAdvResetTime = debugAdvSequence++;
+  debugAdvResetCount++;
+  debugAdvResetLastReason = reason;
+#endif
 }
 
 void nimble_on_sync(void) {
@@ -91,6 +165,10 @@ void nimble_on_sync(void) {
     rc = ble_hs_util_ensure_addr(0);
     ASSERT(rc == 0);
 
+#ifdef CUEBAND_DEBUG_ADV
+    debugAdvSyncTime = debugAdvSequence++;
+    debugAdvSyncCount++;
+#endif
     nptr->StartAdvertising();
 }
 
@@ -186,6 +264,11 @@ void NimbleController::Init() {
   rc = ble_gatts_start();
   ASSERT(rc == 0);
 
+#ifdef CUEBAND_DEBUG_ADV
+  debugAdvInitCount++;
+  debugAdvInitTime = debugAdvSequence++;
+#endif
+
   if (!ble_gap_adv_active() && !bleController.IsConnected())
     StartAdvertising();
 }
@@ -236,6 +319,11 @@ void NimbleController::StartAdvertising() {
 
   rc = ble_gap_adv_start(addrType, NULL, 2000, &adv_params, GAPEventCallback, this);
   ASSERT(rc == 0);
+#ifdef CUEBAND_DEBUG_ADV
+  debugAdvCount++;
+  debugAdvLastStartTime = debugAdvSequence++;
+  debugAdvLastStartResult = rc;
+#endif
 }
 
 int NimbleController::OnGAPEvent(ble_gap_event* event) {
@@ -243,6 +331,11 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
     case BLE_GAP_EVENT_ADV_COMPLETE:
       NRF_LOG_INFO("Advertising event : BLE_GAP_EVENT_ADV_COMPLETE");
       NRF_LOG_INFO("reason=%d; status=%d", event->adv_complete.reason, event->connect.status);
+#ifdef CUEBAND_DEBUG_ADV
+  debugAdvCompleteTime = debugAdvSequence++;
+  debugAdvCompleteCount++;
+  debugAdvCompleteLastReason = event->adv_complete.reason;
+#endif
       StartAdvertising();
       break;
 
@@ -251,6 +344,11 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
 
       /* A new connection was established or a connection attempt failed. */
       NRF_LOG_INFO("connection %s; status=%d ", event->connect.status == 0 ? "established" : "failed", event->connect.status);
+#ifdef CUEBAND_DEBUG_ADV
+      debugAdvConnectTime = debugAdvSequence++;
+      debugAdvConnectCount++;
+      debugAdvConnectLastStatus = event->connect.status;
+#endif
 
       if (event->connect.status != 0) {
         /* Connection failed; resume advertising. */
@@ -271,6 +369,11 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
     case BLE_GAP_EVENT_DISCONNECT:
       NRF_LOG_INFO("Advertising event : BLE_GAP_EVENT_DISCONNECT");
       NRF_LOG_INFO("disconnect reason=%d", event->disconnect.reason);
+#ifdef CUEBAND_DEBUG_ADV
+      debugAdvDisconnectTime = debugAdvSequence++;
+      debugAdvDisconnectCount++;
+      debugAdvDisconnectLastReason = event->disconnect.reason;
+#endif
 
       /* Connection terminated; resume advertising. */
       currentTimeClient.Reset();

@@ -46,7 +46,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
     {Symbols::stopWatch, Apps::StopWatch},
     {Symbols::hourGlass, Apps::Timer},
 #ifdef CUEBAND_APP_ENABLED
-    {"C", Apps::CueBand},
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},
 #else
     {"", Apps::None},
 #endif
@@ -89,7 +89,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
     {Symbols::chartLine, Apps::Motion},
     {Symbols::drum, Apps::Metronome},
 #ifdef CUEBAND_APP_ENABLED
-    {"C", Apps::CueBand},
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},
 #else
     {"", Apps::None},
 #endif

@@ -41,6 +41,7 @@
 // See: displayapp/screens/CueBandApp.h
 // See: displayapp/screens/CueBandApp.cpp
 #define CUEBAND_APP_ENABLED
+#define CUEBAND_APP_SYMBOL "?" // "C"
 
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
@@ -53,6 +54,8 @@
 
 #define CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE  // risky
 #define CUEBAND_ALLOW_REMOTE_RESET
+
+#define CUEBAND_DEBUG_ADV       // Collect debug info for advertising state
 
 
 // Various customizations for the UI and existing PineTime services

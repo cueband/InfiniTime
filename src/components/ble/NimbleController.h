@@ -109,6 +109,9 @@ namespace Pinetime {
       bool IsStreaming();
       bool Stream();
 #endif
+#ifdef CUEBAND_DEBUG_ADV
+      const char *DebugText();
+#endif
 
     private:
 #ifdef CUEBAND_DEVICE_NAME

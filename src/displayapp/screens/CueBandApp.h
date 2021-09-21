@@ -37,6 +37,10 @@ namespace Pinetime {
           void Refresh() override;
           void Update();
 
+          bool OnTouchEvent(TouchEvents event) override;
+
+          int ScreenCount();
+
         private:
           Pinetime::System::SystemTask& systemTask;
           Controllers::MotionController& motionController;
@@ -47,6 +51,8 @@ namespace Pinetime {
 
           lv_task_t* taskUpdate;
           lv_obj_t *lInfo;
+
+          int screen = 0;
 
       };
     }
