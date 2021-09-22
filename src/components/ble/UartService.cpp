@@ -202,13 +202,21 @@ Pinetime::Controllers::UartService::UartService(Pinetime::System::SystemTask& sy
         .uuid = (ble_uuid_t*) (&uartRxCharUuid), 
         .access_cb = UartCallback, 
         .arg = this, 
-        .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP // | BLE_GATT_CHR_F_READ
+        .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP 
+#ifdef CUEBAND_UART_CHARACTERISTIC_READ
+        | BLE_GATT_CHR_F_READ
+#endif
+        ,
     };
     characteristicDefinition[1] = {
         .uuid = (ble_uuid_t*) (&uartTxCharUuid),
         .access_cb = UartCallback,
         .arg = this,
-        .flags =  BLE_GATT_CHR_F_NOTIFY, // | BLE_GATT_CHR_F_READ
+        .flags =  BLE_GATT_CHR_F_NOTIFY
+#ifdef CUEBAND_UART_CHARACTERISTIC_READ
+        | BLE_GATT_CHR_F_READ
+#endif
+        ,
         .val_handle = &transmitHandle
     };
     characteristicDefinition[2] = {0};
