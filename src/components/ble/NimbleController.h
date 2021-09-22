@@ -112,6 +112,10 @@ namespace Pinetime {
 #ifdef CUEBAND_DEBUG_ADV
       void DebugText(char *debugText);  // requires ~200 byte buffer
 #endif
+#if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
+      size_t GetMtu();
+#endif
+
 
     private:
 #ifdef CUEBAND_DEVICE_NAME

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <array>
 #include <cstdint>
 
@@ -49,7 +51,21 @@ namespace Pinetime {
         addressType = t;
       }
 
+#if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
+      void SetMtu(size_t newMtu) {
+        mtu = newMtu;
+      }
+
+      size_t GetMtu() {
+        return mtu;
+      }
+#endif
+
     private:
+#if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
+      size_t mtu = 23;
+#endif
+
       bool isConnected = false;
       bool isFirmwareUpdating = false;
       uint32_t firmwareUpdateTotalBytes = 0;

@@ -43,6 +43,7 @@ namespace Pinetime {
     class ActivityService {
     public:
       explicit ActivityService(Pinetime::System::SystemTask& system, 
+        Controllers::Ble& bleController,
         Controllers::Settings& settingsController,
         Pinetime::Controllers::ActivityController& activityController
       );
@@ -66,6 +67,7 @@ namespace Pinetime {
       struct ble_gatt_svc_def serviceDefinition[2];
 
       Pinetime::System::SystemTask& m_system;
+      Pinetime::Controllers::Ble& bleController;
       Pinetime::Controllers::Settings& settingsController;
       Pinetime::Controllers::ActivityController& activityController;
 

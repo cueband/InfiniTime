@@ -265,6 +265,11 @@ void Pinetime::Controllers::UartService::SendNextPacket() {
     packetTransmitting = false;
 
     if (IsSending() && !packetTransmitting) {
+        size_t maxPacket = MAX_PACKET;
+#ifdef CUEBAND_USE_FULL_MTU
+        size_t mtu = bleController.GetMtu();
+        if (mtu - 3 > maxPacket) maxPacket =  mtu - 3;  // minus 1-byte opcode and 2-byte handle
+#endif
 
         for (int i = 0; i < CUEBAND_TX_COUNT; i++) {
             if (sendBuffer == nullptr || blockLength <= 0) break;
@@ -272,7 +277,7 @@ void Pinetime::Controllers::UartService::SendNextPacket() {
             if (blockOffset >= sendCapacity) blockOffset = 0;  // wrap around
             size_t len = sendCapacity - blockOffset;
             if (len > blockLength) len = blockLength;
-            if (len > MAX_PACKET) len = MAX_PACKET;
+            if (len > maxPacket) len = maxPacket;
             auto* om = ble_hs_mbuf_from_flat(sendBuffer + blockOffset, len);
             packetTransmitting = true;  // BLE_GAP_EVENT_NOTIFY_TX event is called before transmission
             if (ble_gattc_notify_custom(tx_conn_handle, transmitHandle, om) == 0) {

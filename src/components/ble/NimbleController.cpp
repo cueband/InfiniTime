@@ -76,11 +76,18 @@ using namespace Pinetime::Controllers;
     p += sprintf(p, "I:@%d ##%d | %d\n", debugAdvInitTime, debugAdvInitCount, debugAdvSequence);
     p += sprintf(p, "R:@%d ##%d %d\n", debugAdvResetTime, debugAdvResetCount, debugAdvResetLastReason);
     p += sprintf(p, "S:@%d ##%d %s\n", debugAdvSyncTime, debugAdvSyncCount, ble_hs_synced() ? "t" : "f");
-    p += sprintf(p, "+:a=%s c=%s f=%d\n", ble_gap_adv_active() ? "t" : "f", bleController.IsConnected() ? "t" : "f", (int)fastAdvCount);
+    p += sprintf(p, "+:a=%s c=%s/%s f=%d\n", ble_gap_adv_active() ? "t" : "f", (connectionHandle != BLE_HS_CONN_HANDLE_NONE) ? "t" : "f", bleController.IsConnected() ? "t" : "f", (int)fastAdvCount);
     p += sprintf(p, "A:@%d ##%d %d\n", debugAdvLastStartTime, debugAdvCount, debugAdvLastStartResult);
     p += sprintf(p, "a:@%d ##%d %d\n", debugAdvCompleteTime, debugAdvCompleteCount, debugAdvCompleteLastReason);
     p += sprintf(p, "C:@%d ##%d %d\n", debugAdvConnectTime, debugAdvConnectCount, debugAdvConnectLastStatus);
     p += sprintf(p, "D:@%d ##%d %d\n", debugAdvDisconnectTime, debugAdvDisconnectCount, debugAdvDisconnectLastReason);
+    p += sprintf(p, "m:%d/%d %s\n", (int16_t)GetMtu(), (int16_t)bleController.GetMtu(), 
+      #ifdef CUEBAND_USE_FULL_MTU
+        "t"
+      #else
+        "f"
+      #endif
+      );
 
     return;
   }
@@ -142,6 +149,7 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
 #ifdef CUEBAND_ACTIVITY_ENABLED
     activityService {
       systemTask,
+      bleController,
       settingsController,
       activityController
     },
@@ -414,6 +422,9 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
     case BLE_GAP_EVENT_MTU:
       NRF_LOG_INFO("mtu update event; conn_handle=%d cid=%d mtu=%d\n",
         event->mtu.conn_handle, event->mtu.channel_id, event->mtu.value);
+#if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
+        bleController.SetMtu(GetMtu());
+#endif
       break;
 
     case BLE_GAP_EVENT_REPEAT_PAIRING: {
@@ -487,6 +498,17 @@ void NimbleController::NotifyBatteryLevel(uint8_t level) {
     batteryInformationService.NotifyBatteryLevel(connectionHandle, level);
   }
 }
+
+#if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
+// For usable payload, must subtract 1-byte opcode and 2-byte handle
+size_t NimbleController::GetMtu() {   // default 23 bytes, -3 => 20 bytes usable; this config (?) up to 256 bytes, -3 => 253 bytes usable
+  if (connectionHandle == BLE_HS_CONN_HANDLE_NONE) {
+    return 0; // 23;
+  } else {
+    return ble_att_mtu(connectionHandle);
+  }
+}
+#endif
 
 bool Pinetime::Controllers::NimbleController::IsSending() {
 #ifdef CUEBAND_SERVICE_UART_ENABLED
