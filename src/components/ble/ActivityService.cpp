@@ -232,23 +232,47 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // StartRead() is called in idle
 
         } else if (attr_handle == statusHandle) {
-            const char *confirmation = "Erase!";
-            if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
-                activityController.DestroyData();
+
+            // Wake
+            {
+                const char *cmdWake = "Wake!";
+                if (notifSize == strlen(cmdWake) && memcmp(data, cmdWake, strlen(cmdWake)) == 0) {
+                    m_system.PushMessage(Pinetime::System::Messages::GoToRunning);
+                }
             }
 
-        } else if (attr_handle == statusHandle) {
-            const char *confirmation = "Validate!";
-            if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
+            // Sleep
+            {
+                const char *cmdSleep = "Sleep!";
+                if (notifSize == strlen(cmdSleep) && memcmp(data, cmdSleep, strlen(cmdSleep)) == 0) {
+                    m_system.PushMessage(Pinetime::System::Messages::GoToSleep);
+                }
+            }
+
+            // Erase
+            {
+                const char *cmdErase = "Erase!";
+                if (notifSize == strlen(cmdErase) && memcmp(data, cmdErase, strlen(cmdErase)) == 0) {
+                    activityController.DestroyData();
+                }
+            }
+
+            // Validate
+            {
+                const char *cmdValidate = "Validate!";
+                if (notifSize == strlen(cmdValidate) && memcmp(data, cmdValidate, strlen(cmdValidate)) == 0) {
 #ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
-                firmwareValidator.Validate();
+                    firmwareValidator.Validate();
 #endif
+                }
             }
 
-        } else if (attr_handle == statusHandle) {
-            const char *confirmation = "Reset!";
-            if (notifSize == strlen(confirmation) && memcmp(data, confirmation, strlen(confirmation)) == 0) {
-                firmwareValidator.Reset();
+            // Reset
+            {
+                const char *cmdReset = "Reset!";
+                if (notifSize == strlen(cmdReset) && memcmp(data, cmdReset, strlen(cmdReset)) == 0) {
+                    firmwareValidator.Reset();
+                }
             }
 
         }

@@ -358,13 +358,18 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                 motorController.RunForDuration(50);   // milliseconds
 
             } else if (data[0] == 'A') {  // Accelerometer sample
-                const char *chip = "?";
-                if (motionController.DeviceType() == MotionController::DeviceTypes::BMA421) chip = "BMA421";
-                else if (motionController.DeviceType() == MotionController::DeviceTypes::BMA425) chip = "BMA425";
-                else if (motionController.DeviceType() == MotionController::DeviceTypes::Unknown) chip = "Unknown";
-                int reg = 0x00;
-                unsigned int eeLevel = 0;
-                sprintf(resp, "A:%d,%d,%d,%02x,%s,%u\r\n", motionController.X(), motionController.Y(), motionController.Z(), reg, chip, eeLevel);
+                if (data[1] == 'T') {     // Traditional serial terminal greeting/response!
+                    sprintf(resp, "OK\r\n");
+
+                } else {
+                    const char *chip = "?";
+                    if (motionController.DeviceType() == MotionController::DeviceTypes::BMA421) chip = "BMA421";
+                    else if (motionController.DeviceType() == MotionController::DeviceTypes::BMA425) chip = "BMA425";
+                    else if (motionController.DeviceType() == MotionController::DeviceTypes::Unknown) chip = "Unknown";
+                    int reg = 0x00;
+                    unsigned int eeLevel = 0;
+                    sprintf(resp, "A:%d,%d,%d,%02x,%s,%u\r\n", motionController.X(), motionController.Y(), motionController.Z(), reg, chip, eeLevel);
+                }
 
             } else if (data[0] == 'B') {  // Battery
                 sprintf(resp, "B:%d%%\r\n", batteryController.PercentRemaining());
@@ -607,9 +612,20 @@ if (!read) {
                 sprintf(resp, "?Disabled\r\n");
 #endif
 
-            } else if (data[0] == 'X') { // Remote admin
+            } else if (data[0] == 'X') {    // Remote admin
 
-                if (data[1] == 'V') {   // Remote validate (risky)
+                if (data[2] == 'W') {       // Remote wake
+                    if (data[3] == '1') {
+                        m_system.PushMessage(Pinetime::System::Messages::GoToRunning);
+                        sprintf(resp, "XW:1\r\n");
+                    } else if (data[3] == '0') {
+                        m_system.PushMessage(Pinetime::System::Messages::GoToSleep);
+                        sprintf(resp, "XW:0\r\n");
+                    } else {
+                        sprintf(resp, "?!\r\n");
+                    }
+                }
+                else if (data[1] == 'V') {   // Remote validate (risky)
                     if (data[2] == '?') {
                         if (firmwareValidator.IsValidated()) {
                             sprintf(resp, "XV:1\r\n");
