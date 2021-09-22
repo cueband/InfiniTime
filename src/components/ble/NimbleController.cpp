@@ -423,7 +423,7 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
       NRF_LOG_INFO("mtu update event; conn_handle=%d cid=%d mtu=%d\n",
         event->mtu.conn_handle, event->mtu.channel_id, event->mtu.value);
 #if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
-        bleController.SetMtu(GetMtu());
+        bleController.SetMtu(event->mtu.value); // GetMtu()
 #endif
       break;
 
