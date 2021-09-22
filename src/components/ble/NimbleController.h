@@ -110,7 +110,7 @@ namespace Pinetime {
       bool Stream();
 #endif
 #ifdef CUEBAND_DEBUG_ADV
-      const char *DebugText();
+      void DebugText(char *debugText);  // requires ~200 byte buffer
 #endif
 
     private:

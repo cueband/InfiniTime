@@ -6,9 +6,10 @@
 #include <lvgl/lvgl.h>
 #include "systemtask/SystemTask.h"
 #include "Screen.h"
-#include <components/motion/MotionController.h>
+#include "components/datetime/DateTimeController.h"
+#include "components/motion/MotionController.h"
 #ifdef CUEBAND_ACTIVITY_ENABLED
-#include <components/activity/ActivityController.h>
+#include "components/activity/ActivityController.h"
 #endif
 
 namespace Pinetime {
@@ -25,6 +26,7 @@ namespace Pinetime {
           CueBandApp(
             DisplayApp* app, 
             System::SystemTask& systemTask, 
+            Controllers::DateTime& dateTimeController,
             Controllers::MotionController& motionController, 
             Controllers::Settings &settingsController
 #ifdef CUEBAND_ACTIVITY_ENABLED
@@ -43,6 +45,7 @@ namespace Pinetime {
 
         private:
           Pinetime::System::SystemTask& systemTask;
+          Pinetime::Controllers::DateTime& dateTimeController;
           Controllers::MotionController& motionController;
           Controllers::Settings& settingsController;
 #ifdef CUEBAND_ACTIVITY_ENABLED

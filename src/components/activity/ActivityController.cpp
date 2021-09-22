@@ -536,7 +536,7 @@ bool ActivityController::AppendPhysicalBlock(int physicalFile, uint32_t logicalB
   return true;
 }
 
-const char * ActivityController::DebugText() {
+void ActivityController::DebugText(char *debugText) {
   char *p = debugText;
 
   p += sprintf(p, "bc:");
@@ -568,7 +568,7 @@ const char * ActivityController::DebugText() {
   int estimatedRate = -1;
   if (elapsed > 0) estimatedRate = epochSumCount / elapsed;
   p += sprintf(p, "e:%d r:%d %ld/%ld", elapsed, estimatedRate, temp_transmit_count, temp_transmit_count_all);
-  return debugText;
+  return;
 }
 
 // Write block: seek to block location (append additional bytes if location after end, or wrap-around if file maximum size or no more drive space)

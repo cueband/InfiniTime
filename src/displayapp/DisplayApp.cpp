@@ -443,7 +443,7 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
 #ifdef CUEBAND_APP_ENABLED
     case Apps::CueBand:
       currentScreen = std::make_unique<Screens::CueBandApp>(
-        this, *systemTask, motionController, settingsController
+        this, *systemTask, dateTimeController, motionController, settingsController
 #ifdef CUEBAND_ACTIVITY_ENABLED
         , activityController
 #endif

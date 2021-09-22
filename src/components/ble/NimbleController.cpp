@@ -70,8 +70,7 @@ using namespace Pinetime::Controllers;
   int debugAdvDisconnectLastReason = CUEBAND_DEBUG_ADV_NOT_SET;
 
 
-  static char debugText[200];
-  const char * NimbleController::DebugText() {
+  void NimbleController::DebugText(char *debugText) {
     char *p = debugText;
 
     p += sprintf(p, "I:@%d ##%d | %d\n", debugAdvInitTime, debugAdvInitCount, debugAdvSequence);
@@ -83,7 +82,7 @@ using namespace Pinetime::Controllers;
     p += sprintf(p, "C:@%d ##%d %d\n", debugAdvConnectTime, debugAdvConnectCount, debugAdvConnectLastStatus);
     p += sprintf(p, "D:@%d ##%d %d\n", debugAdvDisconnectTime, debugAdvDisconnectCount, debugAdvDisconnectLastReason);
 
-    return debugText;
+    return;
   }
 
 #endif

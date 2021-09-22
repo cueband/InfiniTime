@@ -80,7 +80,7 @@ namespace Pinetime {
       void Init(uint32_t time, std::array<uint8_t, 6> deviceAddress, uint8_t accelerometerInfo);
       void DestroyData();
 
-      const char *DebugText();
+      void DebugText(char *debugText);  // requires ~200 byte buffer
 
       // Get range of blocks available, read
       uint32_t BlockCount();
@@ -171,7 +171,6 @@ namespace Pinetime {
       uint32_t errWrite = 0, errWriteLast = 0, errWriteLastInitial=0;
       uint32_t errRead = 0, errReadLast = 0, errReadLogicalLast = 0;
       uint32_t errScan = 0;
-      char debugText[200];          // TODO: Reduce this (e.g. line-by-line version, callee-supplied buffer)
 
       // Resample buffer
       int16_t outputBuffer[CUEBAND_AXES * ACTIVITY_RESAMPLE_BUFFER_SIZE];
