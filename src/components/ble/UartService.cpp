@@ -627,11 +627,11 @@ if (!read) {
 
             } else if (data[0] == 'X') {    // Remote admin
 
-                if (data[2] == 'W') {       // Remote wake
-                    if (data[3] == '1') {
+                if (data[1] == 'W') {       // Remote wake
+                    if (data[2] == '1') {
                         m_system.PushMessage(Pinetime::System::Messages::GoToRunning);
                         sprintf(resp, "XW:1\r\n");
-                    } else if (data[3] == '0') {
+                    } else if (data[2] == '0') {
                         m_system.PushMessage(Pinetime::System::Messages::GoToSleep);
                         sprintf(resp, "XW:0\r\n");
                     } else {
