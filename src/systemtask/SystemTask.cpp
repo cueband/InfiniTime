@@ -426,6 +426,16 @@ void SystemTask::Work() {
       }
     }
 
+#ifdef CUEBAND_POSSIBLE_FIX_BLE_CONNECT_SERVICE_DISCOVERY_TIMEOUT
+    // There seems to be a possible race condition between the BleConnected message starting this timer, and BLE_GAP_EVENT_DISCONNECT
+    // ...if the disconnect occurs within 5 iterations of the loop (not really "seconds" as described?), StartDiscovery() will still be called.
+    // This patch prevents that from happening -- but it might've been harmless anyway when it's not connected.
+    // Not sure where the delay value comes from anyway, but I don't think it sounds robust -- perhaps there's a way to wait until the central has finished discovery.
+    if (isBleDiscoveryTimerRunning && !bleController.IsConnected()) {
+      isBleDiscoveryTimerRunning = false;
+    }
+#endif
+
     if (isBleDiscoveryTimerRunning) {
       if (bleDiscoveryTimer == 0) {
         isBleDiscoveryTimerRunning = false;

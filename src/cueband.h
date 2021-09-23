@@ -175,6 +175,7 @@
 #endif
 
 #define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
+#define CUEBAND_POSSIBLE_FIX_BLE_CONNECT_SERVICE_DISCOVERY_TIMEOUT      // Possible race condition on service discovery?
 
 #define CUEBAND_DELAY_START 50          // Delay cue.band service intialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
