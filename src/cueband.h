@@ -63,6 +63,7 @@
 
 #define CUEBAND_AXES 3          // Must be 3
 
+#define CUEBAND_DEFAULT_SCREEN_TIMEOUT 30000    // 15000 // Ideally matching one of the options in SettingDisplay.cpp
 
 #define CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE  // risky
 #define CUEBAND_ALLOW_REMOTE_RESET

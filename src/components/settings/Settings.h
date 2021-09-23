@@ -1,4 +1,7 @@
 #pragma once
+
+#include "cueband.h"
+
 #include <cstdint>
 #include <bitset>
 #include "components/datetime/DateTimeController.h"
@@ -167,7 +170,11 @@ namespace Pinetime {
       struct SettingsData {
         uint32_t version = settingsVersion;
         uint32_t stepsGoal = 10000;
+#ifdef CUEBAND_DEFAULT_SCREEN_TIMEOUT
+        uint32_t screenTimeOut = CUEBAND_DEFAULT_SCREEN_TIMEOUT;
+#else
         uint32_t screenTimeOut = 15000;
+#endif
 
         ClockType clockType = ClockType::H24;
         Vibration vibrationStatus = Vibration::ON;
