@@ -426,6 +426,11 @@ void SystemTask::Work() {
       }
     }
 
+#ifdef CUEBAND_POLL_START_ADVERTISING
+    // Poll from the main loop context to see if advertising should be started
+    nimbleController.PollStartAdvertising();
+#endif
+
 #ifdef CUEBAND_POSSIBLE_FIX_BLE_CONNECT_SERVICE_DISCOVERY_TIMEOUT
     // There seems to be a possible race condition between the BleConnected message starting this timer, and BLE_GAP_EVENT_DISCONNECT
     // ...if the disconnect occurs within 5 iterations of the loop (not really "seconds" as described?), StartDiscovery() will still be called.

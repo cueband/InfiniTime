@@ -281,6 +281,27 @@ void NimbleController::Init() {
 }
 
 void NimbleController::StartAdvertising() {
+#ifdef CUEBAND_POLL_START_ADVERTISING
+  // HACK: As this may be called from the NimBLE task, just set the flag...
+  wantToStartAdvertising = true;
+}
+
+// HACK: ...this can be periodically polled from the main task.
+void NimbleController::PollStartAdvertising() {
+  // if (!wantToStartAdvertising && !ble_gap_adv_active() && !bleController.IsConnected()) wantToStartAdvertising = true;
+  if (!wantToStartAdvertising) return;        // only process further if we want to start advertising
+  if (bleController.IsConnected()) return;    // ignore while connected
+  if (advertisingStartBackOff > 0) {          // back-off for N interations after failed attempt
+    advertisingStartBackOff--;
+    return;
+  }
+  // Going to attempt to start -- stop any existing advertising...
+  if (ble_gap_adv_active()) {
+    // return;
+    ble_gap_adv_stop();
+  }
+  // ...now continue setting up advertising:
+#endif
   int rc;
 
   /* set adv parameters */
@@ -330,6 +351,14 @@ void NimbleController::StartAdvertising() {
   debugAdvCount++;
   debugAdvLastStartTime = debugAdvSequence++;
   debugAdvLastStartResult = rc;
+#endif
+#ifdef CUEBAND_POLL_START_ADVERTISING
+  if (rc == 0) {  // Advertising started OK
+    wantToStartAdvertising = false;
+    advertisingStartBackOff = 0;
+  } else {        // Otherwise, wait a few iterations before trying again
+    advertisingStartBackOff = 10;
+  }
 #endif
 }
 
