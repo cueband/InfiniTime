@@ -16,7 +16,6 @@
         "mutex": "cpp",
         "netfwd": "cpp",
         "thread": "cpp",
-
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",
@@ -64,7 +63,8 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "assert.h": "c"
     },
     "cmake.configureOnOpen": true
 }
