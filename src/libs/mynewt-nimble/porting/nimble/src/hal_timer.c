@@ -175,7 +175,7 @@ nrf_timer_set_ocmp(struct nrf52_hal_timer *bsptimer, uint32_t expiry)
                 rtctimer->CC[NRF_RTC_TIMER_CC_INT] = expiry & 0x00ffffff;
             } else {
                 /* CC too far ahead. Just make sure we set compare far ahead */
-                rtctimer->CC[NRF_RTC_TIMER_CC_INT] = cntr + (1UL << 23);
+                rtctimer->CC[NRF_RTC_TIMER_CC_INT] = cntr + (1UL << 23);        // NOTE: (Branch would only apply if setting a time >= 512s or 8m32s) Shouldn't this be 24-bit masked?:  & 0x00ffffff
             }
             rtctimer->INTENSET = NRF_TIMER_INT_MASK(NRF_RTC_TIMER_CC_INT);
         }
@@ -469,6 +469,10 @@ hal_timer_init(int timer_num, void *cfg)
         hwtimer = NRF_RTC0;
         irq_isr = nrf52_timer5_irq_handler;
         bsptimer->tmr_rtc = 1;
+#if 1
+#warning "NOTE: This build is seeding the hal_timer to overflow when treated as a signed 32-bit value after 512 seconds (8m32s)."
+bsptimer->tmr_cntr += (0x7fUL << 24);
+#endif
         break;
 #endif
     default:
