@@ -330,9 +330,17 @@ void NimbleController::PollStartAdvertising() {
   }
 
   fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
+#ifdef CUEBAND_NO_ADV_RSP    // Optional test: do not split name into advertising response (name truncated, no UUID advertised)
+  #warning "This build does not split the advertising response (name truncated, no UUID advertised)"
+  fields.name_len = strlen(deviceName) > 8 ? 8 : strlen(deviceName);      // Truncate to 8 characters
+  fields.name = (uint8_t *)deviceName;
+  //fields.name += strlen(deviceName) > fields.name_len ? (strlen(deviceName) - fields.name_len) : 0;   // (Optional) Shift to the last 8 characters (rather than the first 8)
+  fields.name_is_complete = 1;
+#else
   fields.uuids128 = &dfuServiceUuid;
   fields.num_uuids128 = 1;
   fields.uuids128_is_complete = 1;
+#endif
   fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
 
   rsp_fields.name = (uint8_t*) deviceName;
@@ -342,8 +350,10 @@ void NimbleController::PollStartAdvertising() {
   rc = ble_gap_adv_set_fields(&fields);
   ASSERT(rc == 0);
 
+#ifndef CUEBAND_NO_ADV_RSP    // Optional test: do not split name into advertising response
   rc = ble_gap_adv_rsp_set_fields(&rsp_fields);
   ASSERT(rc == 0);
+#endif
 
   rc = ble_gap_adv_start(addrType, NULL, 2000, &adv_params, GAPEventCallback, this);
   ASSERT(rc == 0);
