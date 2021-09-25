@@ -64,7 +64,9 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "assert.h": "c"
+        "assert.h": "c",
+        "cueband.h": "c",
+        "hal_timer.h": "c"
     },
     "cmake.configureOnOpen": true
 }

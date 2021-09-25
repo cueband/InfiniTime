@@ -34,6 +34,8 @@
 #include "ble_ll_priv.h"
 #include "ble_ll_conn_priv.h"
 
+#include "cueband.h"
+
 /* XXX: this is temporary. Not sure what I want to do here */
 struct hal_timer g_ble_ll_sched_timer;
 
@@ -1081,6 +1083,14 @@ ble_ll_sched_adv_new(struct ble_ll_sched_item *sch, ble_ll_sched_adv_new_cb cb,
 
     OS_EXIT_CRITICAL(sr);
 
+#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
+{
+    char msg[80];
+    sprintf(msg, "AN: d=%d s=%08x e=%08x c=%d\n", (unsigned int)duration, (unsigned int)adv_start, (unsigned int)sch->end_time, (orig == sch));
+    cblog(msg);
+}
+#endif
+
     /* Restart timer */
     BLE_LL_ASSERT(sch != NULL);
     os_cputime_timer_start(&g_ble_ll_sched_timer, sch->start_time);
@@ -1278,6 +1288,15 @@ ble_ll_sched_adv_reschedule(struct ble_ll_sched_item *sch, uint32_t *start,
 
     OS_EXIT_CRITICAL(sr);
 
+#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
+
+{
+    char msg[80];
+    sprintf(msg, "AR: d=%d s=%08x e=%08x\n", (unsigned int)duration, (unsigned int)sch->start_time, (unsigned int)sch->end_time);
+    cblog(msg);
+}
+#endif
+
     sch = TAILQ_FIRST(&g_ble_ll_sched_q);
     os_cputime_timer_start(&g_ble_ll_sched_timer, sch->start_time);
 
@@ -1313,6 +1332,16 @@ ble_ll_sched_adv_resched_pdu(struct ble_ll_sched_item *sch)
     ble_ll_rfmgmt_sched_changed(TAILQ_FIRST(&g_ble_ll_sched_q));
 
     OS_EXIT_CRITICAL(sr);
+
+#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
+
+{
+    char msg[80];
+    sprintf(msg, "AP: s=%08x e=%08x\n", (unsigned int)sch->start_time, (unsigned int)sch->end_time);
+    cblog(msg);
+}
+#endif
+
     os_cputime_timer_start(&g_ble_ll_sched_timer, sch->start_time);
     return 0;
 

@@ -24,6 +24,26 @@
 #include "os/os_cputime.h"
 #include "hal/hal_timer.h"
 
+#include "cueband.h"
+
+#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
+
+// DEBUG: hal_timer
+struct my_nrf52_hal_timer {
+    uint8_t tmr_enabled;
+    uint8_t tmr_irq_num;
+    uint8_t tmr_rtc;
+    uint8_t tmr_pad;
+    uint32_t tmr_cntr;
+    uint32_t timer_isrs;
+    uint32_t tmr_freq;
+    void *tmr_reg;
+    //TAILQ_HEAD(hal_timer_qhead, hal_timer) hal_timer_q;
+};
+extern struct my_nrf52_hal_timer nrf52_hal_timer5;
+static struct my_nrf52_hal_timer *bsptimer = &nrf52_hal_timer5;
+#endif
+
 #if defined(OS_CPUTIME_FREQ_HIGH)
 struct os_cputime_data g_os_cputime;
 #endif
@@ -90,6 +110,15 @@ int
 os_cputime_timer_start(struct hal_timer *timer, uint32_t cputime)
 {
     int rc;
+
+#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
+
+if ((void *)timer == (void *)bsptimer) {
+    char msg[80];
+    sprintf(msg, "S: t=%08x e=%08x\n", (unsigned int)cputime, (unsigned int)timer->expiry);
+    cblog(msg);
+}
+#endif
 
     rc = hal_timer_start_at(timer, cputime);
     return rc;

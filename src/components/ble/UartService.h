@@ -86,6 +86,11 @@ namespace Pinetime {
 
       //std::string getLine();
 
+#ifdef CUEBAND_LOG
+      bool IsLogging() { return logging; }
+      size_t Log(const char *data);
+#endif
+
     private:
       ble_uuid128_t uartUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = UART_SERVICE_UUID_BASE};
 
@@ -123,11 +128,14 @@ namespace Pinetime {
       static uint8_t streamBuffer[];
       uint8_t *sendBuffer = nullptr;
       static const size_t sendCapacity = 512 + 32;
-      size_t blockLength = 0;
-      size_t blockOffset = 0;
+      volatile size_t blockLength = 0;
+      volatile size_t blockOffset = 0;
       volatile bool packetTransmitting = false;
       uint16_t tx_conn_handle;
       unsigned int transmitErrorCount = 0;
+#ifdef CUEBAND_LOG
+      bool logging = false;
+#endif
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
       uint32_t readLogicalBlockIndex = 0xffffffff;

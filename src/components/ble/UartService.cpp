@@ -23,6 +23,21 @@
 
 uint8_t Pinetime::Controllers::UartService::streamBuffer[Pinetime::Controllers::UartService::sendCapacity];
 
+#ifdef CUEBAND_LOG
+// Slightly hacky global debug print command
+Pinetime::Controllers::UartService *singletonUartService = NULL;
+void cblog(const char *str) {
+    if (singletonUartService != NULL && singletonUartService->IsLogging()) {
+        // Attempt to add log message to outgoing buffer
+        if (!singletonUartService->Log(str)) {
+            // ...if failed, attempt to indicate message overflow
+            singletonUartService->Log("!");
+        }
+    }
+    return;
+}
+#endif
+
 // Parse multiple numbers in a given string
 static size_t parseNumbers(const char *input, int *values, size_t max) {
     size_t count = 0;
@@ -52,7 +67,7 @@ static size_t parseNumbers(const char *input, int *values, size_t max) {
 // (Compatibility for AxLE) Simple function to write capitalised hex to a buffer from binary
 // adds no spaces, adds a terminating null, returns chars written
 // Endianess specified, for little endian, read starts at last ptr pos backwards
-uint16_t WriteBinaryToHex(char* dest, void* source, uint16_t len, uint8_t littleEndian)
+static uint16_t WriteBinaryToHex(char* dest, void* source, uint16_t len, uint8_t littleEndian)
 {
 	uint16_t ret = (len*2);
 	uint8_t* ptr = (uint8_t*)source;
@@ -76,10 +91,11 @@ uint16_t WriteBinaryToHex(char* dest, void* source, uint16_t len, uint8_t little
 	return ret;
 }
 
+/*
 // (Compatibility for AxLE) Simple function to read an ascii string of hex chars from a buffer 
 // For each hex pair, a byte is written to the out buffer
 // Returns number read, earlys out on none hex char (caps not important)
-uint16_t ReadHexToBinary(uint8_t* dest, const char* source, uint16_t maxLen)
+static uint16_t ReadHexToBinary(uint8_t* dest, const char* source, uint16_t maxLen)
 {
 	uint16_t read = 0;
 
@@ -112,6 +128,7 @@ uint16_t ReadHexToBinary(uint8_t* dest, const char* source, uint16_t maxLen)
 
 	return read;
 }
+*/
 
 // Encode a binary input as an ASCII Base64-encoded (RFC 3548) stream with NULL ending
 // Output buffer must have capacity for (((length + 2) / 3) * 4) + 1 bytes
@@ -119,7 +136,7 @@ uint16_t ReadHexToBinary(uint8_t* dest, const char* source, uint16_t maxLen)
 // - no output padding where the input is a multiple of 3
 // Utility function: Encode a binary input as an ASCII Base64-encoded (RFC 3548) stream with NULL ending -- output buffer must have capacity for (((length + 2) / 3) * 4) + 1 bytes
 #define BASE64_SIZE(_s) ((((_s) + 2) / 3) * 4) // this does not include the NULL terminator
-size_t EncodeBase64(char *output, const void *input, size_t length)
+static size_t EncodeBase64(char *output, const void *input, size_t length)
 {
 	static const char base64lookup[64] = 
 	{
@@ -197,6 +214,9 @@ Pinetime::Controllers::UartService::UartService(Pinetime::System::SystemTask& sy
     , cueController {cueController}
 #endif
     {
+#ifdef CUEBAND_LOG
+    ::singletonUartService = this;
+#endif
 
     characteristicDefinition[0] = {
         .uuid = (ble_uuid_t*) (&uartRxCharUuid), 
@@ -258,6 +278,9 @@ void Pinetime::Controllers::UartService::Disconnect() {
         blockBuffer = nullptr;
     }
     packetTransmitting = false;
+#ifdef CUEBAND_LOG
+    logging = false;
+#endif
 }
 
 bool Pinetime::Controllers::UartService::IsSending() {
@@ -448,6 +471,22 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                 if (motorPulseWidth > 1000) motorPulseWidth = 1000;
                 cueController.SetInterval(interval, maximumRuntime, motorPulseWidth);
                 sprintf(resp, "J:%u,%d,%u\r\n", (uint16_t)interval, (int16_t)maximumRuntime, (uint16_t)motorPulseWidth); // maximumRuntime "-1" if infinite
+#else
+                sprintf(resp, "?Disabled\r\n");
+#endif
+
+            } else if (memcmp(data, "LOG", 3) == 0) {  // Logging
+#ifdef CUEBAND_LOG
+                if (data[3] == ' ' && data[4] == '0') {
+                    sprintf(resp, "LOG:0\r\n");
+                    logging = false;
+                } else if (data[3] == ' ' && data[4] == '1') {
+                    sprintf(resp, "LOG:1\r\n");
+                    logging = true;
+cblog("LOG STARTED\n");
+                } else {
+                    sprintf(resp, "?!\r\n");
+                }
 #else
                 sprintf(resp, "?Disabled\r\n");
 #endif
@@ -703,6 +742,19 @@ static size_t Base16Encode(const uint8_t *binary, size_t countBinary, uint8_t *o
 bool Pinetime::Controllers::UartService::IsStreaming() {
     return streamFlag;
 }
+
+#ifdef CUEBAND_LOG
+size_t Pinetime::Controllers::UartService::Log(const char *data) {
+    if (!logging) {
+        return 0;
+    }
+    size_t length = strlen(data);
+    if (!StreamAppend((const uint8_t *)data, length)) {
+        return 0;
+    }
+    return length;
+}
+#endif
 
 bool Pinetime::Controllers::UartService::StreamAppendString(const char *data) {
     return StreamAppend((const uint8_t *)data, strlen(data));

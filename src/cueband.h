@@ -3,6 +3,21 @@
 
 #pragma once
 
+//#define CUEBAND_DEBUG_ADV_LOG
+
+#define CUEBAND_BLE_OVERFLOW_HAL_TIMER
+
+#define CUEBAND_LOG
+#ifdef CUEBAND_LOG
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+        void cblog(const char *str);
+    #ifdef __cplusplus
+    }
+    #endif
+#endif
+
 // Preprocessor fun
 #define CUEBAND_STRINGIZE(S) #S
 #define CUEBAND_STRINGIZE_STRINGIZE(S) CUEBAND_STRINGIZE(S)
@@ -259,6 +274,9 @@
 #endif
 #if defined(CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK)
     #warning "CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK should not normally be defined (usually all available space is used)"
+#endif
+#if defined(CUEBAND_DEBUG_ADV_LOG)
+    #warning "This is a build for debugging advertising - CUEBAND_DEBUG_ADV_LOG"
 #endif
 #endif
 
