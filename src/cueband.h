@@ -3,20 +3,7 @@
 
 #pragma once
 
-//#define CUEBAND_DEBUG_ADV_LOG
-
-#define CUEBAND_BLE_OVERFLOW_HAL_TIMER
-
 #define CUEBAND_LOG
-#ifdef CUEBAND_LOG
-    #ifdef __cplusplus
-    extern "C" {
-    #endif
-        void cblog(const char *str);
-    #ifdef __cplusplus
-    }
-    #endif
-#endif
 
 // Preprocessor fun
 #define CUEBAND_STRINGIZE(S) #S
@@ -87,6 +74,10 @@
 //#define CUEBAND_UART_CHARACTERISTIC_READ        // (temporarily set the "READ" bits on the UART characteristics -- even though they are not handled)
 
 #define CUEBAND_DEBUG_ADV       // Collect debug info for advertising state
+
+#ifdef CUEBAND_DEBUG_ADV
+    #define CUEBAND_BLE_OVERFLOW_HAL_TIMER
+#endif
 
 
 // Various customizations for the UI and existing PineTime services
@@ -216,6 +207,25 @@
 
 #define CUEBAND_TX_COUNT 26    // Queue multiple notifications at once (hopefully to send more than one per connection interval)
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS
+
+
+
+// Methods
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef CUEBAND_LOG
+void cblog(const char *str);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
+
 
 // Config compatibility checks
 #if defined(CUEBAND_FIFO_ENABLED) && !defined(CUEBAND_BUFFER_ENABLED)

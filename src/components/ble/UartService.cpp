@@ -270,6 +270,7 @@ void Pinetime::Controllers::UartService::Disconnect() {
 #endif
 
     // Free resources
+    tx_conn_handle = BLE_HS_CONN_HANDLE_NONE;
     sendBuffer = nullptr;
     blockLength = 0;
     blockOffset = 0;
@@ -284,7 +285,7 @@ void Pinetime::Controllers::UartService::Disconnect() {
 }
 
 bool Pinetime::Controllers::UartService::IsSending() {
-    return sendBuffer != nullptr && blockLength != 0;
+    return tx_conn_handle != BLE_HS_CONN_HANDLE_NONE && sendBuffer != nullptr && blockLength != 0;
 }
 
 void Pinetime::Controllers::UartService::Idle() {

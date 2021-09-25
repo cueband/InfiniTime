@@ -506,6 +506,7 @@ list(APPEND SOURCE_FILES
         touchhandler/TouchHandler.cpp
 
         # cueband
+        cueband.c
         components/ble/ActivityService.cpp
         components/ble/UartService.cpp
         components/activity/ActivityController.cpp

@@ -87,7 +87,7 @@ namespace Pinetime {
       //std::string getLine();
 
 #ifdef CUEBAND_LOG
-      bool IsLogging() { return logging; }
+      bool IsLogging() { return tx_conn_handle != BLE_HS_CONN_HANDLE_NONE && logging; }
       size_t Log(const char *data);
 #endif
 
@@ -131,7 +131,7 @@ namespace Pinetime {
       volatile size_t blockLength = 0;
       volatile size_t blockOffset = 0;
       volatile bool packetTransmitting = false;
-      uint16_t tx_conn_handle;
+      uint16_t tx_conn_handle = BLE_HS_CONN_HANDLE_NONE;
       unsigned int transmitErrorCount = 0;
 #ifdef CUEBAND_LOG
       bool logging = false;

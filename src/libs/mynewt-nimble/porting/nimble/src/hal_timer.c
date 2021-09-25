@@ -182,15 +182,6 @@ nrf_timer_set_ocmp(struct nrf52_hal_timer *bsptimer, uint32_t expiry)
             rtctimer->INTENSET = NRF_TIMER_INT_MASK(NRF_RTC_TIMER_CC_INT);
         }
 
-#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
-
-{
-    char msg[80];
-    sprintf(msg, "O: t=%08x x=%08x d=%d %s c=%06x\n", (unsigned int)temp, (unsigned int)expiry, (int)delta_t, (delta_t < (1UL << 24)) ? "ok" : "XX", (unsigned int)(rtctimer->CC[NRF_RTC_TIMER_CC_INT]));
-    cblog(msg);
-}
-#endif
-
     } else {
         hwtimer = bsptimer->tmr_reg;
 
@@ -379,15 +370,6 @@ hal_rtc_timer_irq_handler(struct nrf52_hal_timer *bsptimer)
         rtctimer->EVENTS_OVRFLW = 0;
         bsptimer->tmr_cntr += (1UL << 24);
     }
-
-#if defined(CUEBAND_DEBUG_ADV_LOG) && defined(CUEBAND_LOG)
-
-{
-    char msg[80];
-    sprintf(msg, "I: c=%d o=%d @%02x_%06x\n", compare == 0 ? 0 : 1, overflow == 0 ? 0 : 1, (uint8_t)(bsptimer->tmr_cntr >> 24), (unsigned int)(bsptimer->tmr_cntr));
-    cblog(msg);
-}
-#endif
 
     /* Count # of timer isrs */
     ++bsptimer->timer_isrs;

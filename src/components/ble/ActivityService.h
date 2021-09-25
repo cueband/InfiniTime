@@ -85,7 +85,7 @@ namespace Pinetime {
       size_t blockLength = 0;
       size_t blockOffset = 0;
       volatile bool packetTransmitting = false;
-      uint16_t tx_conn_handle;
+      uint16_t tx_conn_handle = BLE_HS_CONN_HANDLE_NONE;
 
     };
   }
