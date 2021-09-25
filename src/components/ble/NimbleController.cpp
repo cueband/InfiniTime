@@ -69,6 +69,21 @@ using namespace Pinetime::Controllers;
   int debugAdvDisconnectCount = 0;
   int debugAdvDisconnectLastReason = CUEBAND_DEBUG_ADV_NOT_SET;
 
+  // DEBUG: hal_timer
+  struct my_nrf52_hal_timer {
+      uint8_t tmr_enabled;
+      uint8_t tmr_irq_num;
+      uint8_t tmr_rtc;
+      uint8_t tmr_pad;
+      uint32_t tmr_cntr;
+      uint32_t timer_isrs;
+      uint32_t tmr_freq;
+      void *tmr_reg;
+      //TAILQ_HEAD(hal_timer_qhead, hal_timer) hal_timer_q;
+  };
+  extern struct my_nrf52_hal_timer nrf52_hal_timer5;
+  static my_nrf52_hal_timer *bsptimer = &nrf52_hal_timer5;
+  static NRF_RTC_Type *rtctimer = (NRF_RTC_Type *)bsptimer->tmr_reg;
 
   void NimbleController::DebugText(char *debugText) {
     char *p = debugText;
@@ -81,6 +96,7 @@ using namespace Pinetime::Controllers;
     p += sprintf(p, "a:@%d ##%d %d\n", debugAdvCompleteTime, debugAdvCompleteCount, debugAdvCompleteLastReason);
     p += sprintf(p, "C:@%d ##%d %d\n", debugAdvConnectTime, debugAdvConnectCount, debugAdvConnectLastStatus);
     p += sprintf(p, "D:@%d ##%d %d\n", debugAdvDisconnectTime, debugAdvDisconnectCount, debugAdvDisconnectLastReason);
+#ifdef CUEBAND_USE_FULL_MTU
     p += sprintf(p, "m:%d/%d %s\n", (int16_t)GetMtu(), (int16_t)bleController.GetMtu(), 
       #ifdef CUEBAND_USE_FULL_MTU
         "t"
@@ -88,6 +104,11 @@ using namespace Pinetime::Controllers;
         "f"
       #endif
       );
+#endif
+    // rtctimer | NRF_RTC0
+    uint32_t counter = NRF_RTC0->COUNTER;
+    p += sprintf(p, "T:%02x_%02x%02x%02x E%d %d%d\n", (uint8_t)(bsptimer->tmr_cntr >> 24), (uint8_t)(counter >> 16), (uint8_t)(counter >> 8), (uint8_t)(counter), bsptimer->tmr_enabled, (int)(NRF_RTC0->EVENTS_OVRFLW), (int)(rtctimer->EVENTS_COMPARE[2]));
+    p += sprintf(p, "i%u e%d %04x%04x\n", (unsigned int)bsptimer->timer_isrs, (int)(NRF_RTC0->EVTEN)?1:0, (uint16_t)(NRF_RTC0->CC[2] >> 16), (uint16_t)(NRF_RTC0->CC[2]));   // 2=NRF_RTC_TIMER_CC_INT
 
     return;
   }

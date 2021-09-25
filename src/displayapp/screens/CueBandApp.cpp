@@ -56,6 +56,9 @@ int CueBandApp::ScreenCount() {
   return screenCount;
 }
 
+
+extern "C" uint32_t os_cputime_get32(void);
+
 void CueBandApp::Update() {
   int thisScreen = 0;
 
@@ -69,6 +72,8 @@ void CueBandApp::Update() {
     uint32_t uptimeHours = (uptime / (60 * 60)) % 24;
     uint32_t uptimeDays = uptime / (60 * 60 * 24);
 
+    uint32_t tmr = os_cputime_get32();
+
     sprintf(debugText,    // ~165 bytes
             "#FFFF00 InfiniTime#\n\n"
             "#444444 Version# %ld.%ld.%ld\n"
@@ -79,13 +84,15 @@ void CueBandApp::Update() {
 #ifdef CUEBAND_INFO_SYSTEM
             CUEBAND_INFO_SYSTEM "\n"
 #endif
-            "\n"
             "#444444 Uptime# %lud %02lu:%02lu:%02lu\n"
+            "T@%02x_%02x_%02x_%02x\n"
             ,
             Version::Major(), Version::Minor(), Version::Patch(),
             Version::GitCommitHash(),
             __DATE__, __TIME__,
-            uptimeDays, uptimeHours, uptimeMinutes, uptimeSeconds);
+            uptimeDays, uptimeHours, uptimeMinutes, uptimeSeconds,
+            (uint8_t)(tmr >> 24), (uint8_t)(tmr >> 16), (uint8_t)(tmr >> 8), (uint8_t)(tmr >> 0)
+            );
   }
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
