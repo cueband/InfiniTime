@@ -25,8 +25,6 @@
 #include "nrfx.h"
 #include "hal/hal_timer.h"
 
-#include "cueband.h"
-
 /* IRQ prototype */
 typedef void (*hal_timer_irq_handler_t)(void);
 

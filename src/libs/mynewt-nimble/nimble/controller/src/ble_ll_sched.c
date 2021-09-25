@@ -34,8 +34,6 @@
 #include "ble_ll_priv.h"
 #include "ble_ll_conn_priv.h"
 
-#include "cueband.h"
-
 /* XXX: this is temporary. Not sure what I want to do here */
 struct hal_timer g_ble_ll_sched_timer;
 

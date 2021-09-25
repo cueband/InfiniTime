@@ -24,8 +24,6 @@
 #include "os/os_cputime.h"
 #include "hal/hal_timer.h"
 
-#include "cueband.h"
-
 #if defined(OS_CPUTIME_FREQ_HIGH)
 struct os_cputime_data g_os_cputime;
 #endif
