@@ -463,8 +463,14 @@ A response may be prefixed with:
   > `XV:<firmware_validated>`
   ...where `firmware_validated` is `0` if not validated, or `1` if validated.
 
-* `XV` - Remotely validate firmware (risky)
+* `XV!` - Remotely validate firmware (risky)
   > `XV:1`
+
+* `XW0` - Remotely sleep device
+  > `XW:0`
+
+* `XW1` - Remotely wake device
+  > `XW:1`
 
 
 <!--
