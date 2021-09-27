@@ -14,7 +14,7 @@ namespace Pinetime {
     class Settings {
     public:
       enum class ClockType : uint8_t { H24, H12 };
-      enum class Vibration : uint8_t { ON, OFF };
+      enum class Notification : uint8_t { ON, OFF };
       enum class WakeUpMode : uint8_t {
         SingleTap = 0,
         DoubleTap = 1,
@@ -96,14 +96,14 @@ namespace Pinetime {
         return settings.clockType;
       };
 
-      void SetVibrationStatus(Vibration status) {
-        if (status != settings.vibrationStatus) {
+      void SetNotificationStatus(Notification status) {
+        if (status != settings.notificationStatus) {
           settingsChanged = true;
         }
-        settings.vibrationStatus = status;
+        settings.notificationStatus = status;
       };
-      Vibration GetVibrationStatus() const {
-        return settings.vibrationStatus;
+      Notification GetNotificationStatus() const {
+        return settings.notificationStatus;
       };
 
       void SetScreenTimeOut(uint32_t timeout) {
@@ -177,7 +177,7 @@ namespace Pinetime {
 #endif
 
         ClockType clockType = ClockType::H24;
-        Vibration vibrationStatus = Vibration::ON;
+        Notification notificationStatus = Notification::ON;
 
         uint8_t clockFace = 0;
 
