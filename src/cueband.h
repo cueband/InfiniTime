@@ -21,13 +21,11 @@
 #endif
 */
 
-
-
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 3       // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 4       // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
-#define CUEBAND_APPLICATION_TYPE 0x0002
+#define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
 #define CUEBAND_DEVICE_NAME "InfiniTime-######"  // "InfiniTime"
 #define CUEBAND_SERIAL_ADDRESS
@@ -209,6 +207,10 @@
 
 #define ACTIVITY_BLOCK_SIZE 256
 
+#define CUEBAND_FORMAT_VERSION 0x0001
+// 0x0000=30 Hz data, no high-pass filter, no SVMMO
+// 0x0001=30 Hz data, no high-pass filter, SVMMO present
+
 #define CUEBAND_TX_COUNT 26    // Queue multiple notifications at once (hopefully to send more than one per connection interval)
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS
 
@@ -280,8 +282,8 @@ void cblog(const char *str);
 #if (ACTIVITY_BLOCK_SIZE != 256)
     #warning "ACTIVITY_BLOCK_SIZE non-standard value (usually 256)"
 #endif
-#if (CUEBAND_ACTIVITY_MAXIMUM_BLOCKS != 256)
-    #warning "CUEBAND_ACTIVITY_MAXIMUM_BLOCKS non-standard value (usually 256)"     // approx. 5 days per 64kB file when 28 minutes per block (256-byte blocks, 8-bytes per sample, 60 second epoch)
+#if (CUEBAND_ACTIVITY_MAXIMUM_BLOCKS != 512)
+    #warning "CUEBAND_ACTIVITY_MAXIMUM_BLOCKS non-standard value (usually 512)"     // approx. 10 days per 128kB file when 28 minutes per block (256-byte blocks, 8-bytes per sample, 60 second epoch)
 #endif
 #if defined(CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS)
     #warning "CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS should not normally be defined"

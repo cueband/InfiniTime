@@ -98,10 +98,12 @@ void ActivityController::AddSingleSample(int16_t x, int16_t y, int16_t z) {
   sum_squares += (uint32_t)((int32_t)y * y);
   sum_squares += (uint32_t)((int32_t)z * z);
   uint16_t svm = int_sqrt32(sum_squares);
+  int32_t svmmo = (int32_t)svm - CUEBAND_BUFFER_16BIT_SCALE;
+  if (svmmo < 0) svmmo = -svmmo; // Absolute magnitude: abs(SVM-1)
 
   // 60 second epoch at (ACTIVITY_RATE = 30 or 32) Hz;  Worst-case (32 Hz): gives (60*32=) 1920 samples; maximum sum of svm (60*32*56755=) 108969600 (27-bit).
-  // CONSIDER: Storing as mean raw value (maximum of 56755), only 16-bit, freeing 16-bits for an alternative calculation (ENMO?)
   epochSumSvm += svm;
+  epochSumSvmMO += svmmo;
   epochSumCount++;
 
 }
@@ -109,6 +111,7 @@ void ActivityController::AddSingleSample(int16_t x, int16_t y, int16_t z) {
 void ActivityController::StartEpoch() {
   epochStartTime = currentTime;
   epochSumSvm = 0;
+  epochSumSvmMO = 0;
   epochSumCount = 0;
   epochEvents = 0x0000;
   epochSteps = 0;
@@ -132,25 +135,27 @@ bool ActivityController::WriteEpoch() {
     // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
     data[2] = (uint8_t)steps; data[3] = (uint8_t)(steps >> 8);
 
-    // Calculate the mean SVM value
+    // Calculate the mean SVM & SVMMO values
     uint32_t meanSvm;
+    uint32_t meanSvmMO;
     if (epochSumCount >= ACTIVITY_RATE * epochInterval * 50 / 100) {
       // At least half of the expected samples were made, use the mean value.
       meanSvm = epochSumSvm / epochSumCount;
+      meanSvmMO = epochSumSvmMO / epochSumCount;
       // Saturate/clip to maximum allowed
       if (meanSvm > 0xfffe) meanSvm = 0xfffe;
+      if (meanSvmMO > 0xfffe) meanSvmMO = 0xfffe;
     } else {
       // Less than half of the expected samples were made, use the invalid value
       meanSvm = 0xffff;
+      meanSvmMO = 0xffff;
     }
 
     // @4 Mean of the SVM values for the entire epoch
     data[4] = (uint8_t)meanSvm; data[5] = (uint8_t)(meanSvm >> 8);
 
-    // @6 Alternative activity calculation (e.g. for sleep or PAEE; possibly heart-rate?)
-    // TODO: Calculate an alternative activity value
-    uint32_t movement = 0;
-    data[6] = (uint8_t)movement; data[7] = (uint8_t)(movement >> 8);
+    // @6 Mean of the abs(SVM-1) values for the entire epoch
+    data[6] = (uint8_t)meanSvmMO; data[7] = (uint8_t)(meanSvmMO >> 8);
 
     countEpochs++;
   }
@@ -231,7 +236,7 @@ void ActivityController::DestroyData() {
 }
 
 bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
-  uint16_t formatVersion = 0x0000;
+  uint16_t formatVersion = CUEBAND_FORMAT_VERSION;
 
   // Header
   activeBlock[0] = 'A'; activeBlock[1] = 'D';                                                                           // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
@@ -545,7 +550,7 @@ void ActivityController::DebugText(char *debugText) {
   }
   p += sprintf(p, "\n");
 
-  p += sprintf(p, "L:");
+  //p += sprintf(p, "");
   for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
     p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].lastLogicalBlock);
   }
@@ -558,11 +563,11 @@ void ActivityController::DebugText(char *debugText) {
   }
   p += sprintf(p, "\n");
   
-  p += sprintf(p, "Al:%ld Af:%d bc:%ld\n", ActiveLogicalBlock(), activeFile, (activeFile < 0 ? -1 : meta[activeFile].blockCount));   // debug output as signed to spot invalid=-1
-  p += sprintf(p, "F:%ld BC:%ld\n", EarliestLogicalBlock(), BlockCount());   // debug as signed to spot invalid=-1
-  p += sprintf(p, "I:%s S:%lu\n", isInitialized ? "t" : "f", blockStartTime);
-  p += sprintf(p, "E:%lu C:%lu\n", countEpochs, epochSumCount);
-  p += sprintf(p, "I:%lu sum:%lu\n", epochInterval, epochSumSvm);
+  p += sprintf(p, "Af:%d bc:%ld Al:%ld\n", activeFile, (activeFile < 0 ? -1 : meta[activeFile].blockCount), ActiveLogicalBlock());   // debug output as signed to spot invalid=-1
+  p += sprintf(p, "I:%s BC:%ld F:%ld\n", isInitialized ? "t" : "f", BlockCount(), EarliestLogicalBlock());   // debug as signed to spot invalid=-1
+  p += sprintf(p, "S:%lu E:%lu C:%lu\n", blockStartTime, countEpochs, epochSumCount);
+  p += sprintf(p, "smo:%lu\n", epochSumSvmMO);
+  p += sprintf(p, "i:%lu sum:%lu\n", epochInterval, epochSumSvm);
   p += sprintf(p, "er:%lu/%lu/%lu ew:%lu/%lu/%lu\n", errRead, errReadLast, errReadLogicalLast, errWrite, errWriteLastInitial, errWriteLast);
   int elapsed = currentTime - epochStartTime;
   int estimatedRate = -1;

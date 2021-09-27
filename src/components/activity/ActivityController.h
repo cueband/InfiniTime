@@ -157,6 +157,7 @@ namespace Pinetime {
       // Current epoch
       uint32_t epochStartTime = 0;
       uint32_t epochSumSvm = 0;
+      uint32_t epochSumSvmMO = 0;
       uint32_t epochSumCount = 0;
       uint16_t epochEvents = 0x0000;
       uint32_t epochSteps = 0;

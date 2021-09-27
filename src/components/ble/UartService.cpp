@@ -442,7 +442,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
                 // TODO: Try to honor the requested settings
 #ifdef CUEBAND_STREAM_RESAMPLED
-                rate = ACTIVITY_RATE / CUEBAND_STREAM_DECIMATE;                      // 30 Hz; 
+                rate = ACTIVITY_RATE / CUEBAND_STREAM_DECIMATE;                      // ACTIVITY_RATE Hz;
 #else
                 rate = CUEBAND_BUFFER_EFFECTIVE_RATE / CUEBAND_STREAM_DECIMATE;      // 8 Hz; // 50 Hz; // 100 Hz; 
 #endif
