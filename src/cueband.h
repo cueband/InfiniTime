@@ -197,10 +197,14 @@
     #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 1-minute
     #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 52  // 1 day
     #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files of data giving only 3-4 days
-#else // Standard logging (15-20 days)
+#elif 0 // Old logging (15-20 days)
     #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
     #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 256 // 256 = 64 kB, ~5 days/file;  
     #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 15-20 days
+#else // New logging (30-40 days)
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
+    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 512 // 512 = 128 kB, ~10 days/file;  
+    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 30-40 days
 #endif
 
 #define ACTIVITY_BLOCK_SIZE 256
