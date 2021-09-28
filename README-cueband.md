@@ -291,6 +291,7 @@ Where `format` is one of:
 |:------:|:-----------------------------------------------------------|
 | 0x0000 | 30 Hz resampled data, no high-pass filter, no SVMMO.       |
 | 0x0001 | 30 Hz resampled data, no high-pass filter, SVMMO present.  |
+| 0x0002 | 40 Hz resampled data, high-pass filter SVMMO and unfiltered SVMMO. |
 
 Each sample is of the form `activity_sample`:
 
@@ -298,10 +299,13 @@ Each sample is of the form `activity_sample`:
 struct {
     uint16_t events;                    // @0 Event flags (see below)
     uint16_t prompts_steps;             // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
-    uint16_t mean_svm;                  // @4 Mean of the SVM values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
+    uint16_t mean_filtered_svmmo;       // @4 Mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
     uint16_t mean_svmmo;                // @6 Mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
 } // @8
 ```
+
+Note: Offset `@4` was previously (format `0x0000`-`0x0001`): *Mean of the SVM values for the entire epoch*.
+
 
 The `events` flags are bitwise flags and defined as follows:
 

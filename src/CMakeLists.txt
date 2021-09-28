@@ -690,6 +690,7 @@ set(INCLUDE_FILES
         components/ble/ActivityService.h
         components/ble/UartService.h
         components/activity/ActivityController.h
+        components/activity/iir.h
         components/activity/resampler.h
         components/cue/CueController.h
         displayapp/screens/CueBandApp.h

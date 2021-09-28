@@ -4,6 +4,9 @@
 
 #include "ActivityController.h"
 
+#define IIR_RATE ACTIVITY_RATE
+#include "iir.h"
+
 using namespace Pinetime::Controllers;
 
 #define ACTIVITY_DATA_FILENAME "ACTV%04d.BIN"
@@ -11,7 +14,7 @@ using namespace Pinetime::Controllers;
 
 ActivityController::ActivityController(Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs) : settingsController {settingsController}, fs {fs} {
 
-  resampler_init(&this->resampler, CUEBAND_BUFFER_EFFECTIVE_RATE, ACTIVITY_RATE, CUEBAND_AXES);
+  resampler_init(&this->resampler, CUEBAND_BUFFER_EFFECTIVE_RATE, ACTIVITY_RATE, 0, CUEBAND_AXES);
 
 }
 
@@ -99,18 +102,27 @@ void ActivityController::AddSingleSample(int16_t x, int16_t y, int16_t z) {
   sum_squares += (uint32_t)((int32_t)z * z);
   uint16_t svm = int_sqrt32(sum_squares);
   int32_t svmmo = (int32_t)svm - CUEBAND_BUFFER_16BIT_SCALE;
-  if (svmmo < 0) svmmo = -svmmo; // Absolute magnitude: abs(SVM-1)
+  int32_t abs_svmmo = (svmmo < 0) ? -svmmo : svmmo; // Absolute magnitude: abs(SVM-1)
 
   // 60 second epoch at (ACTIVITY_RATE = 30 or 32) Hz;  Worst-case (32 Hz): gives (60*32=) 1920 samples; maximum sum of svm (60*32*56755=) 108969600 (27-bit).
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+  int32_t filtered_svmmo = iir_order2_highpass0_5(svmmo);
+  int32_t abs_filtered_svmmo = (filtered_svmmo < 0) ? -filtered_svmmo : filtered_svmmo; // Absolute magnitude: abs(SVM-1)
+  epochSumFilteredSvmMO += abs_filtered_svmmo;
+#else
   epochSumSvm += svm;
-  epochSumSvmMO += svmmo;
+#endif
+  epochSumSvmMO += abs_svmmo;
   epochSumCount++;
-
 }
 
 void ActivityController::StartEpoch() {
   epochStartTime = currentTime;
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+  epochSumFilteredSvmMO = 0;
+#else
   epochSumSvm = 0;
+#endif
   epochSumSvmMO = 0;
   epochSumCount = 0;
   epochEvents = 0x0000;
@@ -136,23 +148,43 @@ bool ActivityController::WriteEpoch() {
     data[2] = (uint8_t)steps; data[3] = (uint8_t)(steps >> 8);
 
     // Calculate the mean SVM & SVMMO values
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+    uint32_t meanFilteredSvmMO;
+#else
     uint32_t meanSvm;
+#endif
     uint32_t meanSvmMO;
     if (epochSumCount >= ACTIVITY_RATE * epochInterval * 50 / 100) {
       // At least half of the expected samples were made, use the mean value.
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+      meanFilteredSvmMO = epochSumFilteredSvmMO / epochSumCount;
+#else
       meanSvm = epochSumSvm / epochSumCount;
+#endif
       meanSvmMO = epochSumSvmMO / epochSumCount;
       // Saturate/clip to maximum allowed
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+      if (meanFilteredSvmMO > 0xfffe) meanFilteredSvmMO = 0xfffe;
+#else
       if (meanSvm > 0xfffe) meanSvm = 0xfffe;
+#endif
       if (meanSvmMO > 0xfffe) meanSvmMO = 0xfffe;
     } else {
       // Less than half of the expected samples were made, use the invalid value
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+      meanFilteredSvmMO = 0xffff;
+#else
       meanSvm = 0xffff;
+#endif
       meanSvmMO = 0xffff;
     }
 
     // @4 Mean of the SVM values for the entire epoch
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+    data[4] = (uint8_t)meanFilteredSvmMO; data[5] = (uint8_t)(meanFilteredSvmMO >> 8);
+#else
     data[4] = (uint8_t)meanSvm; data[5] = (uint8_t)(meanSvm >> 8);
+#endif
 
     // @6 Mean of the abs(SVM-1) values for the entire epoch
     data[6] = (uint8_t)meanSvmMO; data[7] = (uint8_t)(meanSvmMO >> 8);
@@ -567,7 +599,11 @@ void ActivityController::DebugText(char *debugText) {
   p += sprintf(p, "I:%s BC:%ld F:%ld\n", isInitialized ? "t" : "f", BlockCount(), EarliestLogicalBlock());   // debug as signed to spot invalid=-1
   p += sprintf(p, "S:%lu E:%lu C:%lu\n", blockStartTime, countEpochs, epochSumCount);
   p += sprintf(p, "smo:%lu\n", epochSumSvmMO);
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+  p += sprintf(p, "i:%lu fts:%lu\n", epochInterval, epochSumFilteredSvmMO);
+#else
   p += sprintf(p, "i:%lu sum:%lu\n", epochInterval, epochSumSvm);
+#endif
   p += sprintf(p, "er:%lu/%lu/%lu ew:%lu/%lu/%lu\n", errRead, errReadLast, errReadLogicalLast, errWrite, errWriteLastInitial, errWriteLast);
   int elapsed = currentTime - epochStartTime;
   int estimatedRate = -1;

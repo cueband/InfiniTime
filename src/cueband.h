@@ -23,7 +23,7 @@
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 4       // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 5       // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
@@ -207,9 +207,13 @@
 
 #define ACTIVITY_BLOCK_SIZE 256
 
-#define CUEBAND_FORMAT_VERSION 0x0001
+#define ACTIVITY_RATE 40    // Common activity monitor rate: 32 Hz (Philips Actiwatch Spectrum+/Pro/2, CamNtech Actiwave Motion, Minisun IDEEA, Fit.life Fitmeter, BodyMedia SenseWear); or 30 Hz (ActiGraph GT3X/GT1M)
+// Always store MEAN(SVMMO), additionally:
+#define CUEBAND_ACTIVITY_HIGH_PASS  // ...store MEAN(FILTER(SVMMO)), otherwise: store plain MEAN(SVM)
+#define CUEBAND_FORMAT_VERSION 0x0002
 // 0x0000=30 Hz data, no high-pass filter, no SVMMO
 // 0x0001=30 Hz data, no high-pass filter, SVMMO present
+// 0x0002=40 Hz data, SVMMO, high-pass SVMMO
 
 #define CUEBAND_TX_COUNT 26    // Queue multiple notifications at once (hopefully to send more than one per connection interval)
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS

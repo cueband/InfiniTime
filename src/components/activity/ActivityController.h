@@ -34,8 +34,6 @@
 #define ACTIVITY_EVENT_CUE_SNOOZED         0x4000 // Cue: user snoozed cueing
 #define ACTIVITY_EVENT_RESERVED_2          0x8000 // (Reserved 2)
 
-#define ACTIVITY_RATE 30    // Common activity monitor rate: 32 Hz (Philips Actiwatch Spectrum+/Pro/2, CamNtech Actiwave Motion, Minisun IDEEA, Fit.life Fitmeter, BodyMedia SenseWear); or 30 Hz (ActiGraph GT3X/GT1M)
-
 #define ACTIVITY_HEADER_SIZE 30
 #define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 480 (512 - 30 bytes header - 2 bytes checksum)
 #define ACTIVITY_SAMPLE_SIZE 8
@@ -156,7 +154,11 @@ namespace Pinetime {
 
       // Current epoch
       uint32_t epochStartTime = 0;
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+      uint32_t epochSumFilteredSvmMO = 0;
+#else
       uint32_t epochSumSvm = 0;
+#endif
       uint32_t epochSumSvmMO = 0;
       uint32_t epochSumCount = 0;
       uint16_t epochEvents = 0x0000;
