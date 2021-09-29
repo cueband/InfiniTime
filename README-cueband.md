@@ -1,5 +1,7 @@
 # Cue.band InfiniTime Firmware
 
+This is a work-in-progress fork of [InfiniTime](https://github.com/JF002/InfiniTime) for the [Cue Band project](https://cue.band/).
+
 Test firmware: 
 
   * [cueband/InfiniTime/releases](https://github.com/cueband/InfiniTime/releases)
