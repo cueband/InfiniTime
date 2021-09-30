@@ -18,16 +18,19 @@ All stored/transmitted values are little-endian.
 
 The primary additional features:
 
-* Cueing
-* Device Activity Log
-* UART
+*	Vibration cues at timed intervals.
+*	Weekly scheduling of these intervals.
+*	On-device cue management (e.g. silencing of cues).
+*	Device wear detection (e.g. only cue while worn).
+*	Device activity log (e.g. when cueing occurs).
+*	Synchronization (scheduling and logs) between the device and a user's phone.
 
 Further functionality:
 
-* Interface modifications from base InfiniTime
-* Security
+*	Additional security protections.
+* Interface simplifications (feature removal to standard watch functionality).
+* BLE UART alternative for all communciation.
 * ? Shipping mode
-* ? Reset behaviour
 
 In the following description, `(*)` denotes a feature not yet fully implemented.
 
