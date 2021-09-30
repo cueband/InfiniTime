@@ -71,6 +71,8 @@
 //#define CUEBAND_USE_FULL_MTU    // (not tested) use full MTU size, reduces packet overhead and could be up to ~15% faster for bulk transmission.
 //#define CUEBAND_UART_CHARACTERISTIC_READ        // (temporarily set the "READ" bits on the UART characteristics -- even though they are not handled)
 
+#define CUEBAND_DEBUG_ACTIVITY   // Collect additional debug info for movement
+
 #define CUEBAND_DEBUG_ADV       // Collect debug info for advertising state
 
 #ifdef CUEBAND_DEBUG_ADV

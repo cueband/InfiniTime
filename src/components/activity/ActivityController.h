@@ -78,7 +78,7 @@ namespace Pinetime {
       void Init(uint32_t time, std::array<uint8_t, 6> deviceAddress, uint8_t accelerometerInfo);
       void DestroyData();
 
-      void DebugText(char *debugText);  // requires ~200 byte buffer
+      void DebugText(char *debugText, bool additionalInfo);  // requires ~200 byte buffer
 
       // Get range of blocks available, read
       uint32_t BlockCount();

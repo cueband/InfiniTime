@@ -11,6 +11,19 @@ using namespace Pinetime::Controllers;
 
 #define ACTIVITY_DATA_FILENAME "ACTV%04d.BIN"
 
+#ifdef CUEBAND_DEBUG_ACTIVITY
+static struct {
+  int16_t lastX, lastY, lastZ;
+  uint32_t lastSumSquares;
+  uint16_t lastSVM;
+  int32_t lastSVMMO;
+  uint16_t lastAbsSVMMO;
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+  int32_t lastFilteredSVMMO;
+  int32_t lastAbsFilteredSVMMO;
+#endif
+} activity_debug_info;
+#endif
 
 ActivityController::ActivityController(Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs) : settingsController {settingsController}, fs {fs} {
 
@@ -96,24 +109,38 @@ void ActivityController::AddSingleSample(int16_t x, int16_t y, int16_t z) {
     #error "The data should be clipped to at most +/- 8 g if the sensor is configured higher"
   #endif
 
-  // Each square is at most (-32768 * -32768 =) 1073741824; so the sum-of-squares is at most 3221225472; sqrt is at most 56755.
+  // Each square is at most (-32768 * -32768 =) 1073741824; so the sum-of-squares is at most 3221225472
   sum_squares += (uint32_t)((int32_t)x * x);
   sum_squares += (uint32_t)((int32_t)y * y);
   sum_squares += (uint32_t)((int32_t)z * z);
-  uint16_t svm = int_sqrt32(sum_squares);
-  int32_t svmmo = (int32_t)svm - CUEBAND_BUFFER_16BIT_SCALE;
-  int32_t abs_svmmo = (svmmo < 0) ? -svmmo : svmmo; // Absolute magnitude: abs(SVM-1)
+  uint16_t svm = int_sqrt32(sum_squares); // sqrt is at most 56755.
+  int32_t svmmo = (int32_t)svm - CUEBAND_BUFFER_16BIT_SCALE;  // at 1g=4096; in the interval (-4096, 52659)
+  uint16_t abs_svmmo = (svmmo < 0) ? (uint16_t)-svmmo : (uint16_t)svmmo; // Absolute magnitude: abs(SVM-1), at 1g=4096, abs(svm-1) is at most 52659.
 
-  // 60 second epoch at (ACTIVITY_RATE = 30 or 32) Hz;  Worst-case (32 Hz): gives (60*32=) 1920 samples; maximum sum of svm (60*32*56755=) 108969600 (27-bit).
+  // 60 second epoch at (ACTIVITY_RATE = 30/32/40/50) Hz;  Worst-case (50 Hz): gives (60*50=) 3000 samples; maximum sum of raw svm (60*50*56755=) 170265000 (28-bit).
 #ifdef CUEBAND_ACTIVITY_HIGH_PASS
   int32_t filtered_svmmo = iir_order2_highpass0_5(svmmo);
-  int32_t abs_filtered_svmmo = (filtered_svmmo < 0) ? -filtered_svmmo : filtered_svmmo; // Absolute magnitude: abs(SVM-1)
+  int32_t abs_filtered_svmmo = (filtered_svmmo < 0) ? (int32_t)-filtered_svmmo : (int32_t)filtered_svmmo; // Absolute magnitude: abs(SVM-1)
   epochSumFilteredSvmMO += abs_filtered_svmmo;
 #else
   epochSumSvm += svm;
 #endif
   epochSumSvmMO += abs_svmmo;
   epochSumCount++;
+
+#ifdef CUEBAND_DEBUG_ACTIVITY
+  activity_debug_info.lastX = x;
+  activity_debug_info.lastY = y;
+  activity_debug_info.lastZ = z;
+  activity_debug_info.lastSumSquares = sum_squares;
+  activity_debug_info.lastSVM = svm;
+  activity_debug_info.lastSVMMO = svmmo;
+  activity_debug_info.lastAbsSVMMO = abs_svmmo;
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+  activity_debug_info.lastFilteredSVMMO = filtered_svmmo;
+  activity_debug_info.lastAbsFilteredSVMMO = abs_filtered_svmmo;
+#endif
+#endif
 }
 
 void ActivityController::StartEpoch() {
@@ -573,42 +600,63 @@ bool ActivityController::AppendPhysicalBlock(int physicalFile, uint32_t logicalB
   return true;
 }
 
-void ActivityController::DebugText(char *debugText) {
+void ActivityController::DebugText(char *debugText, bool additionalInfo) {
   char *p = debugText;
 
-  p += sprintf(p, "bc:");
-  for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
-    p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].blockCount);
-  }
-  p += sprintf(p, "\n");
+  if (!additionalInfo) {
 
-  //p += sprintf(p, "");
-  for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
-    p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].lastLogicalBlock);
-  }
-  p += sprintf(p, "\n");
-  
-  //p += sprintf(p, "es:%lx\n", errScan);
-  p += sprintf(p, "es:");
-  for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
-    p += sprintf(p, "%s%02x", f > 0 ? "/" : "", meta[f].err);
-  }
-  p += sprintf(p, "\n");
-  
-  p += sprintf(p, "Af:%d bc:%ld Al:%ld\n", activeFile, (activeFile < 0 ? -1 : meta[activeFile].blockCount), ActiveLogicalBlock());   // debug output as signed to spot invalid=-1
-  p += sprintf(p, "I:%s BC:%ld F:%ld\n", isInitialized ? "t" : "f", BlockCount(), EarliestLogicalBlock());   // debug as signed to spot invalid=-1
-  p += sprintf(p, "S:%lu E:%lu C:%lu\n", blockStartTime, countEpochs, epochSumCount);
-  p += sprintf(p, "smo:%lu\n", epochSumSvmMO);
+    p += sprintf(p, "bc:");
+    for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+      p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].blockCount);
+    }
+    p += sprintf(p, "\n");
+
+    //p += sprintf(p, "");
+    for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+      p += sprintf(p, "%s%ld", f > 0 ? "/" : "", meta[f].lastLogicalBlock);
+    }
+    p += sprintf(p, "\n");
+    
+    //p += sprintf(p, "es:%lx\n", errScan);
+    p += sprintf(p, "es:");
+    for (int f = 0; f < CUEBAND_ACTIVITY_FILES; f++) {
+      p += sprintf(p, "%s%02x", f > 0 ? "/" : "", meta[f].err);
+    }
+    p += sprintf(p, "\n");
+    
+    p += sprintf(p, "Af:%d bc:%ld Al:%ld\n", activeFile, (activeFile < 0 ? -1 : meta[activeFile].blockCount), ActiveLogicalBlock());   // debug output as signed to spot invalid=-1
+    p += sprintf(p, "I:%s BC:%ld F:%ld\n", isInitialized ? "t" : "f", BlockCount(), EarliestLogicalBlock());   // debug as signed to spot invalid=-1
+    p += sprintf(p, "S:%lu E:%lu C:%lu\n", blockStartTime, countEpochs, epochSumCount);
+    p += sprintf(p, "smo:%lu\n", epochSumSvmMO);
 #ifdef CUEBAND_ACTIVITY_HIGH_PASS
-  p += sprintf(p, "i:%lu fts:%lu\n", epochInterval, epochSumFilteredSvmMO);
+    p += sprintf(p, "i:%lu fts:%lu\n", epochInterval, epochSumFilteredSvmMO);
 #else
-  p += sprintf(p, "i:%lu sum:%lu\n", epochInterval, epochSumSvm);
+    p += sprintf(p, "i:%lu sum:%lu\n", epochInterval, epochSumSvm);
 #endif
-  p += sprintf(p, "er:%lu/%lu/%lu ew:%lu/%lu/%lu\n", errRead, errReadLast, errReadLogicalLast, errWrite, errWriteLastInitial, errWriteLast);
-  int elapsed = currentTime - epochStartTime;
-  int estimatedRate = -1;
-  if (elapsed > 0) estimatedRate = epochSumCount / elapsed;
-  p += sprintf(p, "e:%d r:%d %ld/%ld", elapsed, estimatedRate, temp_transmit_count, temp_transmit_count_all);
+    p += sprintf(p, "er:%lu/%lu/%lu ew:%lu/%lu/%lu\n", errRead, errReadLast, errReadLogicalLast, errWrite, errWriteLastInitial, errWriteLast);
+    int elapsed = currentTime - epochStartTime;
+    int estimatedRate = -1;
+    if (elapsed > 0) estimatedRate = epochSumCount / elapsed;
+    p += sprintf(p, "e:%d r:%d %ld/%ld", elapsed, estimatedRate, temp_transmit_count, temp_transmit_count_all);
+
+  } else {  // additionalInfo
+
+#ifdef CUEBAND_DEBUG_ACTIVITY
+    p += sprintf(p, "#:%d e:%d/%d\n", epochSumCount, currentTime - epochStartTime, (int)epochInterval);
+    p += sprintf(p, "%+4d%+4d%+4d\n", activity_debug_info.lastX, activity_debug_info.lastY, activity_debug_info.lastZ);
+    p += sprintf(p, "SSq:%u\n", (unsigned int)activity_debug_info.lastSumSquares);
+    p += sprintf(p, "SVM:%u\n", (unsigned int)activity_debug_info.lastSVM);
+    p += sprintf(p, "MO:%+d\n", (int)activity_debug_info.lastSVMMO);
+    p += sprintf(p, "A:  %u\n", (unsigned int)activity_debug_info.lastAbsSVMMO);
+    p += sprintf(p, "M:  %u\n", (unsigned int)(epochSumSvmMO / (epochSumCount > 0 ? epochSumCount : 1)));
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+    p += sprintf(p, "Fl:%+d\n", (int)activity_debug_info.lastFilteredSVMMO);
+    p += sprintf(p, "FA: %u\n", (unsigned int)activity_debug_info.lastAbsFilteredSVMMO);
+    p += sprintf(p, "FM: %u\n", (unsigned int)(epochSumFilteredSvmMO / (epochSumCount > 0 ? epochSumCount : 1)));
+#endif
+#endif
+
+  }
   return;
 }
 

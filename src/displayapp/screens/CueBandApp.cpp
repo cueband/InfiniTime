@@ -48,7 +48,10 @@ int CueBandApp::ScreenCount() {
   int screenCount = 0;
   screenCount++;  // info
 #ifdef CUEBAND_ACTIVITY_ENABLED
-  screenCount++;  // activity debug
+  screenCount++;  // activity debug - basic
+#ifdef CUEBAND_DEBUG_ACTIVITY
+  screenCount++;  // activity debug - additional
+#endif
 #endif
 #ifdef CUEBAND_DEBUG_ADV
   screenCount++;  // advertising debug
@@ -85,20 +88,25 @@ void CueBandApp::Update() {
             CUEBAND_INFO_SYSTEM "\n"
 #endif
             "#444444 Uptime# %lud %02lu:%02lu:%02lu\n"
-            "T@%02x_%02x_%02x_%02x\n"
+            //"T@%02x_%02x_%02x_%02x\n"
             ,
             Version::Major(), Version::Minor(), Version::Patch(),
             Version::GitCommitHash(),
             __DATE__, __TIME__,
-            uptimeDays, uptimeHours, uptimeMinutes, uptimeSeconds,
-            (uint8_t)(tmr >> 24), (uint8_t)(tmr >> 16), (uint8_t)(tmr >> 8), (uint8_t)(tmr >> 0)
+            uptimeDays, uptimeHours, uptimeMinutes, uptimeSeconds
+            //, (uint8_t)(tmr >> 24), (uint8_t)(tmr >> 16), (uint8_t)(tmr >> 8), (uint8_t)(tmr >> 0)
             );
   }
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
   if (screen == thisScreen++) {
-    activityController.DebugText(debugText);
+    activityController.DebugText(debugText, false);   // basic info
   }
+#ifdef CUEBAND_DEBUG_ACTIVITY
+  if (screen == thisScreen++) {
+    activityController.DebugText(debugText, true);    // additional info
+  }
+#endif
 #endif
 
 #ifdef CUEBAND_DEBUG_ADV
