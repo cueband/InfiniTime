@@ -1,6 +1,10 @@
 # cue.band InfiniTime Firmware
 
-**IMPORTANT:** See [README-cueband.md](README-cueband.md) for further information -- this page is for the main *InfiniTime* firmware.
+This is a work-in-progress fork of [InfiniTime](https://github.com/JF002/InfiniTime) for the [Cue Band project](https://cue.band/).
+
+See: [README-cueband.md](README-cueband.md) for further information about this fork.
+
+The remainder of this page is for the upstream *InfiniTime* firmware.
 
 ---
 

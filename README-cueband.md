@@ -1,5 +1,7 @@
 # Cue.band InfiniTime Firmware
 
+This is a work-in-progress fork of [InfiniTime](https://github.com/JF002/InfiniTime) for the [Cue Band project](https://cue.band/).
+
 Test firmware: 
 
   * [cueband/InfiniTime/releases](https://github.com/cueband/InfiniTime/releases)
@@ -178,7 +180,7 @@ The device activity log measures device state, user interactions, and user activ
 Brief notes:
 
 * Storage file format as a block structure (`activity_log` format, see below: *Device Activity Log Block Format*).
-* Circular buffer
+* ~~Circular buffer~~ -- did not work as LittleFS cannot be used for random writes within a large file, flushing appears to cost of an order of the remainder of the file [LittleFS Issue #27](https://github.com/littlefs-project/littlefs/issues/27).  Instead *N* files are kept, append-only, and the oldest is removed and replaced as required.
 * Logical block id
 * Active block (RAM)
 * Accelerometer in FIFO mode
