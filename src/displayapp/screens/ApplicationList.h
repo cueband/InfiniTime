@@ -28,14 +28,14 @@ namespace Pinetime {
         Controllers::DateTime& dateTimeController;
 
         ScreenList<
-#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) || defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
         1
 #else
         2
 #endif
           > screens;
         std::unique_ptr<Screen> CreateScreen1();
-#ifndef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if !defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) && !defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
         std::unique_ptr<Screen> CreateScreen2();
         // std::unique_ptr<Screen> CreateScreen3();
 #endif

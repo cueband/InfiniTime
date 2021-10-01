@@ -48,10 +48,15 @@ std::unique_ptr<Screen> Settings::CreateScreen1() {
 std::unique_ptr<Screen> Settings::CreateScreen2() {
 
   std::array<Screens::List::Applications, 4> applications {{
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
     {Symbols::shoe, "Steps", Apps::SettingSteps},
+#endif
     {Symbols::batteryHalf, "Battery", Apps::BatteryInfo},
     {Symbols::paintbrush, "PTS Colors", Apps::SettingPineTimeStyle},
     {Symbols::check, "Firmware", Apps::FirmwareValidation},
+#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
+    {Symbols::list, "About", Apps::SysInfo},
+#endif
   }};
 
   return std::make_unique<Screens::List>(1, 3, app, settingsController, applications);
@@ -60,8 +65,18 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
 std::unique_ptr<Screen> Settings::CreateScreen3() {
 
   std::array<Screens::List::Applications, 4> applications {{
+#ifdef CUEBAND_APP_ENABLED
+    {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
+#endif
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
     {Symbols::list, "About", Apps::SysInfo},
+#endif
+#ifndef CUEBAND_APP_ENABLED
     {Symbols::none, "None", Apps::None},
+#endif
+#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
+    {Symbols::none, "None", Apps::None},
+#endif
     {Symbols::none, "None", Apps::None},
     {Symbols::none, "None", Apps::None},
   }};

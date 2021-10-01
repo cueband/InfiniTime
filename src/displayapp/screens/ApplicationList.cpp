@@ -22,7 +22,7 @@ ApplicationList::ApplicationList(Pinetime::Applications::DisplayApp* app,
                [this]() -> std::unique_ptr<Screen> {
                  return CreateScreen1();
                },
-#ifndef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if !defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) && !defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
                [this]() -> std::unique_ptr<Screen> {
                  return CreateScreen2();
                },
@@ -42,15 +42,26 @@ bool ApplicationList::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
 
 std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   std::array<Screens::Tile::Applications, 6> applications {{
-#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
+  #ifdef CUEBAND_APP_ENABLED
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},
+  #else
+    {"", Apps::None},
+  #endif
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+    {"", Apps::None},
+#elif defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)
     {Symbols::stopWatch, Apps::StopWatch},
     {Symbols::hourGlass, Apps::Timer},
     {Symbols::clock, Apps::Alarm},
-#ifdef CUEBAND_APP_ENABLED
+  #ifdef CUEBAND_APP_ENABLED
     {CUEBAND_APP_SYMBOL, Apps::CueBand},
-#else
+  #else
     {"", Apps::None},
-#endif
+  #endif
     {"", Apps::None},
     {"", Apps::None},
 #else
@@ -64,7 +75,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   }};
 
   return std::make_unique<Screens::Tile>(0, 
-#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) || defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
     1,  // Scrollbar suitable for only one screen of apps
 #else
     2, 
@@ -72,10 +83,10 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
     app, settingsController, batteryController, dateTimeController, applications);
 }
 
-#ifndef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if !defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) && !defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
 std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
   std::array<Screens::Tile::Applications, 6> applications {{
-#ifdef CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) || defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
     {"", Apps::None},
     {"", Apps::None},
     {"", Apps::None},

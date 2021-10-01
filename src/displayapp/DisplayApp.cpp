@@ -238,7 +238,9 @@ void DisplayApp::Refresh() {
           if (currentApp == Apps::Clock) {
             switch (gesture) {
               case TouchEvents::SwipeUp:
+#ifndef CUEBAND_DISABLE_APP_LAUNCHER
                 LoadApp(Apps::Launcher, DisplayApp::FullRefreshDirections::Up);
+#endif
                 break;
               case TouchEvents::SwipeDown:
                 LoadApp(Apps::Notifications, DisplayApp::FullRefreshDirections::Down);

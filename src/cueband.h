@@ -23,7 +23,7 @@
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 5       // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 6       // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
@@ -82,11 +82,13 @@
 #ifdef CUEBAND_CUSTOMIZATION
 
     // See: src/displayapp/screens/WatchFaceDigital.cpp
-    #define CUEBAND_CUSTOMIZATION_NO_HR
-    #define CUEBAND_CUSTOMIZATION_NO_STEPS
+    #define CUEBAND_CUSTOMIZATION_NO_HR                 // Removes from digital watch face
+    #define CUEBAND_CUSTOMIZATION_NO_STEPS              // Removes from digital watch face and settings menu
 
     // See: src/displayapp/screens/ApplicationList.cpp
-    #define CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+    #define CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS   // Only keep essential watch apps in the launcher (stopwatch, timer, alarm)
+    #define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS         // Don't show any non-cueband apps in the launcher
+    #define CUEBAND_DISABLE_APP_LAUNCHER                // Don't show the app launcher at all
 
     // See: src/components/ble/NimbleController.cpp
     #define CUEBAND_SERVICE_MUSIC_DISABLED
@@ -163,11 +165,11 @@
 
     // Modifications to Firmware App screen
     // See: src/displayapp/screens/FirmwareValidation.cpp
-    #define CUEBAND_INFO_FIRMWARE "\ncue.band/" CUEBAND_VERSION
+    #define CUEBAND_INFO_FIRMWARE "\ncb/" CUEBAND_VERSION
 
     // Modifications to System Info App screen
     // See: src/displayapp/screens/SystemInfo.cpp
-    #define CUEBAND_INFO_SYSTEM "\ncue.band/" CUEBAND_VERSION
+    #define CUEBAND_INFO_SYSTEM "\ncb/" CUEBAND_VERSION
 
 #endif
 
