@@ -75,7 +75,7 @@ void CueBandApp::Update() {
     uint32_t uptimeHours = (uptime / (60 * 60)) % 24;
     uint32_t uptimeDays = uptime / (60 * 60 * 24);
 
-    uint32_t tmr = os_cputime_get32();
+    //uint32_t tmr = os_cputime_get32();
 
     sprintf(debugText,    // ~165 bytes
             "#FFFF00 InfiniTime#\n\n"
