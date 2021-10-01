@@ -450,6 +450,10 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
         , activityController
 #endif
       );
+#ifdef CUEBAND_DISABLE_APP_LAUNCHER
+      // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
+      ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+#endif
       break;
 #endif
   }
