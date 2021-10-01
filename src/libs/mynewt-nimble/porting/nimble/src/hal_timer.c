@@ -470,10 +470,6 @@ hal_timer_init(int timer_num, void *cfg)
         hwtimer = NRF_RTC0;
         irq_isr = nrf52_timer5_irq_handler;
         bsptimer->tmr_rtc = 1;
-#ifdef CUEBAND_BLE_OVERFLOW_HAL_TIMER
-#warning "NOTE: This build is initializing the hal_timer to overflow when treated as a signed 32-bit value after 512 seconds (8m32s)."
-bsptimer->tmr_cntr = ((uint32_t)0x7f << 24);
-#endif
         break;
 #endif
     default:

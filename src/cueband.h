@@ -75,10 +75,6 @@
 
 #define CUEBAND_DEBUG_ADV       // Collect debug info for advertising state
 
-#ifdef CUEBAND_DEBUG_ADV
-    #define CUEBAND_BLE_OVERFLOW_HAL_TIMER
-#endif
-
 
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
