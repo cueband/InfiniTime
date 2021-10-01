@@ -642,7 +642,7 @@ void ActivityController::DebugText(char *debugText, bool additionalInfo) {
   } else {  // additionalInfo
 
 #ifdef CUEBAND_DEBUG_ACTIVITY
-    p += sprintf(p, "#:%d e:%d/%d\n", epochSumCount, currentTime - epochStartTime, (int)epochInterval);
+    p += sprintf(p, "#:%u e:%u/%u\n", (unsigned int)epochSumCount, (unsigned int)(currentTime - epochStartTime), (unsigned int)epochInterval);
     p += sprintf(p, "%+4d%+4d%+4d\n", activity_debug_info.lastX, activity_debug_info.lastY, activity_debug_info.lastZ);
     p += sprintf(p, "SSq:%u\n", (unsigned int)activity_debug_info.lastSumSquares);
     p += sprintf(p, "SVM:%u\n", (unsigned int)activity_debug_info.lastSVM);
