@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "CurrentTimeClient.h"
 #include <hal/nrf_rtc.h>
 #include <nrf_log.h>
@@ -84,11 +86,22 @@ int CurrentTimeClient::OnCurrentTimeReadResult(uint16_t conn_handle, const ble_g
   if (error->status == 0) {
     // TODO check that attribute->handle equals the handle discovered in OnCharacteristicDiscoveryEvent
     CtsData result;
+#ifdef CUEBAND_FIX_CURRENT_TIME_CLIENT
+    int rc = 
+#endif
     os_mbuf_copydata(attribute->om, 0, sizeof(CtsData), &result);
+#ifdef CUEBAND_FIX_CURRENT_TIME_CLIENT
+    if (rc == 0) {
+#endif
     NRF_LOG_INFO(
       "Received data: %d-%d-%d %d:%d:%d", result.year, result.month, result.dayofmonth, result.hour, result.minute, result.second);
     dateTimeController.SetTime(
       result.year, result.month, result.dayofmonth, 0, result.hour, result.minute, result.second, nrf_rtc_counter_get(portNRF_RTC_REG));
+#ifdef CUEBAND_FIX_CURRENT_TIME_CLIENT
+    } else {
+      NRF_LOG_INFO("Error reading current time: %u of %u bytes available", attribute->om->om_len, sizeof(CtsData));
+    }
+#endif
   } else {
     NRF_LOG_INFO("Error retrieving current time: %d", error->status);
   }

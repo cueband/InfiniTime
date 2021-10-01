@@ -176,6 +176,8 @@
     #define CUEBAND_FS_FILETELL_ENABLED
 #endif
 
+#define CUEBAND_FIX_CURRENT_TIME_CLIENT // Validate response length
+
 #define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
 //#define CUEBAND_POSSIBLE_FIX_BLE_CONNECT_SERVICE_DISCOVERY_TIMEOUT      // Possible race condition on service discovery?
 
