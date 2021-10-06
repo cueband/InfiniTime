@@ -180,7 +180,6 @@
 
 #define CUEBAND_FIX_CURRENT_TIME_CLIENT // Validate response length
 
-#define CUEBAND_POSSIBLE_FIX_FS         // The value in FS.h for `size` looks incorrect?
 //#define CUEBAND_POSSIBLE_FIX_BLE_CONNECT_SERVICE_DISCOVERY_TIMEOUT      // Possible race condition on service discovery?
 
 //#define CUEBAND_POLL_START_ADVERTISING  // Experiment to hackily move advertising start so that it is not called from the NimBLE (or higher priority) task -- see:  http://mynewt.apache.org/latest/network/ble_hs/ble_gap.html#c.ble_gap_adv_stop
