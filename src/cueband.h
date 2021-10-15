@@ -187,24 +187,10 @@
 
 #define CUEBAND_DELAY_START 50          // Delay cue.band service intialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
-#if 0   // Fast debugging
-    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 2   // 2-second epoch
-    #define CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK 5 // 5 samples per block (10 seconds) -- override for debugging (normally derived from available space)
-    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 4   // 6 blocks per file (60 seconds)
-    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 3-4 minutes
-#elif 0 // Multi-day debugging
-    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 1-minute
-    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 52  // 1 day
-    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files of data giving only 3-4 days
-#elif 0 // Old logging (15-20 days)
-    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
-    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 256 // 256 = 64 kB, ~5 days/file;  
-    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 15-20 days
-#else // New logging (30-40 days)
-    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
-    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 512 // 512 = 128 kB, ~10 days/file;  
-    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 30-40 days
-#endif
+// Logging (30-40 days)
+#define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
+#define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 512 // 512 = 128 kB, ~10 days/file;  
+#define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 30-40 days
 
 #define ACTIVITY_BLOCK_SIZE 256
 
