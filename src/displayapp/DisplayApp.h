@@ -18,6 +18,7 @@
 #include "touchhandler/TouchHandler.h"
 
 #include "Messages.h"
+#include "BootErrors.h"
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
 #include "components/activity/ActivityController.h"
@@ -69,7 +70,7 @@ namespace Pinetime {
                  , Pinetime::Controllers::ActivityController& activityController
 #endif
                  );
-      void Start();
+      void Start(System::BootErrors error);
       void PushMessage(Display::Messages msg);
 
       void StartApp(Apps app, DisplayApp::FullRefreshDirections direction);
@@ -127,6 +128,7 @@ namespace Pinetime {
 
       Apps nextApp = Apps::None;
       DisplayApp::FullRefreshDirections nextDirection;
+      System::BootErrors bootError;
     };
   }
 }
