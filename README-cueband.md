@@ -124,25 +124,72 @@ The BLE service can be used to:
 | Name                          | Schedule Status Characteristic                   |
 | UUID                          | *(TBD)*                                          |
 | Read `status`                 | Query the current schedule status, and resets the `read_index` to `0`.   |
-| Write *(no data)*             | Clears the scratch schedule with empty control points, and stores it as the active schedule with `schedule_id=0xffffffff`. |
-| Write `store`                 | Store the scratch schedule as the active schedule with the specified ID. |
+| Write *(no data)*             | Clears the scratch schedule with empty control points, and stores it as the active schedule with `schedule_id=0xffffffff` indicating no schedule. |
+| Write `change_options`        | Changes the allowed device interface options as specified. |
+| Write `set_impromptu`         | Configures the current *impromptu* settings . |
+| Write `store_schedule`        | Store the scratch schedule as the active schedule with the specified ID. |
 
-Where `status` is:
+`status` is:
 
-```c
-struct {
-    uint32_t active_schedule_id;    // @0
-    uint16_t max_control_points;    // @4
-} // @6
-```
+> ```c
+> struct {
+>     uint32_t active_schedule_id;    // @0
+>     uint16_t max_control_points;    // @4
+>     uint16_t current_control_point; // @6 Current active control point (0xffff=none)
+>     uint8_t override;               // @8 Override setting (0x00=no override, 0x01=snooze, 0x02=impromptu)
+>     uint8_t intensity;              // @9 Active cueing intensity
+>     uint16_t interval;              // @10 Active cueing interval (seconds)
+>     uint32_t duration;              // @12 Active configured cueing duration (seconds)
+>     uint32_t remaining;             // @16 Active remaining cueing duration (seconds) (seconds)
+> } // @20
+> ```
 
-Where `store` is:
+**TODO:** Change above to 
 
-```c
-struct {
-    uint32_t schedule_id;           // @0
-} // @4
-```
+
+`change_options` is:
+
+> ```c
+>  struct {
+>      uint8_t command_type;           // @0 = 0x01 for "change >  options"
+>      uint8_t reserved[3];            // @1 (reserved/padding, >  write as 0x00)
+>      uint32_t options;               // @4 Device interface options
+>  } // @8
+>  ```
+>  
+>  Where `options` is combined of the following bit flags OR'd together:
+>  
+>  * `0b00000001` - Allow user to enable/disable cueing functionality (set: user enable/disable in cue settings menu; >  clear: do not show cue settings menu)
+>  * `0b00000010` - Allow cueing functionality -- will follow a programmed schedule
+>  * `0b00000100` - If cueing allowed, will show status on screen
+>  * `0b00001000` - If cueing allowed, will allow tap to open cue details
+>  * `0b00010000` - Cue details allows customized vibration level
+>  * `0b00100000` - Cue details allows snooze
+>  * `0b01000000` - Cue details allows impromtu cueing
+>  * `0b10000000` - (reserved)
+
+`set_impromtu` is:
+
+> ```c
+> struct {
+>     uint8_t command_type;           // @0 = 0x02 for "set impromptu"
+>     uint8_t reserved[3];            // @1 (reserved/padding, write as 0x00)
+>     uint8_t override;               // @4 Override setting (0x00=no override, 0x01=snooze, 0x02=impromptu)
+>     uint8_t intensity;              // @5 (`override != 0x00`) Override cueing intensity
+>     uint16_t interval;              // @6 (`override != 0x00`) Override cueing interval (seconds)
+>     uint32_t duration;              // @8 (`override != 0x00`) Override cueing duration (seconds)
+> } // @12
+> ```
+
+`store_schedule` is:
+
+> ```c
+> struct {
+>     uint8_t command_type;           // @0 = 0x03 for "store schedule
+>     uint8_t reserved[3];            // @1 (reserved/padding, write as 0x00)
+>     uint32_t schedule_id;           // @4 Schedule ID to use to store the current scratch schedule information
+> } // @8
+> ```
 
 
 #### Characteristic: Schedule Control Point
@@ -158,15 +205,15 @@ struct {
 
 Where `control_point`:
 
-```c
-struct {
-    uint16_t index;         // @0 Write: control point index to set; Read: the `read_index` being read
-    uint8_t  intensity;     // @2 Prompt intensity (0=off; non-zero values=prompt)
-    uint8_t  days;          // @3 Least-significant 7-bits: a bitmap of the days the control point is active for. (b0=Sun, b1=Mon, ..., b6=Sat)
-    uint16_t minute;        // @4 Least-significant 11-bits: minute of the day the control point begins. (0-1439)
-    uint16_t interval;      // @6 Number of seconds for the prompting interval
-} // @8
-```
+> ```c
+> struct {
+>     uint16_t index;         // @0 Write: control point index to set; Read: the `read_index` being read
+>     uint8_t  intensity;     // @2 Prompt intensity (0=off; non-zero values=prompt)
+>     uint8_t  days;          // @3 Least-significant 7-bits: a bitmap of the days the control point is active for. (b0=Sun, b1=Mon, ..., b6=Sat)
+>     uint16_t minute;        // @4 Least-significant 11-bits: minute of the day the control point begins. (0-1439)
+>     uint16_t interval;      // @6 Number of seconds for the prompting interval
+> } // @8
+> ```
 
 
 ## Additional Feature: Device Activity Log
@@ -211,16 +258,16 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 
 Where `status` is:
 
-```c
-struct {
-    uint32_t earliestBlockId;           // @0  Earliest available logical block ID
-    uint32_t activeBlockId;             // @4  Last available logical block ID (the active block -- partially written)
-    uint16_t blockSize = 256;           // @8  Size (bytes) of each block
-    uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
-    uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
-    uint8_t  flags;                     // @14 Status flags (b0 = firmware validated)
-} // @14
-```
+> ```c
+> struct {
+>     uint32_t earliestBlockId;           // @0  Earliest available logical block ID
+>     uint32_t activeBlockId;             // @4  Last available logical block ID (the active block -- partially written)
+>     uint16_t blockSize = 256;           // @8  Size (bytes) of each block
+>     uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
+>     uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
+>     uint8_t  flags;                     // @14 Status flags (b0 = firmware validated)
+> } // @14
+> ```
 
 #### Characteristic: Activity Block
 
@@ -232,11 +279,11 @@ struct {
 
 Where `request` is:
 
-```c
-struct {
-    uint32_t logicalBlockId;            // @0
-} // @4
-```
+> ```c
+> struct {
+>     uint32_t logicalBlockId;            // @0
+> } // @4
+> ```
 
 #### Characteristic: Activity Block Data
 
@@ -248,12 +295,12 @@ struct {
 
 Where `response` is:
 
-```c
-struct {
-    uint16_t payload_length;                // @0
-    uint8_t payload_body[payload_length];   // @2
-} // @(payload_length)
-```
+> ```c
+> struct {
+>     uint16_t payload_length;                // @0
+>     uint8_t payload_body[payload_length];   // @2
+> } // @(payload_length)
+> ```
 
 Where `payload_length` is likely to be `256`, and `payload_body` should be interpreted as `activity_log` (see below: *Device Activity Log Block Format*).
 
@@ -262,76 +309,76 @@ Where `payload_length` is likely to be `256`, and `payload_body` should be inter
 
 The device activity log blocks are of the form `activity_log`:
 
-```c
-const size_t BLOCK_SIZE = 256;
-const size_t SAMPLE_CAPACITY = ((BLOCK_SIZE-30-2)/8);  // =28
-
-struct {
-    // @0 Header (30 bytes)
-    uint16_t   block_type;              // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
-    uint16_t   block_length;            // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
-    uint16_t   format;                  // @4  0x00 = current format (8-bytes per sample)
-    uint32_t   block_id;                // @6  Logical block identifier
-    uint8_t[6] device_id;               // @10 Device ID (address)
-    uint32_t   timestamp;               // @16 Seconds since epoch for the first sample
-    uint8_t    count;                   // @20 Number of valid samples (up to 28 samples when 8-bytes each in a 256-byte block)
-    uint8_t    epoch_interval;          // @21 Epoch interval (seconds, = 60)
-    uint32_t   prompt_configuration;    // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
-    uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=charging, lower 7-bits: percentage)
-    uint8_t    accelerometer;           // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
-    int8_t     temperature;             // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
-    uint8_t    firmware;                // @29 Firmware version
-
-    // @30 Body (BLOCK_SIZE-30-2=224 bytes)
-    activity_sample sample[SAMPLE_CAPACITY];// @30 Samples (8-bytes each; (BLOCK_SIZE-30-2)/8 = 28 count) at epoch interval from start time
-
-    // @(BLOCK_SIZE-2=254) Checksum (2 bytes)
-    uint16_t   checksum;                // @(BLOCK-SIZE-2=254)
-} // @(BLOCK_SIZE)
-```
+> ```c
+> const size_t BLOCK_SIZE = 256;
+> const size_t SAMPLE_CAPACITY = ((BLOCK_SIZE-30-2)/8);  // =28
+> 
+> struct {
+>     // @0 Header (30 bytes)
+>     uint16_t   block_type;              // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
+>     uint16_t   block_length;            // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
+>     uint16_t   format;                  // @4  0x00 = current format (8-bytes per sample)
+>     uint32_t   block_id;                // @6  Logical block identifier
+>     uint8_t[6] device_id;               // @10 Device ID (address)
+>     uint32_t   timestamp;               // @16 Seconds since epoch for the first sample
+>     uint8_t    count;                   // @20 Number of valid samples (up to 28 samples when 8-bytes each in a 256-byte block)
+>     uint8_t    epoch_interval;          // @21 Epoch interval (seconds, = 60)
+>     uint32_t   prompt_configuration;    // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
+>     uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=charging, lower 7-bits: percentage)
+>     uint8_t    accelerometer;           // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
+>     int8_t     temperature;             // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
+>     uint8_t    firmware;                // @29 Firmware version
+> 
+>     // @30 Body (BLOCK_SIZE-30-2=224 bytes)
+>     activity_sample sample[SAMPLE_CAPACITY];// @30 Samples (8-bytes each; (BLOCK_SIZE-30-2)/8 = 28 count) at epoch interval from start time
+> 
+>     // @(BLOCK_SIZE-2=254) Checksum (2 bytes)
+>     uint16_t   checksum;                // @(BLOCK-SIZE-2=254)
+> } // @(BLOCK_SIZE)
+> ```
 
 Where `format` is one of:
 
-|  Value | Description                                                |
-|:------:|:-----------------------------------------------------------|
-| 0x0000 | 30 Hz resampled data, no high-pass filter, no SVMMO.       |
-| 0x0001 | 30 Hz resampled data, no high-pass filter, SVMMO present.  |
-| 0x0002 | 40 Hz resampled data, high-pass filter SVMMO and unfiltered SVMMO. |
+> |  Value | Description                                                |
+> |:------:|:-----------------------------------------------------------|
+> | 0x0000 | 30 Hz resampled data, no high-pass filter, no SVMMO.       |
+> | 0x0001 | 30 Hz resampled data, no high-pass filter, SVMMO present.  |
+> | 0x0002 | 40 Hz resampled data, high-pass filter SVMMO and unfiltered SVMMO. |
 
 Each sample is of the form `activity_sample`:
 
-```c
-struct {
-    uint16_t events;                    // @0 Event flags (see below)
-    uint16_t prompts_steps;             // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
-    uint16_t mean_filtered_svmmo;       // @4 Mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
-    uint16_t mean_svmmo;                // @6 Mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
-} // @8
-```
+> ```c
+> struct {
+>     uint16_t events;                    // @0 Event flags (see below)
+>     uint16_t prompts_steps;             // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
+>     uint16_t mean_filtered_svmmo;       // @4 Mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
+>     uint16_t mean_svmmo;                // @6 Mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
+> } // @8
+> ```
 
-Note: Offset `@4` was previously (format `0x0000`-`0x0001`): *Mean of the SVM values for the entire epoch*.
+<!-- Note: Offset `@4` was previously (format `0x0000`-`0x0001`): *Mean of the SVM values for the entire epoch*. -->
 
 
 The `events` flags are bitwise flags and defined as follows:
 
-```c
-const uint16_t ACTIVITY_EVENT_POWER_CONNECTED     = 0x0001;  // @b0  Connected to power for at least part of the epoch
-const uint16_t ACTIVITY_EVENT_POWER_CHANGED       = 0x0002;  // @b1  Power connection status changed during the epoch
-const uint16_t ACTIVITY_EVENT_BLUETOOTH_CONNECTED = 0x0004;  // @b2  Connected to Bluetooth for at least part the epoch
-const uint16_t ACTIVITY_EVENT_BLUETOOTH_CHANGED   = 0x0008;  // @b3  Bluetooth connection status changed during the epoch
-const uint16_t ACTIVITY_EVENT_BLUETOOTH_COMMS     = 0x0010;  // @b4  Communication protocol activity
-const uint16_t ACTIVITY_EVENT_WATCH_AWAKE         = 0x0020;  // @b5  Watch was awoken at least once during the epoch
-const uint16_t ACTIVITY_EVENT_WATCH_INTERACTION   = 0x0040;  // @b6  Watch screen interaction (button or touch)
-const uint16_t ACTIVITY_EVENT_RESTART             = 0x0080;  // @b7  First epoch after device restart (or event logging restarted?)
-const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn
-const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer considered asleep
-const uint16_t ACTIVITY_EVENT_RESERVED_1          = 0x0400;  // @b10 (Reserved 1)
-const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 (TBD?) Cue: new configuration written
-const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (TBD?) Cue: user opened app
-const uint16_t ACTIVITY_EVENT_CUE_TEMPORARY       = 0x2000;  // @b13 Cue: temporary changed of prompting configuration
-const uint16_t ACTIVITY_EVENT_CUE_SNOOZED         = 0x4000;  // @b14 (TBD?) Cue: user snoozed cueing
-const uint16_t ACTIVITY_EVENT_RESERVED_2          = 0x8000;  // @b15 (Reserved 2)
-```
+> ```c
+> const uint16_t ACTIVITY_EVENT_POWER_CONNECTED     = 0x0001;  // @b0  Connected to power for at least part of the epoch
+> const uint16_t ACTIVITY_EVENT_POWER_CHANGED       = 0x0002;  // @b1  Power connection status changed during the epoch
+> const uint16_t ACTIVITY_EVENT_BLUETOOTH_CONNECTED = 0x0004;  // @b2  Connected to Bluetooth for at least part the epoch
+> const uint16_t ACTIVITY_EVENT_BLUETOOTH_CHANGED   = 0x0008;  // @b3  Bluetooth connection status changed during the epoch
+> const uint16_t ACTIVITY_EVENT_BLUETOOTH_COMMS     = 0x0010;  // @b4  Communication protocol activity
+> const uint16_t ACTIVITY_EVENT_WATCH_AWAKE         = 0x0020;  // @b5  Watch was awoken at least once during the epoch
+> const uint16_t ACTIVITY_EVENT_WATCH_INTERACTION   = 0x0040;  // @b6  Watch screen interaction (button or touch)
+> const uint16_t ACTIVITY_EVENT_RESTART             = 0x0080;  // @b7  First epoch after device restart (or event logging restarted?)
+> const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn
+> const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer considered asleep
+> const uint16_t ACTIVITY_EVENT_RESERVED_1          = 0x0400;  // @b10 (Reserved 1)
+> const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 (TBD?) Cue: new configuration written
+> const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (TBD?) Cue: user opened app
+> const uint16_t ACTIVITY_EVENT_CUE_TEMPORARY       = 0x2000;  // @b13 Cue: temporary changed of prompting configuration
+> const uint16_t ACTIVITY_EVENT_CUE_SNOOZED         = 0x4000;  // @b14 (TBD?) Cue: user snoozed cueing
+> const uint16_t ACTIVITY_EVENT_RESERVED_2          = 0x8000;  // @b15 (Reserved 2)
+> ```
 
 
 ## Additional Feature: UART
