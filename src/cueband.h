@@ -3,6 +3,13 @@
 
 #pragma once
 
+#if defined(PINETIME_IS_RECOVERY)
+    #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
+        //#warning "Note: Recovery build -- no cue.band specific options"
+    #endif
+#else
+
+
 #define CUEBAND_LOG
 
 // Preprocessor fun
@@ -289,3 +296,5 @@ void cblog(const char *str);
 
 // SystemTask.cpp:
 //   uint32_t systick_counter = nrf_rtc_counter_get(portNRF_RTC_REG);
+
+#endif // PINETIME_IS_RECOVERY

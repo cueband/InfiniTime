@@ -1,4 +1,5 @@
 #pragma once
+#include "cueband.h"
 #include <FreeRTOS.h>
 #include <date/date.h>
 #include <queue.h>
