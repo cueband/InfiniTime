@@ -66,6 +66,11 @@ void HeartRateTask::Work() {
 
     if (measurementStarted) {
       auto hrs = heartRateSensor.ReadHrs();
+#ifdef CUEBAND_BUFFER_RAW_HR
+      auto als = heartRateSensor.ReadAls();
+      uint32_t hrmValue = (((uint32_t)als) << 16) | ((uint16_t)hrs);
+      hrmBuffer[numSamples++ % hrmCapacity] = hrmValue;
+#endif
       ppg.Preprocess(hrs);
       auto bpm = ppg.HeartRate();
 
@@ -90,6 +95,9 @@ void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
 }
 
 void HeartRateTask::StartMeasurement() {
+#ifdef CUEBAND_BUFFER_RAW_HR
+  numSamples = 0;
+#endif
   heartRateSensor.Enable();
   vTaskDelay(100);
   ppg.SetOffset(static_cast<float>(heartRateSensor.ReadHrs()));
@@ -98,4 +106,37 @@ void HeartRateTask::StartMeasurement() {
 void HeartRateTask::StopMeasurement() {
   heartRateSensor.Disable();
   vTaskDelay(100);
+#ifdef CUEBAND_BUFFER_RAW_HR
+  numSamples = 0;
+#endif
 }
+
+#ifdef CUEBAND_BUFFER_RAW_HR
+// If NULL pointer: count of buffer entries available since previous cursor position
+// otherwise: read from buffer from previous cursor position, return count, update cursor position
+size_t HeartRateTask::BufferRead(uint32_t *data, size_t *cursor, size_t maxCount) {
+  // TODO: Although this is just for a quick test right now, this needs synchronization to be correct
+  size_t first = *cursor;
+  size_t last = numSamples;
+  // Reset cursor if samples wrapped or restarted
+  if (first > last) first = 0;
+  // Bump cursor if samples overflowed
+  if (last > hrmCapacity && first < last - hrmCapacity) first = last - hrmCapacity;
+  // Requested count
+  size_t count = last - first;
+  if (count > maxCount) count = maxCount;
+
+  // If buffer specified:
+  if (data != nullptr) {
+    // Copy out data
+    for (size_t i = 0; i < count; i++) {
+      data[i] = hrmBuffer[(first + i) % maxCount];
+    }
+    // Update cursor
+    *cursor = first + count;
+  }
+
+  // Return count
+  return count;
+}
+#endif

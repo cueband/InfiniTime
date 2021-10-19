@@ -158,7 +158,8 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
       batteryController, 
       dateTimeController, 
       motorController, 
-      motionController
+      motionController,
+      heartRateController
 #ifdef CUEBAND_ACTIVITY_ENABLED
       , activityController
 #endif

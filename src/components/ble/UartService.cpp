@@ -193,7 +193,8 @@ Pinetime::Controllers::UartService::UartService(Pinetime::System::SystemTask& sy
         Controllers::Battery& batteryController,
         Controllers::DateTime& dateTimeController,
         Pinetime::Controllers::MotorController& motorController,
-        Pinetime::Controllers::MotionController& motionController
+        Pinetime::Controllers::MotionController& motionController,
+        Pinetime::Controllers::HeartRateController& heartRateController
 #ifdef CUEBAND_ACTIVITY_ENABLED
         , Pinetime::Controllers::ActivityController& activityController
 #endif
@@ -206,7 +207,8 @@ Pinetime::Controllers::UartService::UartService(Pinetime::System::SystemTask& sy
     batteryController {batteryController},
     dateTimeController {dateTimeController},
     motorController {motorController},
-    motionController {motionController} 
+    motionController {motionController},
+    heartRateController {heartRateController}
 #ifdef CUEBAND_ACTIVITY_ENABLED
     , activityController {activityController}
 #endif
@@ -249,8 +251,7 @@ Pinetime::Controllers::UartService::UartService(Pinetime::System::SystemTask& sy
     serviceDefinition[1] = {0};
 
 #ifdef CUEBAND_STREAM_ENABLED
-    streamFlag = false;
-    streamSampleIndex = -1;
+    StopStreaming();
 #endif
 }
 
@@ -266,7 +267,7 @@ void Pinetime::Controllers::UartService::Init() {
 void Pinetime::Controllers::UartService::Disconnect() {
     // Stop streaming
 #ifdef CUEBAND_STREAM_ENABLED
-    if (streamFlag) streamFlag = false;
+    StopStreaming();
 #endif
 
     // Free resources
@@ -320,8 +321,7 @@ void Pinetime::Controllers::UartService::SendNextPacket() {
                 packetTransmitting = false;
                 if (transmitErrorCount++ > 10) {
                     // TODO: Stop streaming (if streaming)?
-                    streamFlag = false;
-                    blockLength = 0;
+                    StopStreaming();
                 }
                 break;
             }
@@ -360,16 +360,14 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
             char resp[128];
             // Initially-empty response
             resp[0] = '\0';
-
 #ifdef CUEBAND_STREAM_ENABLED
             // If receive any packet while streaming, stop streaming
             if (streamFlag) { // data[0] != 'I'
-                streamFlag = false;
                 // If mid-packet, terminate packet
                 if (streamSampleIndex >= 0) {
                     StreamAppendString("\r\n");
                 }
-                streamSampleIndex = -1;
+                StopStreaming();
             }
 #endif
 
@@ -431,14 +429,16 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
             } else if (data[0] == 'I') {  // Stream sensor data
 #ifdef CUEBAND_STREAM_ENABLED
-                // Parse 'I' command's space-separated rate/range
+                // Parse 'I' command's space-separated rate/range/options
                 char *p = (char *)data + 1;
                 int rate = (int)strtol(p, &p, 0);
                 int range = (int)strtol(p, &p, 0);
+                int options = (int)strtol(p, &p, 0);
 
                 // Streaming defaults
                 if (rate == 0) rate = 50;
                 if (range == 0) range = 8;
+                //if (options == 0) options = 0;
 
                 // TODO: Try to honor the requested settings
 #ifdef CUEBAND_STREAM_RESAMPLED
@@ -450,13 +450,21 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
                 // Respond with settings in use
                 int mode = 0;   // 0=accel, 2=debug info ('D' command)
-                sprintf(resp, "OP:%02x, %d, %d\r\n", mode, rate, range);
+                sprintf(resp, "OP:%02x, %d, %d, %d\r\n", mode, rate, range, options);
 
                 streamConnectionHandle = conn_handle;
                 streamFlag = true;
                 transmitErrorCount = 0;
                 streamSampleIndex = -1; // header not yet sent
                 streamStartTicks = xTaskGetTickCount();
+                streamOptions = options;
+
+#ifdef CUEBAND_BUFFER_RAW_HR
+                if (streamOptions & 1) {
+                    heartRateController.Start();
+                    streamingHr = true;
+                }
+#endif
 #else
                 sprintf(resp, "?Disabled\r\n");
 #endif
@@ -867,11 +875,9 @@ bool Pinetime::Controllers::UartService::StreamSamples(const int16_t *samples, s
 
             // Hex sample
             uint8_t sampleHex[12 + 2];  // 2 * 3 * 2 + 2
-            Base16Encode(sampleBin, sizeof(sampleBin), sampleHex);
+            uint16_t sampleLen = Base16Encode(sampleBin, sizeof(sampleBin), sampleHex);     // 2 * 3 * 2 = 12
 
             // Send hex-encoded
-            uint16_t sampleLen = 12;    // 2 * 3 * 2
-
             streamSampleIndex++;
             if (streamSampleIndex >= 25) {
                 // Append CRLF
@@ -882,6 +888,35 @@ bool Pinetime::Controllers::UartService::StreamSamples(const int16_t *samples, s
             }
 
             StreamAppend(sampleHex, sampleLen);
+
+#ifdef CUEBAND_BUFFER_RAW_HR
+            // Insert HR packet between accelerometer packets
+            if (streamingHr && streamSampleIndex == -1) {
+                // Count of buffer entries available since previous cursor position
+                //size_t available = heartRateController.BufferRead(nullptr, &hrCursor, SIZE_MAX);
+
+                // Prefix
+                sampleLen = 0;
+                sampleHex[sampleLen++] = '!';
+                StreamAppend(sampleHex, sampleLen);
+
+                for (int j = 0; j < 32; j++) {
+                    // Read buffer from previous cursor position, update cursor position
+                    uint32_t hrBuffer[1];
+                    size_t count = heartRateController.BufferRead(hrBuffer, &hrCursor, sizeof(hrBuffer) / sizeof(hrBuffer[0]));
+                    if (count == 0) break;
+                    sampleLen = Base16Encode((const uint8_t *)&hrBuffer[0], sizeof(hrBuffer[0] * count), sampleHex);
+                    StreamAppend(sampleHex, sampleLen);
+                }
+
+                // Suffix
+                sampleLen = 0;
+                sampleHex[sampleLen++] = '\r';
+                sampleHex[sampleLen++] = '\n';
+                StreamAppend(sampleHex, sampleLen);
+
+            }
+#endif
         }
     }
 
@@ -901,7 +936,7 @@ bool Pinetime::Controllers::UartService::Stream() {
     // Not streaming if disconnected
     // TODO: Make this event-based
     if (streamFlag && !bleController.IsConnected()) {
-        streamFlag = false;
+        StopStreaming();
     }
 
     if (!streamFlag) {
@@ -941,7 +976,23 @@ bool Pinetime::Controllers::UartService::Stream() {
     SendNextPacket();
     return streamFlag;
 }
+
+void Pinetime::Controllers::UartService::StopStreaming() {
+    if (streamFlag) {
+        streamFlag = false;
+        streamSampleIndex = -1;
+        blockLength = 0;
+    }
+#ifdef CUEBAND_BUFFER_RAW_HR
+    if (streamingHr) {
+        heartRateController.Stop();
+        streamingHr = false;
+    }
 #endif
+}
+
+
+#endif  // CUEBAND_STREAM_ENABLED
 
 // TODO: Proper notification
 // std::string Pinetime::Controllers::UartService::getLine() {

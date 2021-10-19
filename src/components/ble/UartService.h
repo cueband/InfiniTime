@@ -30,6 +30,7 @@ namespace Pinetime {
 #include "components/datetime/DateTimeController.h"
 #include "components/motor/MotorController.h"
 #include "components/motion/MotionController.h"
+#include "components/heartrate/HeartRateController.h"
 #include "../firmwarevalidator/FirmwareValidator.h"
 #ifdef CUEBAND_ACTIVITY_ENABLED
 #include "components/activity/ActivityController.h"
@@ -62,7 +63,8 @@ namespace Pinetime {
         Controllers::Battery& batteryController,
         Controllers::DateTime& dateTimeController,
         Pinetime::Controllers::MotorController& motorController,
-        Pinetime::Controllers::MotionController& motionController
+        Pinetime::Controllers::MotionController& motionController,
+        Pinetime::Controllers::HeartRateController& heartRateController
 #ifdef CUEBAND_ACTIVITY_ENABLED
         , Pinetime::Controllers::ActivityController& activityController
 #endif
@@ -109,6 +111,7 @@ namespace Pinetime {
       Pinetime::Controllers::DateTime& dateTimeController;
       Pinetime::Controllers::MotorController& motorController;
       Pinetime::Controllers::MotionController& motionController;
+      Pinetime::Controllers::HeartRateController& heartRateController;
 #ifdef CUEBAND_ACTIVITY_ENABLED
       Pinetime::Controllers::ActivityController& activityController;
 #endif
@@ -142,12 +145,19 @@ namespace Pinetime {
       uint8_t *blockBuffer = nullptr;
 #endif
 #ifdef CUEBAND_STREAM_ENABLED
+      void StopStreaming();
       bool StreamSamples(const int16_t *samples, size_t count);
       unsigned int lastTotalSamples = 0;
+
+#ifdef CUEBAND_BUFFER_RAW_HR
+      bool streamingHr = false;
+      size_t hrCursor = 0;
+#endif
 
       // Streaming
       bool streamFlag;
       int streamSampleIndex;    // -1=not started, 0=sent header, once >=25 send CRLF
+      unsigned int streamOptions;
       unsigned int streamRawSampleCount;
       uint16_t streamConnectionHandle;
       TickType_t streamStartTicks;

@@ -1,4 +1,5 @@
 #pragma once
+#include "cueband.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
@@ -22,6 +23,12 @@ namespace Pinetime {
       void Work();
       void PushMessage(Messages msg);
 
+#ifdef CUEBAND_BUFFER_RAW_HR
+      // If NULL pointer: count of buffer entries available since previous cursor position
+      // otherwise: read from buffer from previous cursor position, return count, update cursor position
+      size_t BufferRead(uint32_t *data, size_t *cursor, size_t maxCount);
+#endif
+
     private:
       static void Process(void* instance);
       void StartMeasurement();
@@ -34,6 +41,11 @@ namespace Pinetime {
       Controllers::HeartRateController& controller;
       Controllers::Ppg ppg;
       bool measurementStarted = false;
+#ifdef CUEBAND_BUFFER_RAW_HR
+      static const size_t hrmCapacity = 32;
+      volatile size_t numSamples = 0;
+      uint32_t hrmBuffer[hrmCapacity];
+#endif
     };
 
   }

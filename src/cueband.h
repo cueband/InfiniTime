@@ -49,6 +49,10 @@
 // See: src/systemtask/SystemTask.cpp
 #define CUEBAND_STREAM_ENABLED
 
+// Streaming includes raw HR signal
+#define CUEBAND_BUFFER_RAW_HR
+
+
 // Stream the resampled data
 //#define CUEBAND_STREAM_RESAMPLED
 
