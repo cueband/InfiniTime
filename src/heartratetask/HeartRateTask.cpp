@@ -130,7 +130,7 @@ size_t HeartRateTask::BufferRead(uint32_t *data, size_t *cursor, size_t maxCount
   if (data != nullptr) {
     // Copy out data
     for (size_t i = 0; i < count; i++) {
-      data[i] = hrmBuffer[(first + i) % maxCount];
+      data[i] = hrmBuffer[(first + i) % hrmCapacity];
     }
     // Update cursor
     *cursor = first + count;

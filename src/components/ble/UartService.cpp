@@ -905,7 +905,7 @@ bool Pinetime::Controllers::UartService::StreamSamples(const int16_t *samples, s
                     uint32_t hrBuffer[1];
                     size_t count = heartRateController.BufferRead(hrBuffer, &hrCursor, sizeof(hrBuffer) / sizeof(hrBuffer[0]));
                     if (count == 0) break;
-                    sampleLen = Base16Encode((const uint8_t *)&hrBuffer[0], sizeof(hrBuffer[0] * count), sampleHex);
+                    sampleLen = Base16Encode((const uint8_t *)&hrBuffer[0], sizeof(hrBuffer[0]) * count, sampleHex);
                     StreamAppend(sampleHex, sampleLen);
                 }
 
