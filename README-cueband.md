@@ -139,8 +139,9 @@ The BLE service can be used to:
 >     uint8_t override;               // @8 Override setting (0x00=no override, 0x01=snooze, 0x02=impromptu)
 >     uint8_t intensity;              // @9 Active cueing intensity
 >     uint16_t interval;              // @10 Active cueing interval (seconds)
->     uint32_t duration;              // @12 Active configured cueing duration (seconds)
->     uint32_t remaining;             // @16 Active remaining cueing duration (seconds) (seconds)
+>     uint16_t duration;              // @12 Active configured cueing duration (seconds, saturates to 0xffff)
+>     uint16_t remaining;             // @14 Active remaining cueing duration (seconds, saturates to 0xffff)
+>     uint32_t options;               // @16 Device interface options
 > } // @20
 > ```
 
