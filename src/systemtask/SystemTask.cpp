@@ -116,11 +116,11 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
 #ifdef CUEBAND_CUE_ENABLED
     cueController {cueController},
 #endif
-    nimbleController(*this, bleController, dateTimeController, notificationManager, batteryController, spiNorFlash, heartRateController
+    nimbleController(*this, bleController, dateTimeController, notificationManager,
+                     batteryController, spiNorFlash, heartRateController, motionController
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       , settingsController
       , motorController
-      , motionController
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
       , activityController

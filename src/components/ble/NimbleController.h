@@ -21,6 +21,7 @@
 #include "NavigationService.h"
 #include "ServiceDiscovery.h"
 #include "HeartRateService.h"
+#include "MotionService.h"
 
 #ifdef CUEBAND_SERVICE_UART_ENABLED
 #include "UartService.h"
@@ -59,11 +60,11 @@ namespace Pinetime {
                        Pinetime::Controllers::NotificationManager& notificationManager,
                        Controllers::Battery& batteryController,
                        Pinetime::Drivers::SpiNorFlash& spiNorFlash,
-                       Controllers::HeartRateController& heartRateController
+                       Controllers::HeartRateController& heartRateController,
+                       Controllers::MotionController& motionController
 #ifdef CUEBAND_SERVICE_UART_ENABLED
                        , Controllers::Settings& settingsController
                        , Pinetime::Controllers::MotorController& motorController
-                       , Pinetime::Controllers::MotionController& motionController
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
                        , Pinetime::Controllers::ActivityController& activityController
@@ -146,6 +147,7 @@ namespace Pinetime {
       BatteryInformationService batteryInformationService;
       ImmediateAlertService immediateAlertService;
       HeartRateService heartRateService;
+      MotionService motionService;
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       UartService uartService;
 #endif
