@@ -139,13 +139,12 @@ The BLE service can be used to:
 >     uint8_t override;               // @8 Override setting (0x00=no override, 0x01=snooze, 0x02=impromptu)
 >     uint8_t intensity;              // @9 Active cueing intensity
 >     uint16_t interval;              // @10 Active cueing interval (seconds)
->     uint32_t duration;              // @12 Active configured cueing duration (seconds)
->     uint32_t remaining;             // @16 Active remaining cueing duration (seconds) (seconds)
+>     uint16_t duration;              // @12 Active configured cueing duration (seconds, saturates to 0xffff)
+>     uint16_t remaining;             // @14 Active remaining cueing duration (seconds, saturates to 0xffff)
+>     uint16_t options;               // @16 Device interface options
+>     uint16_t reserved;              // @18 (reserved)
 > } // @20
 > ```
-
-**TODO:** Change above to 
-
 
 `change_options` is:
 
@@ -153,8 +152,8 @@ The BLE service can be used to:
 >  struct {
 >      uint8_t command_type;           // @0 = 0x01 for "change >  options"
 >      uint8_t reserved[3];            // @1 (reserved/padding, >  write as 0x00)
->      uint32_t options;               // @4 Device interface options
->  } // @8
+>      uint16_t options;               // @4 Device interface options
+>  } // @6
 >  ```
 >  
 >  Where `options` is combined of the following bit flags OR'd together:
