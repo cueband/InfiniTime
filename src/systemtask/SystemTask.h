@@ -22,6 +22,8 @@
 #include "components/alarm/AlarmController.h"
 #include "components/fs/FS.h"
 #include "touchhandler/TouchHandler.h"
+#include "buttonhandler/ButtonHandler.h"
+#include "buttonhandler/ButtonActions.h"
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
 #include "components/activity/ActivityController.h"
@@ -54,6 +56,7 @@ namespace Pinetime {
   }
   namespace Controllers {
     class TouchHandler;
+    class ButtonHandler;
   }
   namespace System {
     class SystemTask {
@@ -80,7 +83,8 @@ namespace Pinetime {
                  Pinetime::Applications::DisplayApp& displayApp,
                  Pinetime::Applications::HeartRateTask& heartRateApp,
                  Pinetime::Controllers::FS& fs,
-                 Pinetime::Controllers::TouchHandler& touchHandler
+                 Pinetime::Controllers::TouchHandler& touchHandler,
+                 Pinetime::Controllers::ButtonHandler& buttonHandler
 #ifdef CUEBAND_ACTIVITY_ENABLED
                  , Pinetime::Controllers::ActivityController& activityController
 #endif
@@ -92,7 +96,6 @@ namespace Pinetime {
       void Start();
       void PushMessage(Messages msg);
 
-      void OnButtonPushed();
       void OnTouchEvent();
 
       void OnIdle();
@@ -145,6 +148,7 @@ namespace Pinetime {
       Pinetime::Applications::HeartRateTask& heartRateApp;
       Pinetime::Controllers::FS& fs;
       Pinetime::Controllers::TouchHandler& touchHandler;
+      Pinetime::Controllers::ButtonHandler& buttonHandler;
 #ifdef CUEBAND_ACTIVITY_ENABLED
       Pinetime::Controllers::ActivityController& activityController;
 #endif
@@ -162,6 +166,9 @@ namespace Pinetime {
       TimerHandle_t idleTimer;
       TimerHandle_t measureBatteryTimer;
       bool doNotGoToSleep = false;
+
+      void HandleButtonAction(Controllers::ButtonActions action);
+      bool fastWakeUpDone = false;
 
       void GoToRunning();
       void UpdateMotion();
