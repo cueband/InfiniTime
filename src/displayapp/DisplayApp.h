@@ -6,9 +6,9 @@
 #include <task.h>
 #include <memory>
 #include <systemtask/Messages.h>
-#include "Apps.h"
-#include "LittleVgl.h"
-#include "TouchEvents.h"
+#include "displayapp/Apps.h"
+#include "displayapp/LittleVgl.h"
+#include "displayapp/TouchEvents.h"
 #include "components/brightness/BrightnessController.h"
 #include "components/motor/MotorController.h"
 #include "components/firmwarevalidator/FirmwareValidator.h"
@@ -18,7 +18,7 @@
 #include "components/alarm/AlarmController.h"
 #include "touchhandler/TouchHandler.h"
 
-#include "Messages.h"
+#include "displayapp/Messages.h"
 #include "BootErrors.h"
 
 #ifdef CUEBAND_ACTIVITY_ENABLED

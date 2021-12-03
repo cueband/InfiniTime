@@ -1,6 +1,6 @@
 #include "cueband.h"
 
-#include "CurrentTimeClient.h"
+#include "components/ble/CurrentTimeClient.h"
 #include <hal/nrf_rtc.h>
 #include <nrf_log.h>
 #include "components/datetime/DateTimeController.h"

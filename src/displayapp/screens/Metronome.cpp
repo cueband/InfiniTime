@@ -1,7 +1,7 @@
 #include "cueband.h"
 
-#include "Metronome.h"
-#include "Symbols.h"
+#include "displayapp/screens/Metronome.h"
+#include "displayapp/screens/Symbols.h"
 
 using namespace Pinetime::Applications::Screens;
 

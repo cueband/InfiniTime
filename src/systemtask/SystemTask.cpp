@@ -1,6 +1,6 @@
 #include "cueband.h"
 
-#include "SystemTask.h"
+#include "systemtask/SystemTask.h"
 #define min // workaround: nimble's min/max macros conflict with libstdc++
 #define max
 #include <host/ble_gap.h>

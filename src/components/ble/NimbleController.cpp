@@ -1,7 +1,7 @@
 #include "cueband.h"
 #include "UartService.h"
 
-#include "NimbleController.h"
+#include "components/ble/NimbleController.h"
 #include <hal/nrf_rtc.h>
 #define min // workaround: nimble's min/max macros conflict with libstdc++
 #define max

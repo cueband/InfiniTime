@@ -1,8 +1,9 @@
-#include "FirmwareValidation.h"
+#include "displayapp/screens/FirmwareValidation.h"
 #include <lvgl/lvgl.h>
 #include "Version.h"
 #include "components/firmwarevalidator/FirmwareValidator.h"
-#include "../DisplayApp.h"
+#include "displayapp/DisplayApp.h"
+
 #include "cueband.h"
 
 using namespace Pinetime::Applications::Screens;
