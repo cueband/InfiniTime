@@ -10,9 +10,9 @@ ControlPointStore::ControlPointStore(ControlPoint *controlPoints, size_t maxCont
 
 // Invalidate the cache (e.g. if the control points are externally modified)
 void ControlPointStore::Invalidate() {
-    this->cachedCue = INDEX_NONE;
-    this->cachedDay = DAY_NONE;
-    this->cachedTime = TIME_NONE;
+    this->cachedCue = ControlPoint::INDEX_NONE;
+    this->cachedDay = ControlPoint::DAY_NONE;
+    this->cachedTime = ControlPoint::TIME_NONE;
     this->cachedUntilTime = 0;
 }
 
@@ -48,7 +48,7 @@ printf("]");
             this->cachedDay = day;
             this->cachedTime = 0;
             this->cachedUntilTime = ControlPoint::timePerDay;
-            this->cachedCue = INDEX_NONE;
+            this->cachedCue = ControlPoint::INDEX_NONE;
         }
     }
     // Return the value of the currently-active cue
