@@ -229,9 +229,7 @@ void DisplayApp::Refresh() {
         } else {
           LoadApp(Apps::Alarm, DisplayApp::FullRefreshDirections::None);
         }
-#ifdef CUEBAND_FIX_ALARMTRIGGERED_FALLTHROUGH
-break;
-#endif
+        break;
       case Messages::ShowPairingKey:
         LoadApp(Apps::PassKey, DisplayApp::FullRefreshDirections::Up);
         break;
