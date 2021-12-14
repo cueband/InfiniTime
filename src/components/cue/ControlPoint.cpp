@@ -2,11 +2,34 @@
 
 namespace Pinetime::Controllers {
 
-    ControlPoint::ControlPoint(uint32_t controlPoint) {
+    // Empty
+    ControlPoint::ControlPoint() {
+        Clear();
+    }
+
+    // From packed
+    ControlPoint::ControlPoint(control_point_packed_t controlPoint) {
+        Set(controlPoint);
+    }
+
+    // From components
+    ControlPoint::ControlPoint(bool enabled, unsigned int weekdays, unsigned int interval, unsigned int volume, unsigned int timeOfDay) {
+        Set(enabled, weekdays, interval, volume, timeOfDay);
+    }
+
+    // All fields to inactive values
+    void ControlPoint::Clear()
+    {
+        Set(false, ControlPoint::DAY_NONE, ControlPoint::TIME_NONE, ControlPoint::VOLUME_NONE, ControlPoint::TIME_NONE);
+    }
+
+    // From packed
+    void ControlPoint::Set(control_point_packed_t controlPoint) {
         this->controlPoint = controlPoint;
     }
 
-    ControlPoint::ControlPoint(bool enabled, unsigned int weekdays, unsigned int interval, unsigned int volume, unsigned int timeOfDay) {
+    // From components
+    void ControlPoint::Set(bool enabled, unsigned int weekdays, unsigned int interval, unsigned int volume, unsigned int timeOfDay) {
         this->controlPoint = 
               (enabled ? (1 << 31) : 0)
             | ((weekdays & (1 << numDays)) << 24)
@@ -14,6 +37,11 @@ namespace Pinetime::Controllers {
             | ((volume & ((1 << 3) - 1)) << 11)
             | (timeOfDay & ((1 << 11) - 1))
             ;
+    }
+
+    // Packed value
+    control_point_packed_t ControlPoint::Value() {
+        return controlPoint;
     }
 
     // Cue enabled
@@ -117,7 +145,7 @@ namespace Pinetime::Controllers {
     }
 
     // Find the nearest control points to the given day and time-of-day, both 'before-or-at' and 'after'. false if no valid points.
-    // controlPoints - pointer to ControlPoint elements
+    // controlPoints - pointer to control_point_packed_t elements
     // numControlPoints - number of control points
     // day - day of the week (bitmap: b0-b7)
     // time - time of the day
@@ -125,7 +153,7 @@ namespace Pinetime::Controllers {
     // outElapsed - duration control point has already been active
     // outNextIndex - next control point index (<0 if none)
     // outRemaining - remaining time until the next control point is active
-    bool ControlPoint::CueNearest(ControlPoint *controlPoints, size_t numControlPoints, unsigned int day, unsigned int time, int *outIndex, unsigned int *outElapsed, int *outNextIndex, unsigned int *outRemaining)
+    bool ControlPoint::CueNearest(control_point_packed_t *controlPoints, size_t numControlPoints, unsigned int day, unsigned int time, int *outIndex, unsigned int *outElapsed, int *outNextIndex, unsigned int *outRemaining)
     {
         int closestIndexBefore = INDEX_NONE;
         unsigned int closestDistanceBefore = TIME_NONE;
@@ -133,22 +161,22 @@ namespace Pinetime::Controllers {
         unsigned int closestDistanceAfter = TIME_NONE;
         for (int i = 0; (size_t)i < numControlPoints; i++)
         {
-            ControlPoint *controlPoint = &controlPoints[i];
+            ControlPoint controlPoint = ControlPoint(controlPoints[i]);
             unsigned int distance;
 
-            if (!controlPoint->IsEnabled())
+            if (!controlPoint.IsEnabled())
             {
                 continue;
             }
             
-            distance = controlPoint->CueTimeBefore(day, time);
+            distance = controlPoint.CueTimeBefore(day, time);
             if (distance != TIME_NONE && (distance < closestDistanceBefore || closestIndexBefore != TIME_NONE))
             {
                 closestIndexBefore = i;
                 closestDistanceBefore = distance;
             }
 
-            distance = controlPoint->CueTimeAfter(day, time);
+            distance = controlPoint.CueTimeAfter(day, time);
             if (distance != TIME_NONE && (distance < closestDistanceAfter || closestIndexAfter != TIME_NONE))
             {
                 closestIndexAfter = i;
