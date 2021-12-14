@@ -160,9 +160,10 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
     immediateAlertService {systemTask, notificationManager},
     heartRateService {systemTask, heartRateController},
     motionService {systemTask, motionController},
-    fsService {systemTask, fs},
+    serviceDiscovery({&currentTimeClient, &alertNotificationClient}),
+    fsService {systemTask, fs}
 #ifdef CUEBAND_SERVICE_UART_ENABLED
-    uartService {
+    , uartService {
       systemTask, 
       bleController, 
       settingsController, 
@@ -177,17 +178,17 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
 #ifdef CUEBAND_CUE_ENABLED
       , cueController
 #endif
-    },
+    }
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
-    activityService {
+    , activityService {
       systemTask,
       bleController,
       settingsController,
       activityController
-    },
+    }
 #endif
-    serviceDiscovery({&currentTimeClient, &alertNotificationClient}) {
+    {
 }
 
 void nimble_on_reset(int reason) {

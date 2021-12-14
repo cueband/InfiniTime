@@ -155,6 +155,7 @@ namespace Pinetime {
       MotionService motionService;
       ServiceDiscovery serviceDiscovery;
       FSService fsService;
+      
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       UartService uartService;
 #endif
