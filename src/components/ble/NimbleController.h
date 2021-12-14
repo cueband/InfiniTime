@@ -78,9 +78,6 @@ namespace Pinetime {
                        );
       void Init();
       void StartAdvertising();
-#ifdef CUEBAND_POLL_START_ADVERTISING
-      void PollStartAdvertising();
-#endif
       int OnGAPEvent(ble_gap_event* event);
 
       int OnDiscoveryEvent(uint16_t i, const ble_gatt_error* pError, const ble_gatt_svc* pSvc);
@@ -124,10 +121,6 @@ namespace Pinetime {
 #endif
 #if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
       size_t GetMtu();
-#endif
-#ifdef CUEBAND_POLL_START_ADVERTISING
-      volatile bool wantToStartAdvertising = false;
-      volatile int advertisingStartBackOff = 0;
 #endif
 
     private:
