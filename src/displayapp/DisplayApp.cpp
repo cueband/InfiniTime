@@ -31,6 +31,7 @@
 #include "displayapp/screens/FlashLight.h"
 #include "displayapp/screens/BatteryInfo.h"
 #include "displayapp/screens/Steps.h"
+#include "displayapp/screens/PassKey.h"
 #include "displayapp/screens/Error.h"
 
 #ifdef CUEBAND_APP_ENABLED
@@ -231,6 +232,9 @@ void DisplayApp::Refresh() {
 #ifdef CUEBAND_FIX_ALARMTRIGGERED_FALLTHROUGH
 break;
 #endif
+      case Messages::ShowPairingKey:
+        LoadApp(Apps::PassKey, DisplayApp::FullRefreshDirections::Up);
+        break;
       case Messages::TouchEvent: {
         if (state != States::Running) {
           break;
@@ -368,6 +372,11 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
     case Apps::FirmwareUpdate:
       currentScreen = std::make_unique<Screens::FirmwareUpdate>(this, bleController);
       ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::None);
+      break;
+
+    case Apps::PassKey:
+      currentScreen = std::make_unique<Screens::PassKey>(this, bleController.GetPairingKey());
+      ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::SwipeDown);
       break;
 
     case Apps::Notifications:
@@ -530,8 +539,9 @@ void DisplayApp::SetFullRefresh(DisplayApp::FullRefreshDirections direction) {
 }
 
 void DisplayApp::PushMessageToSystemTask(Pinetime::System::Messages message) {
-  if (systemTask != nullptr)
+  if (systemTask != nullptr) {
     systemTask->PushMessage(message);
+  }
 }
 
 void DisplayApp::Register(Pinetime::System::SystemTask* systemTask) {

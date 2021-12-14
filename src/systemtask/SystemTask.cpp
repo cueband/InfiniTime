@@ -124,25 +124,26 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
                      batteryController,
                      spiNorFlash,
                      heartRateController,
-                     motionController
+                     motionController,
+                     fs
 #ifdef CUEBAND_SERVICE_UART_ENABLED
-      , settingsController
-      , motorController
+                     , settingsController
+                     , motorController
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
-      , activityController
+                     , activityController
 #endif
 #ifdef CUEBAND_CUE_ENABLED
-      , cueController
+                     , cueController
 #endif
     ) {
-
 }
 
 void SystemTask::Start() {
   systemTasksMsgQueue = xQueueCreate(10, 1);
-  if (pdPASS != xTaskCreate(SystemTask::Process, "MAIN", 350, this, 0, &taskHandle))
+  if (pdPASS != xTaskCreate(SystemTask::Process, "MAIN", 350, this, 0, &taskHandle)) {
     APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
+  }
 }
 
 void SystemTask::Process(void* instance) {
@@ -213,20 +214,22 @@ void SystemTask::Work() {
   pinConfig.skip_gpio_setup = false;
   pinConfig.hi_accuracy = false;
   pinConfig.is_watcher = false;
-  pinConfig.sense = (nrf_gpiote_polarity_t) NRF_GPIOTE_POLARITY_TOGGLE;
-  pinConfig.pull = (nrf_gpio_pin_pull_t) GPIO_PIN_CNF_PULL_Pulldown;
+  pinConfig.sense = static_cast<nrf_gpiote_polarity_t>(NRF_GPIOTE_POLARITY_TOGGLE);
+  pinConfig.pull = static_cast<nrf_gpio_pin_pull_t>(GPIO_PIN_CNF_PULL_Pulldown);
 
   nrfx_gpiote_in_init(PinMap::Button, &pinConfig, nrfx_gpiote_evt_handler);
   nrfx_gpiote_in_event_enable(PinMap::Button, true);
 
   // Touchscreen
-  nrf_gpio_cfg_sense_input(PinMap::Cst816sIrq, (nrf_gpio_pin_pull_t) GPIO_PIN_CNF_PULL_Pullup, (nrf_gpio_pin_sense_t) GPIO_PIN_CNF_SENSE_Low);
+  nrf_gpio_cfg_sense_input(PinMap::Cst816sIrq,
+                           static_cast<nrf_gpio_pin_pull_t>(GPIO_PIN_CNF_PULL_Pullup),
+                           static_cast<nrf_gpio_pin_sense_t> GPIO_PIN_CNF_SENSE_Low);
 
   pinConfig.skip_gpio_setup = true;
   pinConfig.hi_accuracy = false;
   pinConfig.is_watcher = false;
-  pinConfig.sense = (nrf_gpiote_polarity_t) NRF_GPIOTE_POLARITY_HITOLO;
-  pinConfig.pull = (nrf_gpio_pin_pull_t) GPIO_PIN_CNF_PULL_Pullup;
+  pinConfig.sense = static_cast<nrf_gpiote_polarity_t>(NRF_GPIOTE_POLARITY_HITOLO);
+  pinConfig.pull = static_cast<nrf_gpio_pin_pull_t> GPIO_PIN_CNF_PULL_Pullup;
 
   nrfx_gpiote_in_init(PinMap::Cst816sIrq, &pinConfig, nrfx_gpiote_evt_handler);
 
@@ -247,7 +250,6 @@ void SystemTask::Work() {
   xTimerStart(dimTimer, 0);
   xTimerStart(measureBatteryTimer, portMAX_DELAY);
 
-// Suppress endless loop diagnostic
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
   while (true) {
@@ -317,8 +319,9 @@ void SystemTask::Work() {
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::GoToRunning);
           heartRateApp.PushMessage(Pinetime::Applications::HeartRateTask::Messages::WakeUp);
 
-          if (!bleController.IsConnected())
+          if (!bleController.IsConnected()) {
             nimbleController.RestartFastAdv();
+          }
 
           isSleeping = false;
           isWakingUp = false;
@@ -337,6 +340,9 @@ void SystemTask::Work() {
           }
         } break;
         case Messages::GoToSleep:
+          if (doNotGoToSleep) {
+            break;
+          }
           isGoingToSleep = true;
           NRF_LOG_INFO("[systemtask] Going to sleep");
           xTimerStop(idleTimer, 0);
@@ -382,8 +388,9 @@ void SystemTask::Work() {
           break;
         case Messages::BleFirmwareUpdateStarted:
           doNotGoToSleep = true;
-          if (isSleeping && !isWakingUp)
+          if (isSleeping && !isWakingUp) {
             GoToRunning();
+          }
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::BleFirmwareUpdateStarted);
           break;
         case Messages::BleFirmwareUpdateFinished:
@@ -459,16 +466,18 @@ void SystemTask::Work() {
         case Messages::BatteryPercentageUpdated:
           nimbleController.NotifyBatteryLevel(batteryController.PercentRemaining());
           break;
+        case Messages::OnPairing:
+          if (isSleeping && !isWakingUp) {
+            GoToRunning();
+          }
+          motorController.RunForDuration(35);
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::ShowPairingKey);
+          break;
 
         default:
           break;
       }
     }
-
-#ifdef CUEBAND_POLL_START_ADVERTISING
-    // Poll from the main loop context to see if advertising should be started
-    nimbleController.PollStartAdvertising();
-#endif
 
 #ifdef CUEBAND_POSSIBLE_FIX_BLE_CONNECT_SERVICE_DISCOVERY_TIMEOUT
     // There seems to be a possible race condition between the BleConnected message starting this timer, and BLE_GAP_EVENT_DISCONNECT
@@ -496,7 +505,7 @@ void SystemTask::Work() {
     dateTimeController.UpdateTime(systick_counter);
     NoInit_BackUpTime = dateTimeController.CurrentDateTime();
 
-  // 1 Hz events
+    // 1 Hz events
 #if defined(CUEBAND_CUE_ENABLED) or defined(CUEBAND_ACTIVITY_ENABLED)
     uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
 #ifdef CUEBAND_CUE_ENABLED
@@ -573,15 +582,17 @@ void SystemTask::Work() {
 #endif
 #endif
 
-    if (!nrf_gpio_pin_read(PinMap::Button))
+    if (!nrf_gpio_pin_read(PinMap::Button)) {
       watchdog.Kick();
+    }
   }
-// Clear diagnostic suppression
 #pragma clang diagnostic pop
 }
+
 void SystemTask::UpdateMotion() {
-  if (isGoingToSleep or isWakingUp)
+  if (isGoingToSleep or isWakingUp) {
     return;
+  }
 
 #if defined(CUEBAND_POLLED_ENABLED) || defined(CUEBAND_FIFO_ENABLED)
   bool sampleNow = false;
@@ -602,11 +613,12 @@ void SystemTask::UpdateMotion() {
   }
 #endif
 
-  if (isSleeping && !settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::RaiseWrist))
+  if (isSleeping && !settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::RaiseWrist)) {
 #if defined(CUEBAND_POLLED_ENABLED) || defined(CUEBAND_FIFO_ENABLED)
    if (!sampleNow)   // While using polled sampling, do not consider returning early
 #endif
     return;
+  }
 
   if (stepCounterMustBeReset) {
     motionSensor.ResetStepCounter();
@@ -718,8 +730,9 @@ void SystemTask::HandleButtonAction(Controllers::ButtonActions action) {
 }
 
 void SystemTask::GoToRunning() {
-  if (isGoingToSleep or (not isSleeping) or isWakingUp)
+  if (isGoingToSleep or (not isSleeping) or isWakingUp) {
     return;
+  }
   isWakingUp = true;
   PushMessage(Messages::GoToRunning);
 }
@@ -728,8 +741,9 @@ void SystemTask::OnTouchEvent() {
 #ifdef CUEBAND_ACTIVITY_ENABLED
   interactionCount++;
 #endif
-  if (isGoingToSleep)
+  if (isGoingToSleep) {
     return;
+  }
   if (!isSleeping) {
     PushMessage(Messages::OnTouchEvent);
   } else if (!isWakingUp) {
@@ -741,7 +755,7 @@ void SystemTask::OnTouchEvent() {
 }
 
 void SystemTask::PushMessage(System::Messages msg) {
-  if (msg == Messages::GoToSleep) {
+  if (msg == Messages::GoToSleep && !doNotGoToSleep) {
     isGoingToSleep = true;
   }
 
@@ -759,8 +773,9 @@ void SystemTask::PushMessage(System::Messages msg) {
 }
 
 void SystemTask::OnDim() {
-  if (doNotGoToSleep)
+  if (doNotGoToSleep) {
     return;
+  }
   NRF_LOG_INFO("Dim timeout -> Dim screen")
   displayApp.PushMessage(Pinetime::Applications::Display::Messages::DimScreen);
   xTimerStart(idleTimer, 0);
@@ -768,15 +783,17 @@ void SystemTask::OnDim() {
 }
 
 void SystemTask::OnIdle() {
-  if (doNotGoToSleep)
+  if (doNotGoToSleep) {
     return;
+  }
   NRF_LOG_INFO("Idle timeout -> Going to sleep")
   PushMessage(Messages::GoToSleep);
 }
 
 void SystemTask::ReloadIdleTimer() {
-  if (isSleeping || isGoingToSleep)
+  if (isSleeping || isGoingToSleep) {
     return;
+  }
   if (isDimmed) {
     displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
     isDimmed = false;

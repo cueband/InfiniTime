@@ -154,6 +154,7 @@ set(NIMBLE_SRC
         libs/mynewt-nimble/nimble/controller/src/ble_ll_supp_cmd.c
         libs/mynewt-nimble/nimble/controller/src/ble_ll_hci_ev.c
         libs/mynewt-nimble/nimble/controller/src/ble_ll_rfmgmt.c
+        libs/mynewt-nimble/nimble/controller/src/ble_ll_resolv.c
         libs/mynewt-nimble/porting/nimble/src/os_cputime.c
         libs/mynewt-nimble/porting/nimble/src/os_cputime_pwr2.c
         libs/mynewt-nimble/porting/nimble/src/os_mbuf.c
@@ -430,8 +431,10 @@ list(APPEND SOURCE_FILES
         displayapp/screens/BatteryInfo.cpp
         displayapp/screens/Steps.cpp
         displayapp/screens/Timer.cpp
+        displayapp/screens/PassKey.cpp
         displayapp/screens/Error.cpp
         displayapp/screens/Alarm.cpp
+        displayapp/screens/Styles.cpp
         displayapp/Colors.cpp
 
         ## Settings
@@ -1000,7 +1003,7 @@ set(EXECUTABLE_RECOVERY_MCUBOOT_FILE_NAME ${EXECUTABLE_RECOVERY_MCUBOOT_NAME}-${
 set(IMAGE_RECOVERY_MCUBOOT_FILE_NAME ${EXECUTABLE_RECOVERY_MCUBOOT_NAME}-image-${pinetime_VERSION_MAJOR}.${pinetime_VERSION_MINOR}.${pinetime_VERSION_PATCH}.bin)
 set(DFU_RECOVERY_MCUBOOT_FILE_NAME ${EXECUTABLE_RECOVERY_MCUBOOT_NAME}-dfu-${pinetime_VERSION_MAJOR}.${pinetime_VERSION_MINOR}.${pinetime_VERSION_PATCH}.zip)
 add_executable(${EXECUTABLE_RECOVERY_MCUBOOT_NAME} ${RECOVERY_SOURCE_FILES})
-target_link_libraries(${EXECUTABLE_RECOVERY_MCUBOOT_NAME} nimble nrf-sdk littlefs)
+target_link_libraries(${EXECUTABLE_RECOVERY_MCUBOOT_NAME} nimble nrf-sdk littlefs QCBOR)
 set_target_properties(${EXECUTABLE_RECOVERY_MCUBOOT_NAME} PROPERTIES OUTPUT_NAME ${EXECUTABLE_RECOVERY_MCUBOOT_FILE_NAME})
 target_compile_definitions(${EXECUTABLE_RECOVERY_MCUBOOT_NAME} PUBLIC "PINETIME_IS_RECOVERY")
 target_compile_options(${EXECUTABLE_RECOVERY_MCUBOOT_NAME} PUBLIC
@@ -1038,7 +1041,7 @@ endif()
 set(EXECUTABLE_RECOVERYLOADER_NAME "pinetime-recovery-loader")
 set(EXECUTABLE_RECOVERYLOADER_FILE_NAME ${EXECUTABLE_RECOVERYLOADER_NAME}-${pinetime_VERSION_MAJOR}.${pinetime_VERSION_MINOR}.${pinetime_VERSION_PATCH})
 add_executable(${EXECUTABLE_RECOVERYLOADER_NAME} ${RECOVERYLOADER_SOURCE_FILES})
-target_link_libraries(${EXECUTABLE_RECOVERYLOADER_NAME} nrf-sdk)
+target_link_libraries(${EXECUTABLE_RECOVERYLOADER_NAME} nrf-sdk QCBOR)
 set_target_properties(${EXECUTABLE_RECOVERYLOADER_NAME} PROPERTIES OUTPUT_NAME ${EXECUTABLE_RECOVERYLOADER_FILE_NAME})
 target_compile_options(${EXECUTABLE_RECOVERYLOADER_NAME} PUBLIC
         $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:DEBUG>>: ${COMMON_FLAGS} -Og -g3>
@@ -1071,7 +1074,7 @@ set(EXECUTABLE_MCUBOOT_RECOVERYLOADER_FILE_NAME ${EXECUTABLE_MCUBOOT_RECOVERYLOA
 set(IMAGE_MCUBOOT_RECOVERYLOADER_FILE_NAME ${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME}-image-${pinetime_VERSION_MAJOR}.${pinetime_VERSION_MINOR}.${pinetime_VERSION_PATCH}.bin)
 set(DFU_MCUBOOT_RECOVERYLOADER_FILE_NAME ${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME}-dfu-${pinetime_VERSION_MAJOR}.${pinetime_VERSION_MINOR}.${pinetime_VERSION_PATCH}.zip)
 add_executable(${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME} ${RECOVERYLOADER_SOURCE_FILES})
-target_link_libraries(${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME} nrf-sdk)
+target_link_libraries(${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME} nrf-sdk QCBOR)
 set_target_properties(${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME} PROPERTIES OUTPUT_NAME ${EXECUTABLE_MCUBOOT_RECOVERYLOADER_FILE_NAME})
 target_compile_options(${EXECUTABLE_MCUBOOT_RECOVERYLOADER_NAME} PUBLIC
         $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:DEBUG>>: ${COMMON_FLAGS} -Og -g3>
