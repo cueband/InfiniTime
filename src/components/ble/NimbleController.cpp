@@ -146,6 +146,7 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
     alertNotificationClient {systemTask, notificationManager},
     currentTimeService {dateTimeController},
     musicService {systemTask},
+    weatherService {systemTask, dateTimeController},
     navService {systemTask},
     batteryInformationService {batteryController},
     immediateAlertService {systemTask, notificationManager},
@@ -223,6 +224,9 @@ void NimbleController::Init() {
   currentTimeService.Init();
 #ifndef CUEBAND_SERVICE_MUSIC_DISABLED
   musicService.Init();
+#endif
+#ifndef CUEBAND_SERVICE_WEATHER_DISABLED
+  weatherService.Init();
 #endif
 #ifndef CUEBAND_SERVICE_NAV_DISABLED
   navService.Init();

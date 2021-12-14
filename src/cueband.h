@@ -27,6 +27,7 @@
 #pragma GCC diagnostic pop
 #endif
 */
+#define CUEBAND_FIX_ALARMTRIGGERED_FALLTHROUGH
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
@@ -103,6 +104,7 @@
 
     // See: src/components/ble/NimbleController.cpp
     #define CUEBAND_SERVICE_MUSIC_DISABLED
+    #define CUEBAND_SERVICE_WEATHER_DISABLED
     #define CUEBAND_SERVICE_NAV_DISABLED
     #define CUEBAND_SERVICE_HR_DISABLED
 

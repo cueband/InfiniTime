@@ -228,6 +228,9 @@ void DisplayApp::Refresh() {
         } else {
           LoadApp(Apps::Alarm, DisplayApp::FullRefreshDirections::None);
         }
+#ifdef CUEBAND_FIX_ALARMTRIGGERED_FALLTHROUGH
+break;
+#endif
       case Messages::TouchEvent: {
         if (state != States::Running) {
           break;
