@@ -129,7 +129,7 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
                                    Pinetime::Drivers::SpiNorFlash& spiNorFlash,
                                    Controllers::HeartRateController& heartRateController,
                                    Controllers::MotionController& motionController,
-                                   Pinetime::Controllers::FS& fs
+                                   Controllers::FS& fs
 #ifdef CUEBAND_SERVICE_UART_ENABLED
                                    , Controllers::Settings& settingsController
                                    , Pinetime::Controllers::MotorController& motorController
@@ -160,6 +160,7 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
     immediateAlertService {systemTask, notificationManager},
     heartRateService {systemTask, heartRateController},
     motionService {systemTask, motionController},
+    fsService {systemTask, fs},
 #ifdef CUEBAND_SERVICE_UART_ENABLED
     uartService {
       systemTask, 
@@ -250,6 +251,7 @@ void NimbleController::Init() {
   heartRateService.Init();
 #endif
   motionService.Init();
+  fsService.Init();
 
 #ifdef CUEBAND_SERVICE_UART_ENABLED
   uartService.Init();

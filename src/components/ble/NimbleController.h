@@ -24,6 +24,7 @@
 #include "components/ble/MotionService.h"
 #include "components/ble/weather/WeatherService.h"
 #include "components/fs/FS.h"
+#include "components/ble/FSService.h"
 
 #ifdef CUEBAND_SERVICE_UART_ENABLED
 #include "UartService.h"
@@ -153,6 +154,7 @@ namespace Pinetime {
       HeartRateService heartRateService;
       MotionService motionService;
       ServiceDiscovery serviceDiscovery;
+      FSService fsService;
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       UartService uartService;
 #endif
