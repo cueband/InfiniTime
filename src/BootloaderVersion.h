@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "cueband.h"
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
 namespace Pinetime {
   class BootloaderVersion {
   public:
@@ -18,3 +24,7 @@ namespace Pinetime {
     static char versionString[VERSION_STR_LEN];
   };
 }
+
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic pop
+#endif

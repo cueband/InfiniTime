@@ -6,6 +6,12 @@ using namespace Pinetime;
 
 // NOTE : version < 1.0.0 of bootloader does not export its version to the application firmware.
 
+#include "cueband.h"
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
 uint32_t BootloaderVersion::version = 0;
 char BootloaderVersion::versionString[BootloaderVersion::VERSION_STR_LEN] = "0.0.0";
 
@@ -34,3 +40,7 @@ void BootloaderVersion::SetVersion(uint32_t v) {
   snprintf(BootloaderVersion::versionString, BootloaderVersion::VERSION_STR_LEN, "%ld.%ld.%ld",
            BootloaderVersion::Major(), BootloaderVersion::Minor(), BootloaderVersion::Patch());
 }
+
+#ifdef CUEBAND_FIX_WARNINGS
+#pragma GCC diagnostic pop
+#endif

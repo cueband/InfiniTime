@@ -20,7 +20,7 @@ namespace Pinetime::Controllers {
     // All fields to inactive values
     void ControlPoint::Clear()
     {
-        Set(false, ControlPoint::DAY_NONE, ControlPoint::TIME_NONE, ControlPoint::VOLUME_NONE, ControlPoint::TIME_NONE);
+        Set(false, ControlPoint::DAY_NONE, ControlPoint::INTERVAL_NONE, ControlPoint::VOLUME_NONE, ControlPoint::TIME_NONE);
     }
 
     // From packed
@@ -30,12 +30,15 @@ namespace Pinetime::Controllers {
 
     // From components
     void ControlPoint::Set(bool enabled, unsigned int weekdays, unsigned int interval, unsigned int volume, unsigned int timeOfDay) {
+        unsigned int scaledTime = timeOfDay / timeUnitSize;
+        unsigned int scaledInterval = interval / intervalUnitSize;
+
         this->controlPoint = 
               (enabled ? (1 << 31) : 0)
-            | ((weekdays & (1 << numDays)) << 24)
-            | ((interval >= (1 << 10) ? ((1 << 10) - 1) : interval) << 14)
+            | ((weekdays & ((1 << numDays) - 1)) << 24)
+            | (((scaledInterval >= (1 << 10)) ? ((1 << 10) - 1) : scaledInterval) << 14)
             | ((volume & ((1 << 3) - 1)) << 11)
-            | (timeOfDay & ((1 << 11) - 1))
+            | (scaledTime & ((1 << 11) - 1))
             ;
     }
 
@@ -101,7 +104,7 @@ namespace Pinetime::Controllers {
         // Find closest day before this
         for (unsigned int i = 1; i <= numDays; i++)
         {
-            int testDay = (weekdays + numDays - i) % numDays;
+            int testDay = (day + numDays - i) % numDays;
             if (weekdays & (1 << testDay))
             {
                 // Remainder of cue day, plus number of whole days, plus time of current day
@@ -170,14 +173,14 @@ namespace Pinetime::Controllers {
             }
             
             distance = controlPoint.CueTimeBefore(day, time);
-            if (distance != TIME_NONE && (distance < closestDistanceBefore || closestIndexBefore != TIME_NONE))
+            if (distance != TIME_NONE && (distance < closestDistanceBefore || closestIndexBefore == INDEX_NONE))
             {
                 closestIndexBefore = i;
                 closestDistanceBefore = distance;
             }
 
             distance = controlPoint.CueTimeAfter(day, time);
-            if (distance != TIME_NONE && (distance < closestDistanceAfter || closestIndexAfter != TIME_NONE))
+            if (distance != TIME_NONE && (distance < closestDistanceAfter || closestIndexAfter == INDEX_NONE))
             {
                 closestIndexAfter = i;
                 closestDistanceAfter = distance;

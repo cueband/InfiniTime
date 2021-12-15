@@ -14,6 +14,7 @@ namespace Pinetime::Controllers {
 
         static const unsigned int TIME_NONE = ((unsigned int)-1);   // 0xffffffff
         static const unsigned int DAY_NONE = ((unsigned int)-1);    // 0xffffffff
+        static const unsigned int INTERVAL_NONE = 0;
         static const int INDEX_NONE = -1;
         static const unsigned int VOLUME_NONE = 0;        
 

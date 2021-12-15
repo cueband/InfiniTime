@@ -42,14 +42,15 @@ int processLine(test_state_t *state, const char *line)
     else if (!strncmp(line, "SET", 3))
     {
         int index;
-        unsigned int days, time;
+        unsigned int days, timeMinutes;
         unsigned int value;
         const int volume = 0;
-        if (sscanf(line, "SET %u %u %u %u", &index, &days, &time, &value) != 4)
+        if (sscanf(line, "SET %u %u %u %u", &index, &days, &timeMinutes, &value) != 4)
         {
             fprintf(stderr, "ERROR: Unable to parse 'SET' command (index, days, time, value): %s\n", line);
             return -1;
         }
+        unsigned int time = timeMinutes * 60;
         Pinetime::Controllers::ControlPoint controlPoint = Pinetime::Controllers::ControlPoint(true, days, value, volume, time);
         state->store.SetScratch(index, controlPoint);
     }
@@ -69,23 +70,24 @@ int processLine(test_state_t *state, const char *line)
     }
     else if (!strncmp(line, "CUETEST", 4))
     {
-        unsigned int day, time;
+        unsigned int day, timeMinutes;
         int value;
-        if (sscanf(line, "CUETEST %u %u %d", &day, &time, &value) != 3)
+        if (sscanf(line, "CUETEST %u %u %d", &day, &timeMinutes, &value) != 3)
         {
             fprintf(stderr, "ERROR: Unable to parse 'CUETEST' command (day, time, value): %s\n", line);
             return -1;
         }
 
+        unsigned int time = timeMinutes * 60;
         Pinetime::Controllers::ControlPoint controlPoint = state->store.CueValue(day, time);
         unsigned int cueValue = controlPoint.GetInterval();
-        if (cueValue == value || (cueValue < 0 && value < 0))
+        if (cueValue == value || (!controlPoint.IsEnabled() && value < 0))
         {
             state->success++;
         }
         else
         {
-            printf("FAIL @%d: Mismatch on expected CUETEST value. Got %u, expected %u (day %u, time %u)\n", state->lineNumber, cueValue, value, day, time);
+            printf("FAIL @%d: Mismatch on expected CUETEST value. Got %u, expected %u (day %u, time %u)\n", state->lineNumber, cueValue, value, day, timeMinutes);
             state->fails++;
         }
 
@@ -95,10 +97,11 @@ int processLine(test_state_t *state, const char *line)
         }
         state->lastDayOfWeek = day;
         state->lastTimeOfDay = time;
-        //uint32_t timestamp = DAY_TIME(state->lastFakeWeek, state->lastDayOfWeek, state->lastTimeOfDay);
-
-        //Prompter
-
+    }
+    else if (!strncmp(line, "BREAK", 5))
+    {
+        fprintf(stderr, "WARNING: Will terminate early at: %s\n", line);
+        return 1;
     }
     else if (!strncmp(line, "#", 1) || line[0] == '\r' || line[0] == '\n' || line[0] == '\0')
     {

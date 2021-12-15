@@ -1,6 +1,9 @@
 #include <cstring>
+#include <cstdio>
 
 #include "ControlPointStore.h"
+
+#define CUE_DEBUG_CONTROL_POINT_CACHE
 
 namespace Pinetime::Controllers {
 
@@ -40,6 +43,7 @@ void ControlPointStore::SetScratch(int index, ControlPoint controlPoint) {
 void ControlPointStore::CommitScratch(unsigned int version) {
     memcpy(controlPoints, scratch, maxControlPoints * sizeof(control_point_packed_t));
 // TODO: Store version
+    Invalidate();
 }
 
 // Invalidate the cache (e.g. if the control points are externally modified)
@@ -53,17 +57,24 @@ void ControlPointStore::Invalidate() {
 // Determine the control point currently active for the given day/time (nullptr if none)
 ControlPoint ControlPointStore::CueValue(unsigned int day, unsigned int time)
 {
+#if 0
+printf("[ALWAYS-INVALIDATE]");
+this->cachedDay = ControlPoint::DAY_NONE;
+#endif
     // Recompute if cached result was invalidated or expired (out of range)
     if (day != this->cachedDay || this->cachedDay >= ControlPoint::numDays || time < this->cachedTime || this->cachedTime >= ControlPoint::timePerDay || time >= this->cachedUntilTime || this->cachedUntilTime > ControlPoint::timePerDay)
     {
-#if 0
+#ifdef CUE_DEBUG_CONTROL_POINT_CACHE
 printf("[CACHE-MISS: ");
+if (this->cachedDay == ControlPoint::DAY_NONE) printf("was-invalidated;");
+else {
 if (day != this->cachedDay) printf("wrong-day;");
 if (this->cachedDay >= ControlPoint::numDays) printf("day-invalid;");
 if (time < this->cachedTime) printf("time-before;");
 if (this->cachedTime >= ControlPoint::timePerDay) printf("time-invalid;");
 if (time >= this->cachedUntilTime) printf("until-after;");
 if (this->cachedUntilTime > ControlPoint::timePerDay) printf("until-invalid;");
+}
 printf("]");
 #endif
         int index, next;
@@ -75,6 +86,9 @@ printf("]");
             this->cachedTime = (elapsed <= time) ? (time - elapsed) : 0;
             this->cachedUntilTime = (remaining > ControlPoint::timePerDay - time) ? ControlPoint::timePerDay : (time + remaining);
             this->cachedCue = index;
+#ifdef CUE_DEBUG_CONTROL_POINT_CACHE
+printf("[CACHE: Within control point #%d, elapsed %d, remaining %d, next #%d; cached times %d-%d on day #%d.]", index, elapsed, remaining, next, this->cachedTime, this->cachedUntilTime, this->cachedDay);
+#endif
         }
         else
         {
@@ -83,6 +97,9 @@ printf("]");
             this->cachedTime = 0;
             this->cachedUntilTime = ControlPoint::timePerDay;
             this->cachedCue = ControlPoint::INDEX_NONE;
+#ifdef CUE_DEBUG_CONTROL_POINT_CACHE
+printf("[CACHE: No control points all day (%d-%d) on day #%d.]", this->cachedTime, this->cachedUntilTime, this->cachedDay);
+#endif
         }
     }
     // Return the value of the currently-active cue

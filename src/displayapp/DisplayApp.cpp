@@ -480,6 +480,9 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
     case Apps::Steps:
       currentScreen = std::make_unique<Screens::Steps>(this, motionController, settingsController);
       break;
+#ifdef CUEBAND_FIX_WARNINGS
+case Apps::Weather: break;
+#endif      
 #ifdef CUEBAND_APP_ENABLED
     case Apps::CueBand:
       currentScreen = std::make_unique<Screens::CueBandApp>(
