@@ -121,7 +121,7 @@ int tests(const char *testFile)
     test_state_t state = {0};
 
     // Clear store
-    state.store.SetData(state.controlPoints, state.scratch, sizeof(state.controlPoints) / sizeof(state.controlPoints[0]));
+    state.store.SetData(Pinetime::Controllers::ControlPointStore::VERSION_NONE, state.controlPoints, state.scratch, sizeof(state.controlPoints) / sizeof(state.controlPoints[0]));
 
     FILE *fp = fopen(testFile, "rt");
     if (fp == NULL)

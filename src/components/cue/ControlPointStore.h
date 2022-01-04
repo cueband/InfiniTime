@@ -14,6 +14,7 @@ namespace Pinetime::Controllers {
       control_point_packed_t *controlPoints;
       control_point_packed_t *scratch;
       size_t maxControlPoints;
+      unsigned int version = VERSION_NONE;
 
       // Cache the currently active cue to minimize searches
       int cachedCue;					// Cue index that is cached (INDEX_NONE for none)
@@ -22,15 +23,17 @@ namespace Pinetime::Controllers {
       unsigned int cachedUntilTime;	// Time (on the cached day) the cache is valid until (exclusive)
 
     public:
+    
+      static const unsigned int VERSION_NONE = (unsigned int)-1;
 
       // Construct no store  
       ControlPointStore();
 
       // Construct with specified backing arrays
-      ControlPointStore(control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints);
+      ControlPointStore(unsigned int version, control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints);
 
       // Set backing arrays
-      void SetData(control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints);
+      void SetData(unsigned int version, control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints);
 
       // Erase stored and scratch control points
       void Reset();
