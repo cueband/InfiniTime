@@ -55,7 +55,7 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
     {Symbols::clock, "Set time", Apps::SettingSetTime},
     {Symbols::batteryHalf, "Battery", Apps::BatteryInfo}
 #ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
-    , {Symbols::paintbrush, "PTS Colors", Apps::SettingPineTimeStyle}
+    , {Symbols::check, "Firmware", Apps::FirmwareValidation}
 #endif
   }};
 
@@ -66,17 +66,17 @@ std::unique_ptr<Screen> Settings::CreateScreen3() {
 
   std::array<Screens::List::Applications, 4> applications {{
 #ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
-    {Symbols::paintbrush, "PTS Colors", Apps::SettingPineTimeStyle},
-#endif
     {Symbols::check, "Firmware", Apps::FirmwareValidation},
+#endif
     {Symbols::list, "About", Apps::SysInfo},
 #ifdef CUEBAND_APP_ENABLED
     {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
 #else
     {Symbols::none, "None", Apps::None},
 #endif
-#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
     {Symbols::none, "None", Apps::None}
+#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
+    , {Symbols::none, "None", Apps::None}
 #endif
   }};
 
