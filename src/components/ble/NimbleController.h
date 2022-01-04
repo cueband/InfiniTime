@@ -153,8 +153,8 @@ namespace Pinetime {
       ImmediateAlertService immediateAlertService;
       HeartRateService heartRateService;
       MotionService motionService;
-      ServiceDiscovery serviceDiscovery;
       FSService fsService;
+      ServiceDiscovery serviceDiscovery;
       
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       UartService uartService;
