@@ -10,7 +10,7 @@ namespace Pinetime {
   namespace Controllers {
     class MotionController {
     public:
-      enum class DeviceTypes{
+      enum class DeviceTypes {
         Unknown,
         BMA421,
         BMA425,
@@ -35,6 +35,13 @@ namespace Pinetime {
       uint32_t NbSteps() const {
         return nbSteps;
       }
+
+      void ResetTrip() {
+        currentTripSteps = 0;
+      }
+      uint32_t GetTripSteps() const {
+        return currentTripSteps;
+      }
       bool ShouldWakeUp(bool isSleeping);
 
       void IsSensorOk(bool isOk);
@@ -51,6 +58,7 @@ namespace Pinetime {
 
     private:
       uint32_t nbSteps;
+      uint32_t currentTripSteps = 0;
       int16_t x;
       int16_t y;
       int16_t z;
