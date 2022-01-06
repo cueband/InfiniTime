@@ -48,15 +48,16 @@ std::unique_ptr<Screen> Settings::CreateScreen1() {
 std::unique_ptr<Screen> Settings::CreateScreen2() {
 
   std::array<Screens::List::Applications, 4> applications {{
-#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
+#if !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
     {Symbols::shoe, "Steps", Apps::SettingSteps},
+#elif defined(CUEBAND_APP_ENABLED)
+    {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
+#else
+    {Symbols::none, "None", Apps::None},
 #endif
     {Symbols::clock, "Set date", Apps::SettingSetDate},
     {Symbols::clock, "Set time", Apps::SettingSetTime},
     {Symbols::batteryHalf, "Battery", Apps::BatteryInfo}
-#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
-    , {Symbols::check, "Firmware", Apps::FirmwareValidation}
-#endif
   }};
 
   return std::make_unique<Screens::List>(1, 3, app, settingsController, applications);
@@ -65,18 +66,14 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
 std::unique_ptr<Screen> Settings::CreateScreen3() {
 
   std::array<Screens::List::Applications, 4> applications {{
-#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
+
+    {Symbols::clock, "Chimes", Apps::SettingChimes},
     {Symbols::check, "Firmware", Apps::FirmwareValidation},
-#endif
     {Symbols::list, "About", Apps::SysInfo},
-#ifdef CUEBAND_APP_ENABLED
+#if defined(CUEBAND_APP_ENABLED) && !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
     {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
 #else
     {Symbols::none, "None", Apps::None},
-#endif
-    {Symbols::none, "None", Apps::None}
-#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
-    , {Symbols::none, "None", Apps::None}
 #endif
   }};
 

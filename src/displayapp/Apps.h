@@ -38,6 +38,7 @@ namespace Pinetime {
       SettingSteps,
       SettingSetDate,
       SettingSetTime,
+      SettingChimes,
       Error,
 #ifdef CUEBAND_APP_ENABLED
       CueBand
