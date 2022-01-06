@@ -153,8 +153,15 @@ namespace Pinetime {
       ImmediateAlertService immediateAlertService;
       HeartRateService heartRateService;
       MotionService motionService;
+#ifdef CUEBAND_FIX_WARNINGS
+      // Re-ordered to remove -Wreorder:
+      ServiceDiscovery serviceDiscovery;
+      FSService fsService;
+#else
+      // Upstream code:
       FSService fsService;
       ServiceDiscovery serviceDiscovery;
+#endif
       
 #ifdef CUEBAND_SERVICE_UART_ENABLED
       UartService uartService;

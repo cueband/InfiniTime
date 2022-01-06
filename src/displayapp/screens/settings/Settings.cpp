@@ -46,19 +46,17 @@ std::unique_ptr<Screen> Settings::CreateScreen1() {
 }
 
 std::unique_ptr<Screen> Settings::CreateScreen2() {
-
   std::array<Screens::List::Applications, 4> applications {{
 #if !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
-    {Symbols::shoe, "Steps", Apps::SettingSteps},
+                                                            {Symbols::shoe, "Steps", Apps::SettingSteps},
 #elif defined(CUEBAND_APP_ENABLED)
-    {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
+                                                            {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
 #else
-    {Symbols::none, "None", Apps::None},
+                                                            {Symbols::none, "None", Apps::None},
 #endif
-    {Symbols::clock, "Set date", Apps::SettingSetDate},
-    {Symbols::clock, "Set time", Apps::SettingSetTime},
-    {Symbols::batteryHalf, "Battery", Apps::BatteryInfo}
-  }};
+                                                            {Symbols::clock, "Set date", Apps::SettingSetDate},
+                                                            {Symbols::clock, "Set time", Apps::SettingSetTime},
+                                                            {Symbols::batteryHalf, "Battery", Apps::BatteryInfo}}};
 
   return std::make_unique<Screens::List>(1, 3, app, settingsController, applications);
 }
@@ -66,15 +64,10 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
 std::unique_ptr<Screen> Settings::CreateScreen3() {
 
   std::array<Screens::List::Applications, 4> applications {{
-
     {Symbols::clock, "Chimes", Apps::SettingChimes},
+    {Symbols::none, "Wake Sense", Apps::SettingShakeThreshold},
     {Symbols::check, "Firmware", Apps::FirmwareValidation},
-    {Symbols::list, "About", Apps::SysInfo},
-#if defined(CUEBAND_APP_ENABLED) && !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
-    {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
-#else
-    {Symbols::none, "None", Apps::None},
-#endif
+    {Symbols::list, "About", Apps::SysInfo}
   }};
 
   return std::make_unique<Screens::List>(2, 3, app, settingsController, applications);
