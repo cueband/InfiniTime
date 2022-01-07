@@ -541,9 +541,10 @@ void SystemTask::Work() {
     // 1 Hz events
 #if defined(CUEBAND_CUE_ENABLED) or defined(CUEBAND_ACTIVITY_ENABLED)
     uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
+    uint32_t uptime = dateTimeController.Uptime().count();
 #ifdef CUEBAND_CUE_ENABLED
     if (now != cueLastSecond) {
-      cueController.TimeChanged(now);
+      cueController.TimeChanged(now, uptime);
       cueLastSecond = now;
     }
 #endif

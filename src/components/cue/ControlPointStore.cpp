@@ -58,7 +58,7 @@ void ControlPointStore::Invalidate() {
     this->cachedUntilTime = 0;
 }
 
-// Determine the control point currently active for the given day/time (nullptr if none)
+// Determine the control point currently active for the given day/time
 ControlPoint ControlPointStore::CueValue(unsigned int day, unsigned int time)
 {
 #if 0
@@ -110,5 +110,15 @@ printf("[CACHE: No control points all day (%d-%d) on day #%d.]", this->cachedTim
     if (this->cachedCue < 0 || (size_t)this->cachedCue >= this->maxControlPoints) return ControlPoint();
     return ControlPoint(this->controlPoints[this->cachedCue]);
 }
+
+// Determine the control point currently active for the given day/time
+ControlPoint ControlPointStore::CueValue(unsigned int timestamp)
+{
+    unsigned int timeOfDay = timestamp % 86400;
+    unsigned int day = ((timestamp / 86400) + 4) % 7;    // Epoch is day 4=Thu
+    Pinetime::Controllers::ControlPoint controlPoint = state->store.CueValue(day, timeOfDay);
+    return controlPoint;
+}
+
 
 }

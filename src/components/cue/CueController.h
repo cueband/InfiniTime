@@ -21,7 +21,7 @@ namespace Pinetime {
       CueController(Controllers::Settings& settingsController, Controllers::FS& fs, Controllers::ActivityController& activityController, Controllers::MotorController& motorController);
 
       void Init();
-      void TimeChanged(uint32_t time);
+      void TimeChanged(uint32_t timestamp, uint32_t uptime);
 
       const static unsigned int INTERVAL_OFF = 0;
       const static unsigned int MAXIMUM_RUNTIME_OFF = 0;
@@ -44,7 +44,8 @@ namespace Pinetime {
       Controllers::ActivityController& activityController;
       Controllers::MotorController& motorController;
 
-      uint32_t currentTime = 0;
+      // uint32_t currentTime = 0;
+      // uint32_t currentUptime = 0;
 
       unsigned int tick = 0;              // second index, prompting "run-time"
       unsigned int promptCount = 0;       // reporting: total number of prompts given

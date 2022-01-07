@@ -28,9 +28,14 @@ CueController::CueController(Controllers::Settings& settingsController,
 
 
 // Called at 1Hz
-void CueController::TimeChanged(uint32_t time) {
-    currentTime = time;
+void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
+    // currentTime = time;
+    // currentUptime = uptime;
 
+Pinetime::Controllers::ControlPoint controlPoint = store.CueValue(timestamp);
+unsigned int cueValue = controlPoint.GetInterval();
+//if (controlPoint.IsEnabled() && cueValue > 0)
+    
     // interval=0 is disabled, and run-time is within maximum duration
     if (interval != 0 and tick < maximumRuntime) {
         // every N seconds

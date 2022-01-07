@@ -54,8 +54,11 @@ namespace Pinetime::Controllers {
       // Control points have been (externally) modified
       void Updated(uint32_t version);
 
-      // Determine the control point currently active for the given day/time (nullptr if none)
+      // Determine the control point currently active for the given day/time-of-day
       ControlPoint CueValue(unsigned int day, unsigned int time);
+
+      // Determine the control point currently active for the given epoch timestamp
+      ControlPoint CueValue(unsigned int timestamp);
 
       uint32_t GetVersion() { return version; }
 
