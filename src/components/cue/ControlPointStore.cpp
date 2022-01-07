@@ -10,12 +10,12 @@ namespace Pinetime::Controllers {
 ControlPointStore::ControlPointStore() : ControlPointStore(VERSION_NONE, nullptr, nullptr, 0) {    
 }
 
-ControlPointStore::ControlPointStore(unsigned int version, control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints) {
+ControlPointStore::ControlPointStore(uint32_t version, control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints) {
     SetData(version, controlPoints, scratch, maxControlPoints);
 }
 
 // Set backing arrays
-void ControlPointStore::SetData(unsigned int version, control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints) {
+void ControlPointStore::SetData(uint32_t version, control_point_packed_t *controlPoints, control_point_packed_t *scratch, size_t maxControlPoints) {
     this->version = version;
     this->controlPoints = controlPoints;
     this->scratch = scratch;
@@ -30,7 +30,7 @@ void ControlPointStore::Reset() {
 
 void ControlPointStore::ClearScratch() {
     ControlPoint clearedValue;
-    for (int i = 0; i < maxControlPoints; i++) {
+    for (size_t i = 0; i < maxControlPoints; i++) {
         this->scratch[i] = clearedValue.Value();
     }
 }
@@ -39,8 +39,13 @@ void ControlPointStore::SetScratch(int index, ControlPoint controlPoint) {
     this->scratch[index] = controlPoint.Value();
 }
 
-void ControlPointStore::CommitScratch(unsigned int version) {
+void ControlPointStore::CommitScratch(uint32_t version) {
     memcpy(controlPoints, scratch, maxControlPoints * sizeof(control_point_packed_t));
+    Updated(version);
+}
+
+// Control points have been (externally) modified
+void ControlPointStore::Updated(uint32_t version) {
     this->version = version;
     Invalidate();
 }

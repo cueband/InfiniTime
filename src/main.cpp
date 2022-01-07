@@ -129,7 +129,7 @@ Pinetime::Controllers::MotorController motorController {};
 Pinetime::Controllers::ActivityController activityController {settingsController, fs};
 #endif
 #ifdef CUEBAND_CUE_ENABLED
-Pinetime::Controllers::CueController cueController {settingsController, activityController, motorController};
+Pinetime::Controllers::CueController cueController {settingsController, fs, activityController, motorController};
 #endif
 
 Pinetime::Applications::DisplayApp displayApp(lcd,

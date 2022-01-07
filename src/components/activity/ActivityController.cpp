@@ -709,7 +709,7 @@ void ActivityController::Event(int16_t eventType) {
   epochEvents |= eventType;
 }
 
-void ActivityController::PromptConfigurationChanged(int16_t promptConfigurationId) {
+void ActivityController::PromptConfigurationChanged(uint32_t promptConfigurationId) {
   this->promptConfigurationId = promptConfigurationId;
 }
 

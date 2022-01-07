@@ -95,7 +95,7 @@ namespace Pinetime {
       // Updates
       bool IsSampling();
       void Event(int16_t eventType);
-      void PromptConfigurationChanged(int16_t promptConfigurationId);
+      void PromptConfigurationChanged(uint32_t promptConfigurationId);
       void PromptGiven(bool muted);
       void AddSteps(uint32_t steps);
       void SensorValues(int8_t battery, int8_t temperature); // (0xff, 0x80);
@@ -148,7 +148,7 @@ namespace Pinetime {
       uint8_t activeBlock[ACTIVITY_BLOCK_SIZE] __attribute__((aligned));
       int8_t lastBattery = 0xff;
       int8_t lastTemperature = 0x80;
-      int16_t promptConfigurationId = 0xffff;
+      uint32_t promptConfigurationId = (uint32_t)-1;
       uint32_t blockStartTime = 0;
       uint32_t countEpochs = 0;
 

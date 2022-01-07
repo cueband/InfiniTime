@@ -532,6 +532,8 @@ list(APPEND SOURCE_FILES
         components/activity/ActivityController.cpp
         components/activity/resampler.c
         components/cue/CueController.cpp
+        components/cue/ControlPoint.cpp
+        components/cue/ControlPointStore.cpp
         displayapp/screens/CueBandApp.cpp
         )
 
@@ -724,6 +726,8 @@ set(INCLUDE_FILES
         components/activity/iir.h
         components/activity/resampler.h
         components/cue/CueController.h
+        components/cue/ControlPoint.h
+        components/cue/ControlPointStore.h
         displayapp/screens/CueBandApp.h
         )
 
