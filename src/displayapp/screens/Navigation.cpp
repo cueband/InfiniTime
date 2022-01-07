@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 /*  Copyright (C) 2021  Adam Pigg
 
     This file is part of InfiniTime.
@@ -22,7 +24,9 @@
 
 using namespace Pinetime::Applications::Screens;
 
+#ifndef CUEBAND_SERVICE_NAV_DISABLED  // Only reference the (large) navigation font when the service is being used: /src/displayapp/fonts/lv_font_navi_80.c
 LV_FONT_DECLARE(lv_font_navi_80)
+#endif
 
 namespace {
   constexpr std::array<std::pair<const char*, const char*>, 86> m_iconMap = {{
@@ -132,7 +136,9 @@ Navigation::Navigation(Pinetime::Applications::DisplayApp* app, Pinetime::Contro
   : Screen(app), navService(nav) {
 
   imgFlag = lv_label_create(lv_scr_act(), nullptr);
+#ifndef CUEBAND_SERVICE_NAV_DISABLED  // Only reference the (large) navigation font when the service is being used: /src/displayapp/fonts/lv_font_navi_80.c
   lv_obj_set_style_local_text_font(imgFlag, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_navi_80);
+#endif
   lv_obj_set_style_local_text_color(imgFlag, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_CYAN);
   lv_label_set_text(imgFlag, iconForName("flag"));
   lv_obj_align(imgFlag, nullptr, LV_ALIGN_CENTER, 0, -60);
