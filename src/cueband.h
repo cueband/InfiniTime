@@ -86,11 +86,17 @@
 
 #define CUEBAND_DEBUG_ADV       // Collect debug info for advertising state
 
+#define CUEBAND_DETECT_UNSET_TIME
 
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
 
 #ifdef CUEBAND_CUSTOMIZATION
+
+    // See: src/displayapp/screens/WatchFaceDigital.cpp
+    // See: src/displayapp/screens/WatchFaceAnalog.cpp
+    // See: src/displayapp/screens/PineTimeStyle.cpp
+    #define CUEBAND_CUSTOMIZATION_NO_INVALID_TIME       // Do not show invalid date/time
 
     // See: src/displayapp/screens/WatchFaceDigital.cpp
     #define CUEBAND_CUSTOMIZATION_NO_HR                 // Removes from digital watch face

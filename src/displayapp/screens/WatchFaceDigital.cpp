@@ -143,6 +143,13 @@ void WatchFaceDigital::Refresh() {
   if (currentDateTime.IsUpdated()) {
     auto newDateTime = currentDateTime.Get();
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+    bool isInvalid = false;
+    #ifdef CUEBAND_DETECT_UNSET_TIME
+      isInvalid = dateTimeController.IsInvalid();
+    #endif
+#endif
+
     auto dp = date::floor<date::days>(newDateTime);
     auto time = date::make_time(newDateTime - dp);
     auto yearMonthDay = date::year_month_day(dp);
@@ -186,12 +193,20 @@ void WatchFaceDigital::Refresh() {
       displayedChar[3] = minutesChar[1];
 
       if (settingsController.GetClockType() == Controllers::Settings::ClockType::H12) {
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+        if (isInvalid) lv_label_set_text(label_time_ampm, "  ");
+        else
+#endif
         lv_label_set_text(label_time_ampm, ampmChar);
         if (hoursChar[0] == '0') {
           hoursChar[0] = ' ';
         }
       }
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) lv_label_set_text_fmt(label_time, "  :  ");
+      else
+#endif
       lv_label_set_text_fmt(label_time, "%s:%s", hoursChar, minutesChar);
 
       if (settingsController.GetClockType() == Controllers::Settings::ClockType::H12) {
@@ -202,6 +217,12 @@ void WatchFaceDigital::Refresh() {
     }
 
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) {
+         lv_label_set_text_fmt(label_date, "--- -- --- ----");
+      }
+      else
+#endif
       if (settingsController.GetClockType() == Controllers::Settings::ClockType::H24) {
         lv_label_set_text_fmt(label_date, "%s %d %s %d", dateTimeController.DayOfWeekShortToString(), day, dateTimeController.MonthShortToString(), year);
       } else {

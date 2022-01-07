@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 /*
  * This file is part of the Infinitime distribution (https://github.com/InfiniTimeOrg/Infinitime).
  * Copyright (c) 2021 Kieran Cawthray.
@@ -173,6 +175,7 @@ PineTimeStyle::PineTimeStyle(DisplayApp* app,
   } else {
     needle_colors[0] = LV_COLOR_WHITE;
   }
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
   stepGauge = lv_gauge_create(lv_scr_act(), nullptr);
   lv_gauge_set_needle_count(stepGauge, 1, needle_colors);
   lv_obj_set_size(stepGauge, 40, 40);
@@ -193,6 +196,7 @@ PineTimeStyle::PineTimeStyle(DisplayApp* app,
   lv_obj_set_style_local_line_opa(stepGauge, LV_GAUGE_PART_NEEDLE, LV_STATE_DEFAULT, LV_OPA_COVER);
   lv_obj_set_style_local_line_width(stepGauge, LV_GAUGE_PART_NEEDLE, LV_STATE_DEFAULT, 3);
   lv_obj_set_style_local_pad_inner(stepGauge, LV_GAUGE_PART_NEEDLE, LV_STATE_DEFAULT, 4);
+#endif
 
   backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
   lv_obj_set_click(backgroundLabel, true);
@@ -385,6 +389,13 @@ void PineTimeStyle::Refresh() {
   if (currentDateTime.IsUpdated()) {
     auto newDateTime = currentDateTime.Get();
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+    bool isInvalid = false;
+    #ifdef CUEBAND_DETECT_UNSET_TIME
+      isInvalid = dateTimeController.IsInvalid();
+    #endif
+#endif
+
     auto dp = date::floor<date::days>(newDateTime);
     auto time = date::make_time(newDateTime - dp);
     auto yearMonthDay = date::year_month_day(dp);
@@ -428,17 +439,41 @@ void PineTimeStyle::Refresh() {
       displayedChar[3] = minutesChar[1];
 
       if (settingsController.GetClockType() == Controllers::Settings::ClockType::H12) {
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+        if (isInvalid) lv_label_set_text(timeAMPM, "");
+        else
+#endif
         lv_label_set_text(timeAMPM, ampmChar);
       }
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) lv_label_set_text_fmt(timeDD1, "  ");
+      else
+#endif
       lv_label_set_text_fmt(timeDD1, "%s", hoursChar);
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) lv_label_set_text_fmt(timeDD2, "  ");
+      else
+#endif
       lv_label_set_text_fmt(timeDD2, "%s", minutesChar);
     }
 
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) lv_label_set_text_fmt(dateDayOfWeek, "---");
+      else
+#endif
       lv_label_set_text_fmt(dateDayOfWeek, "%s", dateTimeController.DayOfWeekShortToString());
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) lv_label_set_text_fmt(dateDay, "--");
+      else
+#endif
       lv_label_set_text_fmt(dateDay, "%d", day);
       lv_obj_realign(dateDay);
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+      if (isInvalid) lv_label_set_text_fmt(dateMonth, "---");
+      else
+#endif
       lv_label_set_text_fmt(dateMonth, "%s", dateTimeController.MonthShortToString());
 
       currentYear = year;
@@ -448,6 +483,7 @@ void PineTimeStyle::Refresh() {
     }
   }
 
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
   stepCount = motionController.NbSteps();
   motionSensorOk = motionController.IsSensorOk();
   if (stepCount.IsUpdated() || motionSensorOk.IsUpdated()) {
@@ -458,6 +494,7 @@ void PineTimeStyle::Refresh() {
       lv_obj_set_style_local_scale_grad_color(stepGauge, LV_GAUGE_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
     }
   }
+#endif
   if (!lv_obj_get_hidden(btnSet)) {
     if ((savedTick > 0) && (lv_tick_get() - savedTick > 3000)) {
       lv_obj_set_hidden(btnSet, true);

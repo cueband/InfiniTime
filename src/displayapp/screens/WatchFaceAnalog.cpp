@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "displayapp/screens/WatchFaceAnalog.h"
 #include <cmath>
 #include <lvgl/lvgl.h>
@@ -142,6 +144,14 @@ void WatchFaceAnalog::UpdateClock() {
   minute = dateTimeController.Minutes();
   second = dateTimeController.Seconds();
 
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+  if (dateTimeController.IsInvalid()) {
+    hour = 0;
+    minute = 0;
+    second = 0;
+  }
+#endif
+
   if (sMinute != minute) {
     auto const angle = minute * 6;
     minute_point[0] = CoordinateRelocate(30, angle);
@@ -222,6 +232,12 @@ void WatchFaceAnalog::Refresh() {
     UpdateClock();
 
     if ((month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+      if (dateTimeController.IsInvalid()) {
+        lv_label_set_text_fmt(label_date_day, "---\n--");
+      }
+      else
+#endif
       lv_label_set_text_fmt(label_date_day, "%s\n%02i", dateTimeController.DayOfWeekShortToString(), day);
 
       currentMonth = month;

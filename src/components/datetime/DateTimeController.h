@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <cstdint>
 #include <chrono>
 
@@ -68,6 +70,12 @@ namespace Pinetime {
       std::chrono::seconds Uptime() const {
         return uptime;
       }
+#ifdef CUEBAND_DETECT_UNSET_TIME
+      bool IsUnset() {
+          uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(CurrentDateTime().time_since_epoch()).count();
+          return now < 1577836800;  // Before 2020-01-01 00:00:00
+      }
+#endif
 
       void Register(System::SystemTask* systemTask);
       void SetCurrentTime(std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> t);
