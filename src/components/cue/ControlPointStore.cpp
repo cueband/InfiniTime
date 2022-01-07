@@ -116,7 +116,7 @@ ControlPoint ControlPointStore::CueValue(unsigned int timestamp)
 {
     unsigned int timeOfDay = timestamp % 86400;
     unsigned int day = ((timestamp / 86400) + 4) % 7;    // Epoch is day 4=Thu
-    Pinetime::Controllers::ControlPoint controlPoint = state->store.CueValue(day, timeOfDay);
+    Pinetime::Controllers::ControlPoint controlPoint = CueValue(day, timeOfDay);
     return controlPoint;
 }
 
