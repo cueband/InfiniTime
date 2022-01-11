@@ -86,7 +86,7 @@
 
 #define CUEBAND_DEBUG_ADV       // Collect debug info for advertising state
 
-#define CUEBAND_DETECT_UNSET_TIME
+#define CUEBAND_DETECT_UNSET_TIME 1577836800  // Before 2020-01-01 00:00:00
 
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION

@@ -73,7 +73,7 @@ namespace Pinetime {
 #ifdef CUEBAND_DETECT_UNSET_TIME
       bool IsUnset() {
           uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(CurrentDateTime().time_since_epoch()).count();
-          return now < 1577836800;  // Before 2020-01-01 00:00:00
+          return now < CUEBAND_DETECT_UNSET_TIME;
       }
 #endif
 

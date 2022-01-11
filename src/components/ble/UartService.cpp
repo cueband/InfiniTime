@@ -469,17 +469,18 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                 sprintf(resp, "?Disabled\r\n");
 #endif
 
-            } else if (data[0] == 'J') { // Set current cueing interval: "J <interval> <maximumRuntime> <motorPulseWidth>"
+            } else if (data[0] == 'J') { // Set current cueing interval: "J <interval> <maximumRuntime> <promptStyle/motorPulseWidth>"
 #ifdef CUEBAND_CUE_ENABLED
                 char *p = (char *)data + 1;
                 uint32_t interval = (uint32_t)strtol(p, &p, 0);
                 uint32_t maximumRuntime = (uint32_t)strtol(p, &p, 0);
-                uint32_t motorPulseWidth = (uint32_t)strtol(p, &p, 0);
-                if (maximumRuntime == 0) maximumRuntime = CueController::MAXIMUM_RUNTIME_INFINITE;
-                if (motorPulseWidth == 0) motorPulseWidth = CueController::DEFAULT_MOTOR_PULSE_WIDTH;
-                if (motorPulseWidth > 1000) motorPulseWidth = 1000;
-                cueController.SetInterval(interval, maximumRuntime, motorPulseWidth);
-                sprintf(resp, "J:%u,%d,%u\r\n", (uint16_t)interval, (int16_t)maximumRuntime, (uint16_t)motorPulseWidth); // maximumRuntime "-1" if infinite
+                uint32_t promptStyle = (uint32_t)strtol(p, &p, 0);
+                cueController.SetInterval(interval, maximumRuntime);
+                // Only change current value if not above maximum
+                if (promptStyle <= 10 * 1000) {
+                    cueController.SetPromptStyle(promptStyle);
+                }
+                sprintf(resp, "J:%u,%d,%u\r\n", (uint16_t)interval, (int16_t)maximumRuntime, (uint16_t)promptStyle);
 #else
                 sprintf(resp, "?Disabled\r\n");
 #endif

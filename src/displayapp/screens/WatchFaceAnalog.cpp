@@ -145,7 +145,7 @@ void WatchFaceAnalog::UpdateClock() {
   second = dateTimeController.Seconds();
 
 #if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
-  if (dateTimeController.IsInvalid()) {
+  if (dateTimeController.IsUnset()) {
     hour = 0;
     minute = 0;
     second = 0;
@@ -233,7 +233,7 @@ void WatchFaceAnalog::Refresh() {
 
     if ((month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
 #if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
-      if (dateTimeController.IsInvalid()) {
+      if (dateTimeController.IsUnset()) {
         lv_label_set_text_fmt(label_date_day, "---\n--");
       }
       else

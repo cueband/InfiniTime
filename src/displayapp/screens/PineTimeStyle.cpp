@@ -392,7 +392,7 @@ void PineTimeStyle::Refresh() {
 #ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
     bool isInvalid = false;
     #ifdef CUEBAND_DETECT_UNSET_TIME
-      isInvalid = dateTimeController.IsInvalid();
+      isInvalid = dateTimeController.IsUnset();
     #endif
 #endif
 

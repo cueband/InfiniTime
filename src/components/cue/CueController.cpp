@@ -23,39 +23,87 @@ CueController::CueController(Controllers::Settings& settingsController,
                             {
     store.SetData(Pinetime::Controllers::ControlPointStore::VERSION_NONE, controlPoints, scratch, sizeof(controlPoints) / sizeof(controlPoints[0]));
     store.Reset();  // Clear all control points, version, and scratch.
-    SetInterval(INTERVAL_OFF, MAXIMUM_RUNTIME_INFINITE, DEFAULT_MOTOR_PULSE_WIDTH);
+    SetInterval(INTERVAL_OFF, MAXIMUM_RUNTIME_OFF);
 }
 
 
 // Called at 1Hz
 void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
-    // currentTime = time;
-    // currentUptime = uptime;
+    bool snoozed = false;
 
-Pinetime::Controllers::ControlPoint controlPoint = store.CueValue(timestamp);
-unsigned int cueValue = controlPoint.GetInterval();
-//if (controlPoint.IsEnabled() && cueValue > 0)
-    
-    // interval=0 is disabled, and run-time is within maximum duration
-    if (interval != 0 and tick < maximumRuntime) {
-        // every N seconds
-        if (tick % interval == 0) {
-            if (motorPulseWidth > 0) {
+    currentTime = timestamp;
+    currentUptime = uptime;
+
+    unsigned int effectivePromptStyle = DEFAULT_PROMPT_STYLE;
+
+    // Get scheduled interval (0=none)
+    Pinetime::Controllers::ControlPoint controlPoint = store.CueValue(timestamp);
+    unsigned int cueInterval = controlPoint.GetInterval();
+    if (!controlPoint.IsEnabled()) cueInterval = 0;
+
+#ifdef CUEBAND_DETECT_UNSET_TIME
+    // Ignore prompt schedule if current time is not set
+    if (currentTime < CUEBAND_DETECT_UNSET_TIME) {
+        cueInterval = 0;
+    }
+#endif
+    if (cueInterval > 0) {
+        effectivePromptStyle = controlPoint.GetVolume();
+    }
+
+    unsigned int effectiveInterval = cueInterval;
+
+    // If temporary prompt/snooze...
+    if (currentUptime < overrideEndTime) {
+        if (interval != 0) {  // if temporary prompting...
+            effectiveInterval = interval;
+            effectivePromptStyle = promptStyle;
+            activityController.Event(ACTIVITY_EVENT_CUE_MANUAL);
+        } else {
+            activityController.Event(ACTIVITY_EVENT_CUE_SNOOZE);
+            snoozed = true;
+        }
+    }
+
+    // Overridden or scheduled interval
+    if (effectiveInterval > 0) {
+        // prompt every N seconds
+        uint32_t elapsed = (lastPrompt != UPTIME_NONE) ? (currentUptime - lastPrompt) : UPTIME_NONE;
+        bool prompt = (elapsed == UPTIME_NONE || elapsed >= effectiveInterval);
+        if (prompt) {
+            if (!snoozed) {
+                // Use as raw width unless matching a style number
+                unsigned int motorPulseWidth = effectivePromptStyle;
+
+                // TODO: Customize this range and/or add patterns
+                switch (effectivePromptStyle % 8) { 
+                    case 0: motorPulseWidth = 15; break;
+                    case 1: motorPulseWidth = 30; break;
+                    case 2: motorPulseWidth = 45; break;
+                    case 3: motorPulseWidth = 60; break;
+                    case 4: motorPulseWidth = 75; break;
+                    case 5: motorPulseWidth = 90; break;
+                    case 6: motorPulseWidth = 105; break;
+                    case 7: motorPulseWidth = 120; break;
+                }
+
+                // Safety limit
+                if (motorPulseWidth > 10 * 1000) motorPulseWidth = 10 * 1000;
+
+                // Prompt
                 motorController.RunForDuration(motorPulseWidth);   // milliseconds
 
                 // Notify activityController of prompt
                 activityController.PromptGiven(false);
-                promptCount++;
             } else {
-                // TODO: Is a zero-width really "muted"? (Should probably only count snoozed ones)
+                // Snoozed prompt
                 activityController.PromptGiven(true);
-                mutedCount++;
             }
+
+            // Record last prompt/snoozed-prompt
+            lastPrompt = currentUptime;
         }
     }
-
-    // Second count
-    tick++;
 }
 
 void CueController::Init() {
@@ -159,28 +207,20 @@ int CueController::WriteCues() {
     }
 
     fs.FileClose(&file_p);
+
+    // Notify that the cues were changed
+    activityController.Event(ACTIVITY_EVENT_CUE_CONFIGURATION);
+
     return 0;
 }
 
-void CueController::SetInterval(unsigned int interval, unsigned int maximumRuntime, unsigned int motorPulseWidth) {
-    if (motorPulseWidth > 1000) motorPulseWidth = 1000;
-    if (this->interval != 0) {
-        // Start with duration since previous prompt
-        tick %= this->interval;
-        // ...immediate prompt if greater than interval
-        if (tick > interval) {
-            tick = 0;
-        }
-    } else {
-        // Immediate prompt if no previous interval
-        tick = 0;
-    }
+void CueController::SetInterval(unsigned int interval, unsigned int maximumRuntime) {
+    // New configuration
+    this->overrideEndTime = currentUptime + maximumRuntime;
     this->interval = interval;
-    this->maximumRuntime = maximumRuntime;
-    this->motorPulseWidth = motorPulseWidth;
 
-    activityController.Event(ACTIVITY_EVENT_CUE_TEMPORARY);
+    // Record this as the last prompt time so that the full interval must elapse
+    lastPrompt = currentUptime;
 }
-
 
 #endif

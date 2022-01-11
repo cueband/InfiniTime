@@ -371,12 +371,12 @@ The `events` flags are bitwise flags and defined as follows:
 > const uint16_t ACTIVITY_EVENT_RESTART             = 0x0080;  // @b7  First epoch after device restart (or event logging restarted?)
 > const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn
 > const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer considered asleep
-> const uint16_t ACTIVITY_EVENT_RESERVED_1          = 0x0400;  // @b10 (Reserved 1)
-> const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 (TBD?) Cue: new configuration written
+> const uint16_t ACTIVITY_EVENT_CUE_DISABLED        = 0x0400;  // @b10 (TBD?) All cueing disabled
+> const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 Cue: new configuration written
 > const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (TBD?) Cue: user opened app
-> const uint16_t ACTIVITY_EVENT_CUE_TEMPORARY       = 0x2000;  // @b13 Cue: temporary changed of prompting configuration
-> const uint16_t ACTIVITY_EVENT_CUE_SNOOZED         = 0x4000;  // @b14 (TBD?) Cue: user snoozed cueing
-> const uint16_t ACTIVITY_EVENT_RESERVED_2          = 0x8000;  // @b15 (Reserved 2)
+> const uint16_t ACTIVITY_EVENT_CUE_MANUAL          = 0x2000;  // @b13 Cue: temporary manual cueing in use
+> const uint16_t ACTIVITY_EVENT_CUE_SNOOZE          = 0x4000;  // @b14 Cue: temporary manual snooze in use
+> const uint16_t ACTIVITY_EVENT_RESERVED            = 0x8000;  // @b15 (Reserved)
 > ```
 
 

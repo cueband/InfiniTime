@@ -25,12 +25,18 @@ namespace Pinetime {
 
       const static unsigned int INTERVAL_OFF = 0;
       const static unsigned int MAXIMUM_RUNTIME_OFF = 0;
-      const static unsigned int MAXIMUM_RUNTIME_INFINITE = 0xffffffff;
-      const static unsigned int DEFAULT_MOTOR_PULSE_WIDTH = 50; // msec
+      const static unsigned int DEFAULT_PROMPT_STYLE = 3; // msec
 
-      void SetInterval(unsigned int interval, unsigned int maximumRuntime, unsigned int motorPulseWidth = DEFAULT_MOTOR_PULSE_WIDTH);
+      void SetInterval(unsigned int interval, unsigned int maximumRuntime);
+      void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
+        this->promptStyle = promptStyle;
+      }
       int ReadCues(uint32_t *version);
       int WriteCues();
+
+      bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
+      bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
+      bool IsScheduled() { return currentUptime >= overrideEndTime; }
 
     private:
 
@@ -44,16 +50,16 @@ namespace Pinetime {
       Controllers::ActivityController& activityController;
       Controllers::MotorController& motorController;
 
-      // uint32_t currentTime = 0;
-      // uint32_t currentUptime = 0;
+      const static uint32_t UPTIME_NONE = (uint32_t)-1;
 
-      unsigned int tick = 0;              // second index, prompting "run-time"
-      unsigned int promptCount = 0;       // reporting: total number of prompts given
-      unsigned int mutedCount = 0;        // reporting: total number of muted prompts given
+      uint32_t currentTime = 0;
+      uint32_t currentUptime = 0;
+      uint32_t lastPrompt = UPTIME_NONE;    // Uptime at the last prompt
 
-      unsigned int interval = INTERVAL_OFF;                     // interval (seconds), 0=off
-      unsigned int motorPulseWidth = DEFAULT_MOTOR_PULSE_WIDTH; // (msec)
-      unsigned int maximumRuntime = MAXIMUM_RUNTIME_OFF;        // (seconds) prompting run-time while enabled, set to UINT_MAX for "infinite" (136 years)
+      uint32_t overrideEndTime = 0;         // End of override time
+      unsigned int interval = INTERVAL_OFF; // override prompt interval (seconds), 0=snooze sheduled prompts
+
+      unsigned int promptStyle = 0;
 
       int readError = -1;                 // (Debug) File read status
       int writeError = -1;                // (Debug) File write status
