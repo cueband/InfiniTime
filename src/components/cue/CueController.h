@@ -16,6 +16,9 @@
 
 namespace Pinetime {
   namespace Controllers {
+
+    typedef uint16_t options_t;
+
     class CueController {
     public:
       CueController(Controllers::Settings& settingsController, Controllers::FS& fs, Controllers::ActivityController& activityController, Controllers::MotorController& motorController);
@@ -27,6 +30,20 @@ namespace Pinetime {
       const static unsigned int MAXIMUM_RUNTIME_OFF = 0;
       const static unsigned int DEFAULT_PROMPT_STYLE = 3; // msec
 
+      // Options
+      const static options_t OPTIONS_CUE_SETTING   = (1 << 0); // Feature: Allow user to disable/enable cueing in the settings menu.
+      const static options_t OPTIONS_CUE_ENABLED   = (1 << 1); // Feature: Enable cueing will (follow the programmed schedule)
+      const static options_t OPTIONS_CUE_STATUS    = (1 << 2); // Feature: Show cueing status on watch face (when cueing enabled)
+      const static options_t OPTIONS_CUE_DETAILS   = (1 << 3); // Feature: Tap on watch face to open cue details (when cueing enabled)
+      const static options_t OPTIONS_CUE_SNOOZE    = (1 << 4); // Feature: Can snooze from cue details
+      const static options_t OPTIONS_CUE_IMPROMPTU = (1 << 5); // Feature: Can start impromptu temporary cueing from cue details
+      const static options_t OPTIONS_CUE_CUSTOM    = (1 << 6); // Feature: Customize vibration level from cue details
+
+      const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_SETTING | OPTIONS_CUE_ENABLED | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_SNOOZE | OPTIONS_CUE_IMPROMPTU | OPTIONS_CUE_CUSTOM;
+
+      options_t GetOptionsMaskValue(options_t *mask = nullptr, options_t *value = nullptr);
+      void SetOptionsMaskValue(options_t mask, options_t value);
+
       void SetInterval(unsigned int interval, unsigned int maximumRuntime);
       void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
         this->promptStyle = promptStyle;
@@ -35,13 +52,22 @@ namespace Pinetime {
       int WriteCues();
 
       void GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint16_t *override_remaining, uint16_t *intensity, uint16_t *interval, uint16_t *duration);
-      uint32_t GetOptions();
+
+      void Reset();
+      ControlPoint GetStoredControlPoint(int index);
+      void ClearScratch();
+      void SetScratchControlPoint(int index, ControlPoint controlPoint);
+      void CommitScratch(uint32_t version);
 
       bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }
 
     private:
+
+      // Options
+      options_t options_overridden_mask = 0;
+      options_t options_overridden_value = 0;
 
       Pinetime::Controllers::ControlPointStore store;
       unsigned short version;

@@ -476,8 +476,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                 uint32_t maximumRuntime = (uint32_t)strtol(p, &p, 0);
                 uint32_t promptStyle = (uint32_t)strtol(p, &p, 0);
                 cueController.SetInterval(interval, maximumRuntime);
-                // Only change current value if not above maximum
-                if (promptStyle <= 10 * 1000) {
+                if (promptStyle < 0xffff) {
                     cueController.SetPromptStyle(promptStyle);
                 }
                 sprintf(resp, "J:%u,%d,%u\r\n", (uint16_t)interval, (int16_t)maximumRuntime, (uint16_t)promptStyle);

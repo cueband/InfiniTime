@@ -125,7 +125,7 @@ The BLE service can be used to:
 | Name                          | Schedule Status Characteristic                   |
 | UUID                          | `faa20001-3a02-417d-90a7-23f4a9c6745f`           |
 | Read `status`                 | Query the current schedule status, and resets the `read_index` to `0`.   |
-| Write *(no data)*             | Clears the scratch schedule with empty control points, and stores it as the active schedule with `schedule_id=0xffffffff` indicating no schedule. |
+| Write *(no data)*             | Clears the scratch schedule with empty control points, and stores it as the active schedule with `schedule_id=0xffffffff` indicating no schedule (do not do this if you are about to send and store a new schedule). |
 | Write `change_options`        | Changes the allowed device interface options as specified. |
 | Write `set_impromptu`         | Configures the current *impromptu* settings . |
 | Write `store_schedule`        | Store the scratch schedule as the active schedule with the specified ID. |
@@ -141,7 +141,8 @@ The BLE service can be used to:
 >     uint16_t intensity;             // @10 Effective cueing intensity
 >     uint16_t interval;              // @12 Effective cueing interval (seconds)
 >     uint16_t duration;              // @14 Remaining scheduled cueing duration (seconds, saturates to 0xffff)
->     uint32_t options;               // @16 Device interface options
+>     uint16_t options_mask;          // @16 Device interface options mask
+>     uint16_t options_value;         // @18 Device interface options value
 > } // @20
 > ```
 
@@ -151,35 +152,30 @@ The BLE service can be used to:
 >  struct {
 >      uint8_t command_type;           // @0 = 0x01 for "change >  options"
 >      uint8_t reserved[3];            // @1 (reserved/padding, >  write as 0x00)
->      uint32_t options;               // @4 Device interface options
+>      uint16_t options_mask;          // @4 Device interface options mask
+>      uint16_t options_value;         // @6 Device interface options value
 >  } // @8
 >  ```
 >  
-> Where `options` is combined of the following features, each taking two bits:
+> When read:
+> * `options_mask` is a bitmap of which options are remotely overridden by the corresponding value (`0`=default, `1`=overridden)
+> * `options_value` is a bitmap of the effective overall option values, combining the defaults with overridden values (`0`=disabled, `1`=enabled).
 >
-> * `b0-1` - Feature: Allow user to disable/enable cueing in the settings menu.
-> * `b2-3` - Feature: Enable cueing will (follow the programmed schedule)
-> * `b4-5` - Feature: Show cueing status on watch face (when cueing enabled)
-> * `b6-7` - Feature: Tap on watch face to open cue details (when cueing enabled)
-> * `b8-9` - Feature: Can snooze from cue details
-> * `b10-11` - Feature: Can start impromptu temporary cueing from cue details
-> * `b12-13` - Feature: Customize vibration level from cue details
-> * `b14-31` - (reserved)
+> When written:
+> * Where `options_mask` is `1`, the corresponding `options_value` bit will be used to remotely override the corresponding feature value (`0`=force disabled, `1`=force enabled).
+> * Where `options_mask` is `0`, the corresponding `options_value` bit being `0` indicates this feature should not be changed, while `1` indicates the feature should be reset back to its default value and no longer be remotely overridden.
 >
-> Each feature has the following states when written:
+> Each bit of `options_mask` and `options_value` represent features as follows:
 >
-> * `0b00` - Do not change current setting
-> * `0b01` - Reset this feature to the device's default setting
-> * `0b10` - Remotely configured: clear to disabled
-> * `0b11` - Remotely configured: set to enabled
+> * `b0` - Feature: Allow user to disable/enable cueing in the settings menu.
+> * `b1` - Feature: Enable cueing will (follow the programmed schedule)
+> * `b2` - Feature: Show cueing status on watch face (when cueing enabled)
+> * `b3` - Feature: Tap on watch face to open cue details (when cueing enabled)
+> * `b4` - Feature: Can snooze from cue details
+> * `b5` - Feature: Can start impromptu temporary cueing from cue details
+> * `b6` - Feature: Customize vibration level from cue details
+> * `b7-b15` - (reserved)
 >
-> Each feature has the following states when read:
->
-> * `0b00` - (As default) disabled
-> * `0b01` - (As default) enabled
-> * `0b10` - (Remotely configured) disabled
-> * `0b11` - (Remotely configured) enabled
-
 
 `set_impromtu` is:
 
@@ -219,7 +215,7 @@ Where `control_point`:
 
 > ```c
 > struct {
->     uint16_t index;         // @0 Write: control point index to set; Read: the `read_index` being read
+>     uint16_t index;         // @0 Read: the `read_index` being read; Write: control point index to set.
 >     uint8_t  intensity;     // @2 Prompt intensity (0=off; non-zero values=prompt)
 >     uint8_t  days;          // @3 Least-significant 7-bits: a bitmap of the days the control point is active for. (b0=Sun, b1=Mon, ..., b6=Sat)
 >     uint16_t minute;        // @4 Least-significant 11-bits: minute of the day the control point begins. (0-1439)

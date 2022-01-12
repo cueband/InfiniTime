@@ -62,6 +62,7 @@ void Pinetime::Controllers::CueService::Init() {
 void Pinetime::Controllers::CueService::ResetState() {
     // Reset state
     readIndex = 0;
+    cueController.ClearScratch();
 }
 
 void Pinetime::Controllers::CueService::Disconnect() {
@@ -74,8 +75,9 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) { // Reading
 
-        if (attr_handle == statusHandle) {
+        if (attr_handle == statusHandle) {  // STATUS: Read `status`
             uint8_t status[15];
+            memset(status, 0, sizeof(status));
             
             // Reset read index
             readIndex = 0;
@@ -120,28 +122,50 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             status[14] = (uint8_t)(duration >> 0);
             status[15] = (uint8_t)(duration >> 8);
 
-            // @0 Active cue schedule ID
-            uint32_t options = cueController.GetOptions();
-            status[16] = (uint8_t)(options >> 0);
-            status[17] = (uint8_t)(options >> 8);
-            status[18] = (uint8_t)(options >> 16);
-            status[19] = (uint8_t)(options >> 24);
+            // @16 Options mask and value
+            options_t mask;
+            options_t effectiveValue = cueController.GetOptionsMaskValue(&mask, nullptr);
+            status[16] = (uint8_t)(mask >> 0);
+            status[17] = (uint8_t)(mask >> 8);
+            status[18] = (uint8_t)(effectiveValue >> 0);
+            status[19] = (uint8_t)(effectiveValue >> 8);
 
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
-        } else if (attr_handle == dataHandle) {
-            uint8_t data[20];
-            memset(data, 0, sizeof(data));
+        } else if (attr_handle == dataHandle) {   // DATA: Read `control_point`
+            uint8_t control_point_data[8];
+            memset(control_point_data, 0, sizeof(control_point_data));
 
-            // @0 ???
-            uint32_t value = 0;
-            data[0] = (uint8_t)(value >> 0);
-            data[1] = (uint8_t)(value >> 8);
-            data[2] = (uint8_t)(value >> 16);
-            data[3] = (uint8_t)(value >> 24);
+            // Read control point at index
+            ControlPoint controlPoint = cueController.GetStoredControlPoint((int)readIndex);
 
-            int res = os_mbuf_append(ctxt->om, &data, sizeof(data));
+            // @0 Index being read
+            control_point_data[0] = (uint8_t)(readIndex >> 0);
+            control_point_data[1] = (uint8_t)(readIndex >> 8);
+
+            // @2 Intensity
+            control_point_data[2] = (uint8_t)(controlPoint.GetVolume());
+
+            // @3 Days
+            control_point_data[3] = (uint8_t)(controlPoint.GetWeekdays());
+
+            // @4 Minute of day
+            unsigned int minute = controlPoint.GetTimeOfDay() / 60;
+            if (minute > 0xffff) minute = 0xffff;
+            control_point_data[4] = (uint8_t)(minute >> 0);
+            control_point_data[5] = (uint8_t)(minute >> 8);
+            
+            // @6 Interval
+            unsigned int interval = controlPoint.GetInterval();
+            if (interval > 0xffff) interval = 0xffff;
+            control_point_data[6] = (uint8_t)(interval >> 0);
+            control_point_data[7] = (uint8_t)(interval >> 8);
+            
+            // Increment read index
+            readIndex++;
+
+            int res = os_mbuf_append(ctxt->om, &control_point_data, sizeof(control_point_data));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
         }
@@ -153,13 +177,69 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
 
         if (attr_handle == statusHandle) {
 
-            if (notifSize >= 4) { 
-                // readIndex = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+            if (notifSize == 0) {   // STATUS: Write *(no data)* - reset schedule
+                cueController.Reset();
+
+            } else {
+
+                if (data[0] == 0x01) {  // STATUS: Write change_options
+                    if (notifSize >= 8) {
+                        // @4 Options mask and value
+                        options_t mask = (options_t)(data[4] | (data[5] << 8));
+                        options_t value = (options_t)(data[6] | (data[7] << 8));
+                        cueController.SetOptionsMaskValue(mask, value);
+                    }
+
+                } else if (data[0] == 0x02) {  // STATUS: Write set_impromtu
+
+                    if (notifSize >= 16) {
+                        // @4 Interval
+                        uint32_t interval = (uint32_t)data[4] | ((uint32_t)data[5] << 8) | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 24);
+                        // @8 Duration
+                        uint32_t duration = (uint32_t)data[8] | ((uint32_t)data[9] << 8) | ((uint32_t)data[10] << 16) | ((uint32_t)data[11] << 24);
+                        // @12 Intensity
+                        uint32_t intensity = (uint32_t)data[12] | ((uint32_t)data[13] << 8) | ((uint32_t)data[14] << 16) | ((uint32_t)data[15] << 24);
+                        cueController.SetInterval(interval, duration);
+                        if (intensity < 0xffff) {
+                            cueController.SetPromptStyle(intensity);
+                        }
+                    }
+
+                } else if (data[0] == 0x03) {  // STATUS: Write store_schedule
+
+                    if (notifSize >= 8) {
+                        // @4 Schedule ID
+                        uint32_t schedule_id = (uint32_t)data[4] | ((uint32_t)data[5] << 8) | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 24);
+                        cueController.CommitScratch(schedule_id);
+                    }
+
+                } // otherwise, unhandled
+
             }
 
         } else if (attr_handle == dataHandle) {
 
-            // TODO
+            if (notifSize == 0) {   // DATA: Write *(no data)* - clear scratch
+                cueController.ClearScratch();
+
+            } else {        // DATA: Write control_point
+
+                if (notifSize >= 8) {
+                    // @0 Index
+                    int index = data[0] | (data[1] << 8);
+                    // @2 Intensity
+                    unsigned int intensity = data[2];
+                    // @3 Days
+                    unsigned int days = data[3];
+                    // @4 Minute
+                    unsigned int minute = data[4] | (data[5] << 8);
+                    // @6 Interval
+                    unsigned int interval = data[6] | (data[7] << 8);
+                    ControlPoint controlPoint = ControlPoint(true, days, interval, intensity, minute * 60);
+                    cueController.SetScratchControlPoint(index, controlPoint);
+                }
+
+            }
 
         }
 

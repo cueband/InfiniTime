@@ -35,8 +35,18 @@ void ControlPointStore::ClearScratch() {
     }
 }
 
+ControlPoint ControlPointStore::GetStored(int index) {
+    if (index >= 0 && index < (int)maxControlPoints) {
+        return ControlPoint(this->controlPoints[index]);
+    } else {
+        return ControlPoint();
+    }
+}
+
 void ControlPointStore::SetScratch(int index, ControlPoint controlPoint) {
-    this->scratch[index] = controlPoint.Value();
+    if (index >= 0 && index < (int)maxControlPoints) {
+        this->scratch[index] = controlPoint.Value();
+    }
 }
 
 void ControlPointStore::CommitScratch(uint32_t version) {

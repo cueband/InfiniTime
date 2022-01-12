@@ -152,9 +152,40 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
     }
 }
 
-uint32_t CueController::GetOptions() {
-    // TODO: Options
-    return 0;
+options_t CueController::GetOptionsMaskValue(options_t *mask, options_t *value) {
+    // overridden_mask:  0=default, 1=remote-set
+    // overridden_value: 0=off, 1=on
+    options_t effectiveValue = (OPTIONS_DEFAULT & ~options_overridden_mask) | (options_overridden_mask & options_overridden_value);
+
+    if (mask != nullptr) *mask = options_overridden_mask;
+    if (value != nullptr) *value = options_overridden_value;
+
+    return effectiveValue;
+}
+
+void CueController::SetOptionsMaskValue(options_t mask, options_t value) {
+    options_t oldMask = options_overridden_mask;
+    options_t oldValue = options_overridden_value & options_overridden_mask;
+
+    // (mask,value)
+    // (0,0) - do not change option
+    // (0,1) - reset option to default
+    // (1,0) - override to false
+    // (1,1) - override to true
+
+    // Reset required options to default
+    options_t resetDefault = ~mask & value;
+    options_overridden_mask &= resetDefault;
+    options_overridden_value &= resetDefault;
+
+    // Set required overridden mask
+    options_overridden_mask |= mask;
+    options_overridden_value = (options_overridden_value & ~mask) | (mask & value);
+
+    // If changed, save
+    if (options_overridden_mask != oldMask || options_overridden_value != oldValue) {
+        WriteCues();
+    }
 }
 
 int CueController::ReadCues(uint32_t *version) {
@@ -169,7 +200,7 @@ int CueController::ReadCues(uint32_t *version) {
     }
 
     // Read header
-    uint8_t headerBuffer[20];
+    uint8_t headerBuffer[24];
     ret = fs.FileRead(&file_p, headerBuffer, sizeof(headerBuffer));
     if (ret != sizeof(headerBuffer)) {
         fs.FileClose(&file_p);
@@ -178,12 +209,15 @@ int CueController::ReadCues(uint32_t *version) {
 
     // Parse header
     bool headerValid = (headerBuffer[0] == 'C' && headerBuffer[1] == 'U' && headerBuffer[2] == 'E' && headerBuffer[3] == 'S');
-    unsigned int fileVersion = headerBuffer[4] + (headerBuffer[5] << 8) + (headerBuffer[6] << 16) + (headerBuffer[7] << 24);
-    unsigned int promptType = headerBuffer[8] + (headerBuffer[9] << 8) + (headerBuffer[10] << 16) + (headerBuffer[11] << 24);
-    unsigned int promptCount = headerBuffer[12] + (headerBuffer[13] << 8) + (headerBuffer[14] << 16) + (headerBuffer[15] << 24);
+    unsigned int fileVersion = headerBuffer[4] | (headerBuffer[5] << 8) | (headerBuffer[6] << 16) | (headerBuffer[7] << 24);
+    unsigned int promptType = headerBuffer[8] | (headerBuffer[9] << 8) | (headerBuffer[10] << 16) | (headerBuffer[11] << 24);
+    options_overridden_mask = headerBuffer[12] | (headerBuffer[13] << 8);
+    options_overridden_value = headerBuffer[14] | (headerBuffer[15] << 8);
+
     if (version != NULL) {
-        *version = headerBuffer[16] + (headerBuffer[17] << 8) + (headerBuffer[18] << 16) + (headerBuffer[19] << 24);
+        *version = headerBuffer[16] | (headerBuffer[17] << 8) | (headerBuffer[18] << 16) | (headerBuffer[19] << 24);
     }
+    unsigned int promptCount = headerBuffer[20] | (headerBuffer[21] << 8) | (headerBuffer[22] << 16) | (headerBuffer[23] << 24);
     if (!headerValid || fileVersion > CUE_FILE_VERSION || promptType != CUE_PROMPT_TYPE) {
         fs.FileClose(&file_p);
         return 3;
@@ -217,16 +251,18 @@ int CueController::WriteCues() {
     int promptCount = sizeof(controlPoints) / sizeof(controlPoints[0]);
     uint32_t promptVersion = store.GetVersion();
 
-    uint8_t headerBuffer[20];
+    uint8_t headerBuffer[24];
     headerBuffer[0] = 'C'; headerBuffer[1] = 'U'; headerBuffer[2] = 'E'; headerBuffer[3] = 'S'; 
     headerBuffer[4] = (uint8_t)CUE_FILE_VERSION; headerBuffer[5] = (uint8_t)(CUE_FILE_VERSION >> 8); headerBuffer[6] = (uint8_t)(CUE_FILE_VERSION >> 16); headerBuffer[7] = (uint8_t)(CUE_FILE_VERSION >> 24); 
     headerBuffer[8] = (uint8_t)CUE_PROMPT_TYPE; headerBuffer[9] = (uint8_t)(CUE_PROMPT_TYPE >> 8); headerBuffer[10] = (uint8_t)(CUE_PROMPT_TYPE >> 16); headerBuffer[11] = (uint8_t)(CUE_PROMPT_TYPE >> 24); 
-    headerBuffer[12] = (uint8_t)promptCount; headerBuffer[13] = (uint8_t)(promptCount >> 8); headerBuffer[14] = (uint8_t)(promptCount >> 16); headerBuffer[15] = (uint8_t)(promptCount >> 24); 
+    headerBuffer[12] = (uint8_t)options_overridden_mask; headerBuffer[13] = (uint8_t)(options_overridden_mask >> 8);
+    headerBuffer[14] = (uint8_t)options_overridden_value; headerBuffer[15] = (uint8_t)(options_overridden_value >> 8);
     headerBuffer[16] = (uint8_t)promptVersion; headerBuffer[17] = (uint8_t)(promptVersion >> 8); headerBuffer[18] = (uint8_t)(promptVersion >> 16); headerBuffer[19] = (uint8_t)(promptVersion >> 24); 
+    headerBuffer[20] = (uint8_t)promptCount; headerBuffer[21] = (uint8_t)(promptCount >> 8); headerBuffer[22] = (uint8_t)(promptCount >> 16); headerBuffer[23] = (uint8_t)(promptCount >> 24); 
     
     // Open control points file for writing
     lfs_file_t file_p = {0};
-    ret = fs.FileOpen(&file_p, CUE_DATA_FILENAME, LFS_O_WRONLY|LFS_O_CREAT|LFS_O_APPEND);
+    ret = fs.FileOpen(&file_p, CUE_DATA_FILENAME, LFS_O_WRONLY|LFS_O_CREAT|LFS_O_TRUNC|LFS_O_APPEND);
     if (ret == LFS_ERR_CORRUPT) fs.FileDelete(CUE_DATA_FILENAME);    // No other sensible action?
     if (ret != LFS_ERR_OK) {
         return 1;
@@ -262,5 +298,33 @@ void CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
     // Record this as the last prompt time so that the full interval must elapse
     lastPrompt = currentUptime;
 }
+
+void CueController::Reset() {
+    store.Reset();
+    WriteCues();
+}
+
+ControlPoint CueController::GetStoredControlPoint(int index) {
+    return store.GetStored(index);
+}
+
+void CueController::ClearScratch() {
+    store.ClearScratch();
+}
+
+void CueController::SetScratchControlPoint(int index, ControlPoint controlPoint) {
+    store.SetScratch(index, controlPoint);
+}
+
+void CueController::CommitScratch(uint32_t version) {
+    store.CommitScratch(version);
+    WriteCues();
+}
+
+
+
+
+Pinetime::Controllers::ControlPoint currentControlPoint;
+
 
 #endif

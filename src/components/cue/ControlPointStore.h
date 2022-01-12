@@ -45,6 +45,9 @@ namespace Pinetime::Controllers {
       // Erase all scratch control points
       void ClearScratch();
 
+      // Get specific stored control point
+      ControlPoint GetStored(int index);
+
       // Set specific scratch control point
       void SetScratch(int index, ControlPoint controlPoint);
 
