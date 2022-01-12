@@ -32,7 +32,7 @@ namespace Pinetime {
 
       // Options
       const static options_t OPTIONS_CUE_SETTING   = (1 << 0); // Feature: Allow user to disable/enable cueing in the settings menu.
-      const static options_t OPTIONS_CUE_ENABLED   = (1 << 1); // Feature: Enable cueing will (follow the programmed schedule)
+      const static options_t OPTIONS_CUE_ENABLED   = (1 << 1); // Feature: Enable scheduled cueing
       const static options_t OPTIONS_CUE_STATUS    = (1 << 2); // Feature: Show cueing status on watch face (when cueing enabled)
       const static options_t OPTIONS_CUE_DETAILS   = (1 << 3); // Feature: Tap on watch face to open cue details (when cueing enabled)
       const static options_t OPTIONS_CUE_SNOOZE    = (1 << 4); // Feature: Can snooze from cue details
@@ -59,6 +59,7 @@ namespace Pinetime {
       void SetScratchControlPoint(int index, ControlPoint controlPoint);
       void CommitScratch(uint32_t version);
 
+      bool IsEnabled() { return (GetOptionsMaskValue() & OPTIONS_CUE_ENABLED) != 0; }
       bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }

@@ -150,8 +150,8 @@ The BLE service can be used to:
 
 > ```c
 >  struct {
->      uint8_t command_type;           // @0 = 0x01 for "change >  options"
->      uint8_t reserved[3];            // @1 (reserved/padding, >  write as 0x00)
+>      uint8_t command_type;           // @0 = 0x01 for "change options"
+>      uint8_t reserved[3];            // @1 (reserved/padding, write as 0x00)
 >      uint16_t options_mask;          // @4 Device interface options mask
 >      uint16_t options_value;         // @6 Device interface options value
 >  } // @8
@@ -168,7 +168,7 @@ The BLE service can be used to:
 > Each bit of `options_mask` and `options_value` represent features as follows:
 >
 > * `b0` - Feature: Allow user to disable/enable cueing in the settings menu.
-> * `b1` - Feature: Enable cueing will (follow the programmed schedule)
+> * `b1` - Feature: Enable scheduled cueing
 > * `b2` - Feature: Show cueing status on watch face (when cueing enabled)
 > * `b3` - Feature: Tap on watch face to open cue details (when cueing enabled)
 > * `b4` - Feature: Can snooze from cue details
@@ -183,9 +183,9 @@ The BLE service can be used to:
 > struct {
 >     uint8_t command_type;           // @0 = 0x02 for "set impromptu"
 >     uint8_t reserved[3];            // @1 (reserved/padding, write as 0x00)
->     uint32_t interval;              // @8 Override cueing interval (seconds), 0=snooze
->     uint32_t duration;              // @12 Override cueing duration (seconds)
->     uint32_t intensity;             // @4 Override cueing intensity
+>     uint32_t interval;              // @4 Override cueing interval (seconds), 0=snooze
+>     uint32_t duration;              // @8 Override cueing duration (seconds)
+>     uint32_t intensity;             // @12 Override cueing intensity
 > } // @16
 > ```
 
@@ -380,7 +380,7 @@ The `events` flags are bitwise flags and defined as follows:
 > const uint16_t ACTIVITY_EVENT_RESTART             = 0x0080;  // @b7  First epoch after device restart (or event logging restarted?)
 > const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn
 > const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer considered asleep
-> const uint16_t ACTIVITY_EVENT_CUE_DISABLED        = 0x0400;  // @b10 (TBD?) All cueing disabled
+> const uint16_t ACTIVITY_EVENT_CUE_DISABLED        = 0x0400;  // @b10 Cue: Scheduled cueing disabled
 > const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 Cue: new configuration written
 > const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (TBD?) Cue: user opened app
 > const uint16_t ACTIVITY_EVENT_CUE_MANUAL          = 0x2000;  // @b13 Cue: temporary manual cueing in use

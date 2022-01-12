@@ -27,7 +27,7 @@
 #define ACTIVITY_EVENT_RESTART             0x0080 // First epoch after device restart (or event logging restarted?)
 #define ACTIVITY_EVENT_NOT_WORN            0x0100 // Activity: Device considered not worn
 #define ACTIVITY_EVENT_ASLEEP              0x0200 // Activity: Wearer considered asleep
-#define ACTIVITY_EVENT_CUE_DISABLED        0x0400 // Cue: alle cueing disabled
+#define ACTIVITY_EVENT_CUE_DISABLED        0x0400 // Cue: scheduled cueing disabled
 #define ACTIVITY_EVENT_CUE_CONFIGURATION   0x0800 // Cue: new configuration written
 #define ACTIVITY_EVENT_CUE_OPENED          0x1000 // Cue: user opened app
 #define ACTIVITY_EVENT_CUE_MANUAL          0x2000 // Cue: temporary manual cueing in use

@@ -53,6 +53,12 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
 
     unsigned int effectiveInterval = cueInterval;
 
+    // If scheduled prompting is disabled...
+    if (!IsEnabled()) {
+        activityController.Event(ACTIVITY_EVENT_CUE_DISABLED);
+        effectiveInterval = 0;
+    }
+
     // If temporary prompt/snooze...
     if (currentUptime < overrideEndTime) {
         if (interval != 0) {  // if temporary prompting...
