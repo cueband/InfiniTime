@@ -528,6 +528,7 @@ list(APPEND SOURCE_FILES
         # cueband
         cueband.c
         components/ble/ActivityService.cpp
+        components/ble/CueService.cpp
         components/ble/UartService.cpp
         components/activity/ActivityController.cpp
         components/activity/resampler.c
@@ -721,6 +722,7 @@ set(INCLUDE_FILES
         # cueband
         cueband.h
         components/ble/ActivityService.h
+        components/ble/CueService.h
         components/ble/UartService.h
         components/activity/ActivityController.h
         components/activity/iir.h
