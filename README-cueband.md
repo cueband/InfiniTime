@@ -99,7 +99,7 @@ Cueing watch app interface... snooze/sleep/pause prompts... configure...
 
 
 
-### (Proposed) Prompting Cue Schedule Configuration BLE Service
+### Prompting Cue Schedule Configuration BLE Service
 
 The BLE service can be used to:
 
@@ -114,7 +114,8 @@ The BLE service can be used to:
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
 | Name                          | Schedule Service                                 |
-| UUID                          | *(TBD)*                                          |
+| UUID                          | `faa20000-3a02-417d-90a7-23f4a9c6745f`           |
+
 
 
 #### Characteristic: Schedule Status
@@ -122,7 +123,7 @@ The BLE service can be used to:
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
 | Name                          | Schedule Status Characteristic                   |
-| UUID                          | *(TBD)*                                          |
+| UUID                          | `faa20001-3a02-417d-90a7-23f4a9c6745f`           |
 | Read `status`                 | Query the current schedule status, and resets the `read_index` to `0`.   |
 | Write *(no data)*             | Clears the scratch schedule with empty control points, and stores it as the active schedule with `schedule_id=0xffffffff` indicating no schedule. |
 | Write `change_options`        | Changes the allowed device interface options as specified. |
@@ -133,16 +134,14 @@ The BLE service can be used to:
 
 > ```c
 > struct {
->     uint32_t active_schedule_id;    // @0
->     uint16_t max_control_points;    // @4
+>     uint32_t active_schedule_id;    // @0 Active cue schedule ID
+>     uint16_t max_control_points;    // @4 Maximum number of control points supported
 >     uint16_t current_control_point; // @6 Current active control point (0xffff=none)
->     uint8_t override;               // @8 Override setting (0x00=no override, 0x01=snooze, 0x02=impromptu)
->     uint8_t intensity;              // @9 Active cueing intensity
->     uint16_t interval;              // @10 Active cueing interval (seconds)
->     uint16_t duration;              // @12 Active configured cueing duration (seconds, saturates to 0xffff)
->     uint16_t remaining;             // @14 Active remaining cueing duration (seconds, saturates to 0xffff)
->     uint16_t options;               // @16 Device interface options
->     uint16_t reserved;              // @18 (reserved)
+>     uint16_t override_remaining;    // @8 (0=not overridden), remaining override duration (seconds, saturates to 0xffff)
+>     uint16_t intensity;             // @10 Effective cueing intensity
+>     uint16_t interval;              // @12 Effective cueing interval (seconds)
+>     uint16_t duration;              // @14 Effective remaining cueing duration (seconds, saturates to 0xffff)
+>     uint32_t options;               // @16 Device interface options
 > } // @20
 > ```
 
@@ -152,20 +151,35 @@ The BLE service can be used to:
 >  struct {
 >      uint8_t command_type;           // @0 = 0x01 for "change >  options"
 >      uint8_t reserved[3];            // @1 (reserved/padding, >  write as 0x00)
->      uint16_t options;               // @4 Device interface options
->  } // @6
+>      uint32_t options;               // @4 Device interface options
+>  } // @8
 >  ```
 >  
->  Where `options` is combined of the following bit flags OR'd together:
->  
->  * `0b00000001` - Allow user to enable/disable cueing functionality (set: user enable/disable in cue settings menu; >  clear: do not show cue settings menu)
->  * `0b00000010` - Allow cueing functionality -- will follow a programmed schedule
->  * `0b00000100` - If cueing allowed, will show status on screen
->  * `0b00001000` - If cueing allowed, will allow tap to open cue details
->  * `0b00010000` - Cue details allows customized vibration level
->  * `0b00100000` - Cue details allows snooze
->  * `0b01000000` - Cue details allows impromtu cueing
->  * `0b10000000` - (reserved)
+> Where `options` is combined of the following features, each taking two bits:
+>
+> * `b0-1` - Feature: Allow user to disable/enable cueing in the settings menu.
+> * `b2-3` - Feature: Enable cueing will (follow the programmed schedule)
+> * `b4-5` - Feature: Show cueing status on watch face (when cueing enabled)
+> * `b6-7` - Feature: Tap on watch face to open cue details (when cueing enabled)
+> * `b8-9` - Feature: Can snooze from cue details
+> * `b10-11` - Feature: Can start impromptu temporary cueing from cue details
+> * `b12-13` - Feature: Customize vibration level from cue details
+> * `b14-31` - (reserved)
+>
+> Each feature has the following states when written:
+>
+> * `0b00` - Do not change current setting
+> * `0b01` - Reset this feature to the device's default setting
+> * `0b10` - Remotely configured: clear to disabled
+> * `0b11` - Remotely configured: set to enabled
+>
+> Each feature has the following states when read:
+>
+> * `0b00` - (As default) disabled
+> * `0b01` - (As default) enabled
+> * `0b10` - (Remotely configured) disabled
+> * `0b11` - (Remotely configured) enabled
+
 
 `set_impromtu` is:
 
@@ -173,11 +187,10 @@ The BLE service can be used to:
 > struct {
 >     uint8_t command_type;           // @0 = 0x02 for "set impromptu"
 >     uint8_t reserved[3];            // @1 (reserved/padding, write as 0x00)
->     uint8_t override;               // @4 Override setting (0x00=no override, 0x01=snooze, 0x02=impromptu)
->     uint8_t intensity;              // @5 (`override != 0x00`) Override cueing intensity
->     uint16_t interval;              // @6 (`override != 0x00`) Override cueing interval (seconds)
->     uint32_t duration;              // @8 (`override != 0x00`) Override cueing duration (seconds)
-> } // @12
+>     uint32_t interval;              // @8 Override cueing interval (seconds), 0=snooze
+>     uint32_t duration;              // @12 Override cueing duration (seconds)
+>     uint32_t intensity;             // @4 Override cueing intensity
+> } // @16
 > ```
 
 `store_schedule` is:
@@ -191,12 +204,12 @@ The BLE service can be used to:
 > ```
 
 
-#### Characteristic: Schedule Control Point
+#### Characteristic: Schedule Data
 
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
 | Name                          | Schedule Control Point Characteristic            |
-| UUID                          | *(TBD)*                                          |
+| UUID                          | `faa20002-3a02-417d-90a7-23f4a9c6745f`           |
 | Read `control_point`          | Reads the stored control point at the `read_index`, and increments the `read_index`.  |
 | Write *(no data)*             | Clears the current scratch schedule, fills with all-empty control points.  |
 | Write `control_point`         | Set the scratch control point values at the specified index.  |

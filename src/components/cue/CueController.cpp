@@ -117,6 +117,35 @@ void CueController::Init() {
     activityController.PromptConfigurationChanged(store.GetVersion());
 }
 
+void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint16_t *override_remaining, uint16_t *intensity, uint16_t *interval, uint16_t *duration) {
+    if (active_schedule_id != nullptr) {
+        *active_schedule_id = store->GetVersion();
+    }
+    if (max_control_points != nullptr) {
+        *max_control_points = PROMPT_MAX_CONTROLS;
+    }
+    if (current_control_point != nullptr) {
+        // TODO: *current_control_point = ?;
+    }
+    if (override_remaining != nullptr) {
+        // TODO: *override_remaining = ?;
+    }
+    if (intensity != nullptr) {
+        // TODO: *intensity = ?;
+    }
+    if (interval != nullptr) {
+        // TODO: *interval = ?;
+    }
+    if (duration != nullptr) {
+        // TODO: *duration = ?;
+    }
+}
+
+uint32_t CueController::GetOptions() {
+    // TODO: Options
+    return 0;
+}
+
 int CueController::ReadCues(uint32_t *version) {
     int ret;
 

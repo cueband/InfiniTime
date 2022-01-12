@@ -38,6 +38,7 @@
 #endif
 #ifdef CUEBAND_CUE_ENABLED
 #include "components/cue/CueController.h"
+#include "components/ble/CueService.h"
 #endif
 
 namespace Pinetime {
@@ -168,6 +169,9 @@ namespace Pinetime {
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
       ActivityService activityService;
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+      CueService cueService;
 #endif
 
       uint8_t addrType;

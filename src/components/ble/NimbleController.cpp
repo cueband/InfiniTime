@@ -188,6 +188,14 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
       activityController
     }
 #endif
+#ifdef CUEBAND_CUE_ENABLED
+    , cueService {
+      systemTask,
+      bleController,
+      settingsController,
+      cueController
+    }
+#endif
     {
 }
 
@@ -259,6 +267,9 @@ void NimbleController::Init() {
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
   activityService.Init();
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+  cueService.Init();
 #endif
 
   int rc;
@@ -454,6 +465,9 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
       activityService.Disconnect();
+#endif
+#ifdef CUEBAND_CUE_ENABLED
+      cueService.Disconnect();
 #endif
       connectionHandle = BLE_HS_CONN_HANDLE_NONE;
       bleController.Disconnect();

@@ -1,4 +1,4 @@
-// UART Service
+// Activity Sync Service
 // Dan Jackson, 2021
 
 #pragma once

@@ -115,6 +115,12 @@ namespace Pinetime {
       }
 #endif
 
+#ifdef CUEBAND_CUE_ENABLED
+      void CommsCue() {
+            commsCount++;
+      }
+#endif
+
     private:
       TaskHandle_t taskHandle;
 
