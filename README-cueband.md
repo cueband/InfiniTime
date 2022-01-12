@@ -140,7 +140,7 @@ The BLE service can be used to:
 >     uint16_t override_remaining;    // @8 (0=not overridden), remaining override duration (seconds, saturates to 0xffff)
 >     uint16_t intensity;             // @10 Effective cueing intensity
 >     uint16_t interval;              // @12 Effective cueing interval (seconds)
->     uint16_t duration;              // @14 Effective remaining cueing duration (seconds, saturates to 0xffff)
+>     uint16_t duration;              // @14 Remaining scheduled cueing duration (seconds, saturates to 0xffff)
 >     uint32_t options;               // @16 Device interface options
 > } // @20
 > ```

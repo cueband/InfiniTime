@@ -37,9 +37,9 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     unsigned int effectivePromptStyle = DEFAULT_PROMPT_STYLE;
 
     // Get scheduled interval (0=none)
-    Pinetime::Controllers::ControlPoint controlPoint = store.CueValue(timestamp);
-    unsigned int cueInterval = controlPoint.GetInterval();
-    if (!controlPoint.IsEnabled()) cueInterval = 0;
+    currentControlPoint = store.CueValue(timestamp, &currentCueIndex, &currentCueCachedRemaining);
+    unsigned int cueInterval = currentControlPoint.GetInterval();
+    if (!currentControlPoint.IsEnabled()) cueInterval = 0;
 
 #ifdef CUEBAND_DETECT_UNSET_TIME
     // Ignore prompt schedule if current time is not set
@@ -48,7 +48,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     }
 #endif
     if (cueInterval > 0) {
-        effectivePromptStyle = controlPoint.GetVolume();
+        effectivePromptStyle = currentControlPoint.GetVolume();
     }
 
     unsigned int effectiveInterval = cueInterval;
@@ -118,26 +118,37 @@ void CueController::Init() {
 }
 
 void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint16_t *override_remaining, uint16_t *intensity, uint16_t *interval, uint16_t *duration) {
+    bool scheduled = IsScheduled();
+
     if (active_schedule_id != nullptr) {
-        *active_schedule_id = store->GetVersion();
+        *active_schedule_id = store.GetVersion();
     }
     if (max_control_points != nullptr) {
         *max_control_points = PROMPT_MAX_CONTROLS;
     }
     if (current_control_point != nullptr) {
-        // TODO: *current_control_point = ?;
+        *current_control_point = (uint16_t)currentCueIndex;
     }
+    unsigned int remaining = scheduled ? 0 : (overrideEndTime - currentUptime);
     if (override_remaining != nullptr) {
-        // TODO: *override_remaining = ?;
+        *override_remaining = (uint16_t)(remaining > 0xffff ? 0xffff : remaining);
     }
     if (intensity != nullptr) {
-        // TODO: *intensity = ?;
+        if (scheduled) {
+            *intensity = (uint16_t)currentControlPoint.GetVolume();
+        } else {
+            *intensity = promptStyle;
+        }
     }
     if (interval != nullptr) {
-        // TODO: *interval = ?;
+        if (scheduled) {
+            *intensity = (uint16_t)currentControlPoint.GetInterval();
+        } else {
+            *interval = (uint16_t)(this->interval > 0xffff ? 0xffff : this->interval);
+        }
     }
     if (duration != nullptr) {
-        // TODO: *duration = ?;
+        *duration = (uint16_t)(currentCueCachedRemaining > 0xffff ? 0xffff : currentCueCachedRemaining);
     }
 }
 

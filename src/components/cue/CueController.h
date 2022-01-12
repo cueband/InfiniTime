@@ -57,6 +57,12 @@ namespace Pinetime {
 
       uint32_t currentTime = 0;
       uint32_t currentUptime = 0;
+
+      // Current scheduled cue control point
+      int currentCueIndex = ControlPoint::INDEX_NONE;
+      Pinetime::Controllers::ControlPoint currentControlPoint;
+      unsigned int currentCueCachedRemaining = 0;
+
       uint32_t lastPrompt = UPTIME_NONE;    // Uptime at the last prompt
 
       uint32_t overrideEndTime = 0;         // End of override time

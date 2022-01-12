@@ -46,10 +46,9 @@ namespace Pinetime {
       void Init();
       void Disconnect();
 
-    private:
-    
-      void TxNotification(ble_gap_event* event);
       int OnCommand(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt);
+
+    private:
 
       void ResetState();
 
