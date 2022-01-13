@@ -123,6 +123,14 @@ WatchFaceAnalog::WatchFaceAnalog(Pinetime::Applications::DisplayApp* app,
   lv_style_set_line_rounded(&hour_line_style_trace, LV_STATE_DEFAULT, false);
   lv_obj_add_style(hour_body_trace, LV_LINE_PART_MAIN, &hour_line_style_trace);
 
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  cue_status = lv_label_create(lv_scr_act(), nullptr);
+  //lv_label_set_text_static(cue_status, "");
+  lv_label_set_text_fmt(cue_status, "");
+  lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+#endif
+
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   UpdateClock();
 }
@@ -245,4 +253,9 @@ void WatchFaceAnalog::Refresh() {
       currentDay = day;
     }
   }
+
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  const char *description = app->GetCueController().Description();
+  lv_label_set_text_fmt(cue_status, "%s", description);
+#endif
 }

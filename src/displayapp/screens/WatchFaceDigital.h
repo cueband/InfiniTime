@@ -67,6 +67,9 @@ namespace Pinetime {
         lv_obj_t* stepIcon;
         lv_obj_t* stepValue;
 #endif
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+        lv_obj_t* cue_status;
+#endif
         lv_obj_t* notificationIcon;
 
         Controllers::DateTime& dateTimeController;

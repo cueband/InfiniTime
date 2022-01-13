@@ -72,15 +72,16 @@
 #define CUEBAND_INFO_APP_ENABLED
 #define CUEBAND_INFO_APP_SYMBOL "?" // "I"
 
-#ifdef CUEBAND_APP_ENABLED
-    #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
-#endif
-
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
 
 // Cue prompts
 #define CUEBAND_CUE_ENABLED
+
+#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_CUE_ENABLED)
+    #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
+    #define CUEBAND_WATCHFACE_CUE_STATUS
+#endif
 
 #define CUEBAND_AXES 3          // Must be 3
 

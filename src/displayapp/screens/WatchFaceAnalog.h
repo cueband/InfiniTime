@@ -74,6 +74,10 @@ namespace Pinetime {
         lv_obj_t* batteryIcon;
         lv_obj_t* notificationIcon;
 
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+        lv_obj_t* cue_status;
+#endif
+
         Controllers::DateTime& dateTimeController;
         Controllers::Battery& batteryController;
         Controllers::Ble& bleController;

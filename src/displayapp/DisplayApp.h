@@ -86,6 +86,10 @@ namespace Pinetime {
 
       void Register(Pinetime::System::SystemTask* systemTask);
 
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+      Pinetime::Controllers::CueController& GetCueController() { return cueController; }
+#endif
+
     private:
       Pinetime::Drivers::St7789& lcd;
       Pinetime::Components::LittleVgl& lvgl;

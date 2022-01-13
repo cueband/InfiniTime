@@ -299,6 +299,14 @@ PineTimeStyle::PineTimeStyle(DisplayApp* app,
   lv_label_set_text_static(lbl_btnSet, Symbols::settings);
   lv_obj_set_hidden(btnSet, true);
 
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  cue_status = lv_label_create(lv_scr_act(), nullptr);
+  //lv_label_set_text_static(cue_status, "");
+  lv_label_set_text_fmt(cue_status, "");
+  lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+#endif
+
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   Refresh();
 }
@@ -501,6 +509,11 @@ void PineTimeStyle::Refresh() {
       savedTick = 0;
     }
   }
+
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  const char *description = app->GetCueController().Description();
+  lv_label_set_text_fmt(cue_status, "%s", description);
+#endif
 }
 
 void PineTimeStyle::UpdateSelected(lv_obj_t* object, lv_event_t event) {

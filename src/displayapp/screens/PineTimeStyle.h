@@ -89,6 +89,9 @@ namespace Pinetime {
         lv_obj_t* btnSet;
         lv_obj_t* lbl_btnSet;
         lv_color_t needle_colors[1];
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+        lv_obj_t* cue_status;
+#endif
 
         Controllers::DateTime& dateTimeController;
         Controllers::Battery& batteryController;
