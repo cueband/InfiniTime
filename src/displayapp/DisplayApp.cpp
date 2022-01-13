@@ -265,6 +265,13 @@ void DisplayApp::Refresh() {
               case TouchEvents::SwipeRight:
                 LoadApp(Apps::QuickSettings, DisplayApp::FullRefreshDirections::RightAnim);
                 break;
+#ifdef CUEBAND_TAP_WATCHFACE_LAUNCH_APP
+              case TouchEvents::Tap:  //  Tap / LongTap / DoubleTap / SwipeLeft / SwipeUp
+                if (cueController.IsEnabled()) {
+                  LoadApp(Apps::CueBand, DisplayApp::FullRefreshDirections::None);
+                }
+                break;
+#endif
               case TouchEvents::DoubleTap:
                 PushMessageToSystemTask(System::Messages::GoToSleep);
                 break;

@@ -86,11 +86,15 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             uint32_t active_schedule_id;
             uint16_t max_control_points;
             uint16_t current_control_point;
-            uint16_t override_remaining;
-            uint16_t intensity;
-            uint16_t interval;
-            uint16_t duration;
+            uint32_t override_remaining;
+            uint32_t intensity;
+            uint32_t interval;
+            uint32_t duration;
             cueController.GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
+            if (override_remaining > 0xffff) override_remaining = 0xffff;
+            if (intensity > 0xffff) intensity = 0xffff;
+            if (interval > 0xffff) interval = 0xffff;
+            if (duration > 0xffff) duration = 0xffff;
 
             // @0 Active cue schedule ID
             status[0] = (uint8_t)(active_schedule_id >> 0);

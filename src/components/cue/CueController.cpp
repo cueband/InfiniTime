@@ -125,7 +125,7 @@ void CueController::Init() {
     activityController.PromptConfigurationChanged(store.GetVersion());
 }
 
-void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint16_t *override_remaining, uint16_t *intensity, uint16_t *interval, uint16_t *duration) {
+void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint32_t *override_remaining, uint32_t *intensity, uint32_t *interval, uint32_t *duration) {
     bool scheduled = IsScheduled();
 
     if (active_schedule_id != nullptr) {
@@ -139,7 +139,7 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
     }
     unsigned int remaining = scheduled ? 0 : (overrideEndTime - currentUptime);
     if (override_remaining != nullptr) {
-        *override_remaining = (uint16_t)(remaining > 0xffff ? 0xffff : remaining);
+        *override_remaining = remaining;
     }
     if (intensity != nullptr) {
         if (scheduled) {
@@ -152,11 +152,11 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
         if (scheduled) {
             *intensity = (uint16_t)currentControlPoint.GetInterval();
         } else {
-            *interval = (uint16_t)(this->interval > 0xffff ? 0xffff : this->interval);
+            *interval = this->interval;
         }
     }
     if (duration != nullptr) {
-        *duration = (uint16_t)(cueRemaining > 0xffff ? 0xffff : cueRemaining);
+        *duration = cueRemaining;
     }
 }
 
@@ -365,15 +365,34 @@ void CueController::DebugText(char *debugText) {
   p += sprintf(p, " @%d i%d v%d\n", currentControlPoint.GetTimeOfDay(), currentControlPoint.GetInterval(), currentControlPoint.GetVolume());
 
   // Status
-  uint16_t override_remaining;
-  uint16_t intensity;
-  uint16_t interval;
-  uint16_t duration;
+  uint32_t override_remaining;
+  uint32_t intensity;
+  uint32_t interval;
+  uint32_t duration;
   GetStatus(nullptr, nullptr, nullptr, &override_remaining, &intensity, &interval, &duration);
-  p += sprintf(p, "Ovr: t%d i%d v%d\n", override_remaining, interval, intensity);
-  p += sprintf(p, "Rem: %d\n", duration);
+  p += sprintf(p, "Ovr: t%d i%d v%d\n", (int)override_remaining, (int)interval, (int)intensity);
+  p += sprintf(p, "Rem: %d\n", (int)duration);
 
   return;
+}
+
+// Return a static buffer (must be used immediately and not called again before use)
+const char *niceTime(unsigned int seconds) {
+    static char buffer[12];
+    if (seconds == 0) {
+        sprintf(buffer, "now");
+    } if (seconds < 60) {
+        sprintf(buffer, "%uls", seconds);
+    } else if (seconds < 60 * 60) {
+        sprintf(buffer, "%ulm", seconds / 60);
+    } else if (seconds < 24 * 60 * 60) {
+        sprintf(buffer, "%ulh", seconds / 60 / 60);
+    } else if (seconds < 0xffffffff) {
+        sprintf(buffer, "%uld", seconds / 60 / 60 / 24);
+    } else {
+        sprintf(buffer, "-");
+    }
+    return buffer;
 }
 
 const char *CueController::Description() {
@@ -385,24 +404,32 @@ const char *CueController::Description() {
         uint32_t active_schedule_id;
         uint16_t max_control_points;
         uint16_t current_control_point;
-        uint16_t override_remaining;
-        uint16_t intensity;
-        uint16_t interval;
-        uint16_t duration;
+        uint32_t override_remaining;
+        uint32_t intensity;
+        uint32_t interval;
+        uint32_t duration;
         GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
 
         if (override_remaining > 0) {
             if (interval > 0) {
-                p += sprintf(p, "Manual (%dm)", override_remaining / 60);
+                // Temporary cueing
+                p += sprintf(p, "Manual (%s)", niceTime(override_remaining));
             } else {
-                p += sprintf(p, "Snooze (%dm)", override_remaining / 60);
+                // Temporary snooze
+                p += sprintf(p, "Snooze (%s)", niceTime(override_remaining));
             }
+        } else if (!IsEnabled()) {
+            // Scheduled cueing Disabled
+            //p += sprintf(p, ".");
         } else if (current_control_point < 0xffff) {
-            p += sprintf(p, "Cue (%dm)", duration / 60);
-        } else if (duration <= 12 * 60) {
-            p += sprintf(p, "Not Cueing (%dm)", duration / 60);
+            // Scheduled cueing in progress
+            p += sprintf(p, "Cue (%s)", niceTime(duration));
+        } else if (duration <= (7 * 24 * 60 * 60)) {
+            // Scheduled cueing
+            p += sprintf(p, "Not Cueing (%s)", niceTime(duration));
         } else {
-            p += sprintf(p, "-");
+            // No scheduled cueing
+            p += sprintf(p, "Not Cueing");
         }
         descriptionValid = true;
     }

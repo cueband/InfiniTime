@@ -72,6 +72,10 @@
 #define CUEBAND_INFO_APP_ENABLED
 #define CUEBAND_INFO_APP_SYMBOL "?" // "I"
 
+#ifdef CUEBAND_APP_ENABLED
+    #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
+#endif
+
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
 
@@ -99,8 +103,8 @@
 
 #ifdef CUEBAND_CUSTOMIZATION
 
-    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL
-    
+    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from analog watch face (to make room for cue status)
+
     // See: src/displayapp/screens/WatchFaceDigital.cpp
     // See: src/displayapp/screens/WatchFaceAnalog.cpp
     // See: src/displayapp/screens/PineTimeStyle.cpp
