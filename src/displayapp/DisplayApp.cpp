@@ -37,6 +37,9 @@
 #ifdef CUEBAND_APP_ENABLED
 #include "displayapp/screens/CueBandApp.h"
 #endif
+#ifdef CUEBAND_INFO_APP_ENABLED
+#include "displayapp/screens/InfoApp.h"
+#endif
 
 #include "drivers/Cst816s.h"
 #include "drivers/St7789.h"
@@ -104,8 +107,11 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
                        Pinetime::Controllers::TimerController& timerController,
                        Pinetime::Controllers::AlarmController& alarmController,
                        Pinetime::Controllers::TouchHandler& touchHandler
-#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
                        , Pinetime::Controllers::ActivityController& activityController
+#endif
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+                       , Pinetime::Controllers::CueController& cueController
 #endif
                        )
   : lcd {lcd},
@@ -123,8 +129,11 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
     timerController {timerController},
     alarmController {alarmController},
     touchHandler {touchHandler}
-#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
     , activityController {activityController}
+#endif
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+    , cueController {cueController}
 #endif
     {
 }
@@ -488,23 +497,44 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
     case Apps::Steps:
       currentScreen = std::make_unique<Screens::Steps>(this, motionController, settingsController);
       break;
+
 #ifdef CUEBAND_FIX_WARNINGS
 case Apps::Weather: break;
-#endif      
+#endif
+
 #ifdef CUEBAND_APP_ENABLED
     case Apps::CueBand:
       currentScreen = std::make_unique<Screens::CueBandApp>(
-        this, *systemTask, dateTimeController, motionController, settingsController
-#ifdef CUEBAND_ACTIVITY_ENABLED
-        , activityController
-#endif
+        this, *systemTask, settingsController
+        #ifdef CUEBAND_CUE_ENABLED
+          , cueController
+        #endif
       );
-#ifdef CUEBAND_DISABLE_APP_LAUNCHER
-      // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
-      ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
-#endif
+      #ifdef CUEBAND_DISABLE_APP_LAUNCHER
+        // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
+        ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+      #endif
       break;
 #endif
+
+#ifdef CUEBAND_INFO_APP_ENABLED
+    case Apps::Info:
+      currentScreen = std::make_unique<Screens::InfoApp>(
+        this, *systemTask, dateTimeController, motionController, settingsController
+        #ifdef CUEBAND_ACTIVITY_ENABLED
+          , activityController
+        #endif
+        #ifdef CUEBAND_CUE_ENABLED
+          , cueController
+        #endif
+      );
+      #ifdef CUEBAND_DISABLE_APP_LAUNCHER
+        // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
+        ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+      #endif
+      break;
+#endif
+
   }
   currentApp = app;
 }

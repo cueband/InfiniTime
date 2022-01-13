@@ -24,6 +24,9 @@
 #ifdef CUEBAND_ACTIVITY_ENABLED
 #include "components/activity/ActivityController.h"
 #endif
+#ifdef CUEBAND_CUE_ENABLED
+#include "components/cue/CueController.h"
+#endif
 
 namespace Pinetime {
 
@@ -67,8 +70,11 @@ namespace Pinetime {
                  Pinetime::Controllers::TimerController& timerController,
                  Pinetime::Controllers::AlarmController& alarmController,
                  Pinetime::Controllers::TouchHandler& touchHandler
-#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
                  , Pinetime::Controllers::ActivityController& activityController
+#endif
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+                 , Pinetime::Controllers::CueController& cueController
 #endif
                  );
       void Start(System::BootErrors error);
@@ -97,8 +103,11 @@ namespace Pinetime {
       Pinetime::Controllers::TimerController& timerController;
       Pinetime::Controllers::AlarmController& alarmController;
       Pinetime::Controllers::TouchHandler& touchHandler;
-#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
       Pinetime::Controllers::ActivityController& activityController;
+#endif
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+      Pinetime::Controllers::CueController& cueController;
 #endif
 
       Pinetime::Controllers::FirmwareValidator validator;

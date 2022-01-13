@@ -64,7 +64,13 @@ namespace Pinetime {
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }
 
+      const char *Description();
+      void DebugText(char *debugText);
+
     private:
+
+      char description[80];
+      bool descriptionValid = false;
 
       // Options
       options_t options_overridden_mask = 0;
@@ -88,7 +94,7 @@ namespace Pinetime {
       // Current scheduled cue control point
       int currentCueIndex = ControlPoint::INDEX_NONE;
       Pinetime::Controllers::ControlPoint currentControlPoint;
-      unsigned int currentCueCachedRemaining = 0;
+      unsigned int cueRemaining = 0;
 
       uint32_t lastPrompt = UPTIME_NONE;    // Uptime at the last prompt
 

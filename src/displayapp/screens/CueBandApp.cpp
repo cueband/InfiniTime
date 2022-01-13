@@ -16,16 +16,14 @@ static void lv_update_task(struct _lv_task_t* task) {
 
 CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
              System::SystemTask& systemTask,
-             Pinetime::Controllers::DateTime& dateTimeController,
-             Controllers::MotionController& motionController,
              Controllers::Settings& settingsController
-#ifdef CUEBAND_ACTIVITY_ENABLED
-             , Controllers::ActivityController& activityController
+#ifdef CUEBAND_CUE_ENABLED
+             , Controllers::CueController& cueController
 #endif
              )
-  : Screen(app), systemTask {systemTask}, dateTimeController {dateTimeController}, motionController {motionController}, settingsController {settingsController}
-#ifdef CUEBAND_ACTIVITY_ENABLED
-  , activityController {activityController}
+  : Screen(app), systemTask {systemTask}, settingsController {settingsController}
+#ifdef CUEBAND_CUE_ENABLED
+  , cueController {cueController}
 #endif
    {
 
@@ -35,7 +33,7 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_align(lInfo, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
   lv_label_set_long_mode(lInfo, LV_LABEL_LONG_EXPAND);
 
-  taskUpdate = lv_task_create(lv_update_task, 250, LV_TASK_PRIO_LOW, this);
+  taskUpdate = lv_task_create(lv_update_task, 1000, LV_TASK_PRIO_LOW, this);
   Update();
 }
 
@@ -44,78 +42,16 @@ CueBandApp::~CueBandApp() {
   lv_obj_clean(lv_scr_act());
 }
 
-int CueBandApp::ScreenCount() {
-  int screenCount = 0;
-  screenCount++;  // info
-#ifdef CUEBAND_ACTIVITY_ENABLED
-  screenCount++;  // activity debug - basic
-#ifdef CUEBAND_DEBUG_ACTIVITY
-  screenCount++;  // activity debug - additional
-#endif
-#endif
-#ifdef CUEBAND_DEBUG_ADV
-  screenCount++;  // advertising debug
-#endif
-  return screenCount;
-}
-
-
-extern "C" uint32_t os_cputime_get32(void);
-
 void CueBandApp::Update() {
-  int thisScreen = 0;
+  static char text[200];
+  char *p = text;
+  *p = '\0';
 
-  static char debugText[200];
-  sprintf(debugText, "-");
+  p += sprintf(text, "Cue.Band\n");
+  p += sprintf(text, "\n");
+  p += sprintf(text, "%s\n", cueController.Description());
 
-  if (screen == thisScreen++) {
-    uint32_t uptime = dateTimeController.Uptime().count();
-    uint32_t uptimeSeconds = uptime % 60;
-    uint32_t uptimeMinutes = (uptime / 60) % 60;
-    uint32_t uptimeHours = (uptime / (60 * 60)) % 24;
-    uint32_t uptimeDays = uptime / (60 * 60 * 24);
-
-    //uint32_t tmr = os_cputime_get32();
-
-    sprintf(debugText,    // ~165 bytes
-            "#FFFF00 InfiniTime#\n\n"
-            "#444444 Version# %ld.%ld.%ld\n"
-            "#444444 Short Ref# %s\n"
-            "#444444 Build date#\n"
-            "%s %s\n"
-            "#444444 Application#"     // CUEBAND_INFO_SYSTEM has "\n" prefix
-#ifdef CUEBAND_INFO_SYSTEM
-            CUEBAND_INFO_SYSTEM "\n"
-#endif
-            "#444444 Uptime# %lud %02lu:%02lu:%02lu\n"
-            //"T@%02x_%02x_%02x_%02x\n"
-            ,
-            Version::Major(), Version::Minor(), Version::Patch(),
-            Version::GitCommitHash(),
-            __DATE__, __TIME__,
-            uptimeDays, uptimeHours, uptimeMinutes, uptimeSeconds
-            //, (uint8_t)(tmr >> 24), (uint8_t)(tmr >> 16), (uint8_t)(tmr >> 8), (uint8_t)(tmr >> 0)
-            );
-  }
-
-#ifdef CUEBAND_ACTIVITY_ENABLED
-  if (screen == thisScreen++) {
-    activityController.DebugText(debugText, false);   // basic info
-  }
-#ifdef CUEBAND_DEBUG_ACTIVITY
-  if (screen == thisScreen++) {
-    activityController.DebugText(debugText, true);    // additional info
-  }
-#endif
-#endif
-
-#ifdef CUEBAND_DEBUG_ADV
-  if (screen == thisScreen++) {
-    systemTask.nimble().DebugText(debugText);
-  }
-#endif
-
-  lv_label_set_text_fmt(lInfo, "%s", debugText);
+  lv_label_set_text_fmt(lInfo, "%s", text);
 }
 
 void CueBandApp::Refresh() {
@@ -125,9 +61,8 @@ void CueBandApp::Refresh() {
 bool CueBandApp::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
   switch (event) {
     case Pinetime::Applications::TouchEvents::LongTap:
-      screen++;
-      if (screen >= ScreenCount()) screen = 0;
-      return true;
+      //return true;
+      return false;
     default:
       return false;
   }

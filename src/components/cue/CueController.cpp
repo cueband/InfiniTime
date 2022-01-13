@@ -31,13 +31,15 @@ CueController::CueController(Controllers::Settings& settingsController,
 void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     bool snoozed = false;
 
+    descriptionValid = false;
+
     currentTime = timestamp;
     currentUptime = uptime;
 
     unsigned int effectivePromptStyle = DEFAULT_PROMPT_STYLE;
 
     // Get scheduled interval (0=none)
-    currentControlPoint = store.CueValue(timestamp, &currentCueIndex, &currentCueCachedRemaining);
+    currentControlPoint = store.CueValue(timestamp, &currentCueIndex, &cueRemaining);
     unsigned int cueInterval = currentControlPoint.GetInterval();
     if (!currentControlPoint.IsEnabled()) cueInterval = 0;
 
@@ -154,7 +156,7 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
         }
     }
     if (duration != nullptr) {
-        *duration = (uint16_t)(currentCueCachedRemaining > 0xffff ? 0xffff : currentCueCachedRemaining);
+        *duration = (uint16_t)(cueRemaining > 0xffff ? 0xffff : cueRemaining);
     }
 }
 
@@ -325,9 +327,87 @@ void CueController::SetScratchControlPoint(int index, ControlPoint controlPoint)
 void CueController::CommitScratch(uint32_t version) {
     store.CommitScratch(version);
     WriteCues();
+    descriptionValid = false;
 }
 
 
+void CueController::DebugText(char *debugText) {
+  char *p = debugText;
+
+  // File debug
+  p += sprintf(p, "Fil: r%d w%d\n", readError, writeError);
+
+  // Version
+  p += sprintf(p, "Ver: %lu\n", (unsigned long)version);
+
+  // Options
+  p += sprintf(p, "Opt: ");
+  options_t mask;
+  options_t effectiveOptions = GetOptionsMaskValue(&mask, nullptr);
+  for (int i = 7; i >= 0; i--) {
+      char masked = (mask & (1 << i)) ? 1 : 0;
+      char value = (effectiveOptions & (1 << i)) ? 1 : 0;
+      char label = (masked ? "AESDZICX" : "aesdzicx")[i];
+      p += sprintf(p, "%c%d", label, value);
+  }
+  p += sprintf(p, "\n");
+
+  // Control points (stored and scratch)
+  int countStored = 0, countScratch = 0;
+  for (int i = 0; i < PROMPT_MAX_CONTROLS; i++) {
+      countStored += ControlPoint(controlPoints[i]).IsEnabled();
+      countScratch += ControlPoint(scratch[i]).IsEnabled();
+  }
+  p += sprintf(p, "S/S: %d %d /%d\n", countStored, countScratch, PROMPT_MAX_CONTROLS);
+
+  // Current scheduled cue control point
+  p += sprintf(p, "Cue: #%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? "E" : "d", currentControlPoint.GetWeekdays());
+  p += sprintf(p, " @%d i%d v%d\n", currentControlPoint.GetTimeOfDay(), currentControlPoint.GetInterval(), currentControlPoint.GetVolume());
+
+  // Status
+  uint16_t override_remaining;
+  uint16_t intensity;
+  uint16_t interval;
+  uint16_t duration;
+  GetStatus(nullptr, nullptr, nullptr, &override_remaining, &intensity, &interval, &duration);
+  p += sprintf(p, "Ovr: t%d i%d v%d\n", override_remaining, interval, intensity);
+  p += sprintf(p, "Rem: %d\n", duration);
+
+  return;
+}
+
+const char *CueController::Description() {
+    if (!descriptionValid) {
+        char *p = description;
+        *p = '\0';
+
+        // Status
+        uint32_t active_schedule_id;
+        uint16_t max_control_points;
+        uint16_t current_control_point;
+        uint16_t override_remaining;
+        uint16_t intensity;
+        uint16_t interval;
+        uint16_t duration;
+        GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
+
+        if (override_remaining > 0) {
+            if (interval > 0) {
+                p += sprintf(p, "Manual (%dm)", override_remaining / 60);
+            } else {
+                p += sprintf(p, "Snooze (%dm)", override_remaining / 60);
+            }
+        } else if (current_control_point < 0xffff) {
+            p += sprintf(p, "Cue (%dm)", duration / 60);
+        } else if (duration <= 12 * 60) {
+            p += sprintf(p, "Not Cueing (%dm)", duration / 60);
+        } else {
+            p += sprintf(p, "-");
+        }
+        descriptionValid = true;
+    }
+    return description;
+}
 
 
 Pinetime::Controllers::ControlPoint currentControlPoint;

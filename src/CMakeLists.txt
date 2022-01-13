@@ -536,6 +536,7 @@ list(APPEND SOURCE_FILES
         components/cue/ControlPoint.cpp
         components/cue/ControlPointStore.cpp
         displayapp/screens/CueBandApp.cpp
+        displayapp/screens/InfoApp.cpp
         )
 
 list(APPEND RECOVERY_SOURCE_FILES
@@ -731,6 +732,7 @@ set(INCLUDE_FILES
         components/cue/ControlPoint.h
         components/cue/ControlPointStore.h
         displayapp/screens/CueBandApp.h
+        displayapp/screens/InfoApp.h
         )
 
 include_directories(

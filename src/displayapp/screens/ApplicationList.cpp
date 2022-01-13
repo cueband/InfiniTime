@@ -48,7 +48,11 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   #else
     {"", Apps::None},
   #endif
+  #ifdef CUEBAND_INFO_APP_ENABLED
+    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+  #else
     {"", Apps::None},
+  #endif
     {"", Apps::None},
     {"", Apps::None},
     {"", Apps::None},
@@ -62,7 +66,11 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   #else
     {"", Apps::None},
   #endif
+  #ifdef CUEBAND_INFO_APP_ENABLED
+    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+  #else
     {"", Apps::None},
+  #endif
     {"", Apps::None},
 #else
     {Symbols::stopWatch, Apps::StopWatch},
@@ -94,10 +102,14 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
     {"", Apps::None},
     {"", Apps::None},
 #else
-    {Symbols::paintbrush, Apps::Paint},
+  #ifdef CUEBAND_INFO_APP_ENABLED
+    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+  #else
+    {Symbols::paddle, Apps::Paddle},
+  #endif
     {Symbols::paddle, Apps::Paddle},
 #ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},    //{"", Apps::None},
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},
 #else
     {"2", Apps::Twos},
 #endif

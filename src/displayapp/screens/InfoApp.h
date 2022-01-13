@@ -6,6 +6,11 @@
 #include <lvgl/lvgl.h>
 #include "systemtask/SystemTask.h"
 #include "Screen.h"
+#include "components/datetime/DateTimeController.h"
+#include "components/motion/MotionController.h"
+#ifdef CUEBAND_ACTIVITY_ENABLED
+#include "components/activity/ActivityController.h"
+#endif
 #ifdef CUEBAND_CUE_ENABLED
 #include "components/cue/CueController.h"
 #endif
@@ -19,27 +24,39 @@ namespace Pinetime {
   namespace Applications {
     namespace Screens {
 
-      class CueBandApp : public Screen {
+      class InfoApp : public Screen {
         public:
-          CueBandApp(
+          InfoApp(
             DisplayApp* app, 
             System::SystemTask& systemTask, 
+            Controllers::DateTime& dateTimeController,
+            Controllers::MotionController& motionController, 
             Controllers::Settings &settingsController
+#ifdef CUEBAND_ACTIVITY_ENABLED
+            , Controllers::ActivityController& activityController
+#endif
 #ifdef CUEBAND_CUE_ENABLED
              , Controllers::CueController& cueController
 #endif
           );
 
-          ~CueBandApp() override;
+          ~InfoApp() override;
 
           void Refresh() override;
           void Update();
 
           bool OnTouchEvent(TouchEvents event) override;
 
+          int ScreenCount();
+
         private:
           Pinetime::System::SystemTask& systemTask;
+          Pinetime::Controllers::DateTime& dateTimeController;
+          Controllers::MotionController& motionController;
           Controllers::Settings& settingsController;
+#ifdef CUEBAND_ACTIVITY_ENABLED
+          Controllers::ActivityController& activityController;
+#endif
 #ifdef CUEBAND_CUE_ENABLED
           Controllers::CueController& cueController;
 #endif

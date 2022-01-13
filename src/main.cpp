@@ -147,8 +147,11 @@ Pinetime::Applications::DisplayApp displayApp(lcd,
                                               timerController,
                                               alarmController,
                                               touchHandler
-#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_ACTIVITY_ENABLED)
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
                                               , activityController
+#endif
+#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+                                              , cueController
 #endif
                                               );
 

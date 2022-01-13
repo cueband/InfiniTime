@@ -69,8 +69,10 @@ void ControlPointStore::Invalidate() {
 }
 
 // Determine the control point currently active for the given day/time
-ControlPoint ControlPointStore::CueValue(unsigned int day, unsigned int time, int *cueIndex, unsigned int *currentCueCachedRemaining)
+ControlPoint ControlPointStore::CueValue(unsigned int day, unsigned int time, int *cueIndex, unsigned int *cueRemaining)
 {
+    int index = -1, next = -1;
+    unsigned int elapsed = 0, remaining = (unsigned int)-1;
 #if 0
 printf("[ALWAYS-INVALIDATE]");
 this->cachedDay = ControlPoint::DAY_NONE;
@@ -91,8 +93,6 @@ if (this->cachedUntilTime > ControlPoint::timePerDay) printf("until-invalid;");
 }
 printf("]");
 #endif
-        int index, next;
-        unsigned int elapsed, remaining;
         if (ControlPoint::CueNearest(this->controlPoints, this->maxControlPoints, day, time, &index, &elapsed, &next, &remaining))
         {
             // Cache the interval clipped to within the current day
@@ -121,8 +121,8 @@ printf("[CACHE: No control points all day (%d-%d) on day #%d.]", this->cachedTim
     if (cueIndex != nullptr) {
         *cueIndex = this->cachedCue;
     }
-    if (currentCueCachedRemaining != nullptr) {
-        *currentCueCachedRemaining = this->cachedUntilTime - time;
+    if (cueRemaining != nullptr) {
+        *cueRemaining = remaining;
     }
 
     // Return the value of the currently-active cue
@@ -131,11 +131,11 @@ printf("[CACHE: No control points all day (%d-%d) on day #%d.]", this->cachedTim
 }
 
 // Determine the control point currently active for the given day/time
-ControlPoint ControlPointStore::CueValue(unsigned int timestamp, int *cueIndex, unsigned int *currentCueCachedRemaining)
+ControlPoint ControlPointStore::CueValue(unsigned int timestamp, int *cueIndex, unsigned int *cueRemaining)
 {
     unsigned int timeOfDay = timestamp % 86400;
     unsigned int day = ((timestamp / 86400) + 4) % 7;    // Epoch is day 4=Thu
-    Pinetime::Controllers::ControlPoint controlPoint = CueValue(day, timeOfDay, cueIndex, currentCueCachedRemaining);
+    Pinetime::Controllers::ControlPoint controlPoint = CueValue(day, timeOfDay, cueIndex, cueRemaining);
     return controlPoint;
 }
 

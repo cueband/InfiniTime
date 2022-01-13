@@ -57,14 +57,20 @@
 //#define CUEBAND_STREAM_RESAMPLED
 
 
-// (Placeholder) App screen
+// App screens
 // See: src/displayapp/Apps.h
 // See: src/displayapp/screens/ApplicationList.cpp
 // See: src/displayapp/DisplayApp.cpp
+
 // See: displayapp/screens/CueBandApp.h
 // See: displayapp/screens/CueBandApp.cpp
 #define CUEBAND_APP_ENABLED
-#define CUEBAND_APP_SYMBOL "?" // "C"
+#define CUEBAND_APP_SYMBOL "!" // "C"
+
+// See: displayapp/screens/InfoApp.h
+// See: displayapp/screens/InfoApp.cpp
+#define CUEBAND_INFO_APP_ENABLED
+#define CUEBAND_INFO_APP_SYMBOL "?" // "I"
 
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
@@ -93,6 +99,8 @@
 
 #ifdef CUEBAND_CUSTOMIZATION
 
+    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL
+    
     // See: src/displayapp/screens/WatchFaceDigital.cpp
     // See: src/displayapp/screens/WatchFaceAnalog.cpp
     // See: src/displayapp/screens/PineTimeStyle.cpp

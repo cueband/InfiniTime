@@ -44,6 +44,9 @@ namespace Pinetime {
 #ifdef CUEBAND_APP_ENABLED
       , CueBand
 #endif
+#ifdef CUEBAND_INFO_APP_ENABLED
+      , Info
+#endif
     };
   }
 }
