@@ -278,6 +278,9 @@ void cblog(const char *str);
 
 // Warnings for non-standard build
 #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
+#if defined(CUEBAND_DEBUG_INIT_TIME)
+    #warning "CUEBAND_DEBUG_INIT_TIME defined - invalid times will be set to build time (DO NOT RELEASE THIS BUILD)"
+#endif
 #if !defined(CUEBAND_FIFO_ENABLED)
     #warning "CUEBAND_FIFO_ENABLED not defined - won't use sensor FIFO"
 #endif
