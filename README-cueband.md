@@ -503,6 +503,27 @@ A response may be prefixed with:
 * `J <interval=0> <maximum_runtime=4294967295> <motor_pulse_width=50>` - Set temporary queueing interval (seconds)
   > `J:<interval>,<maximum_runtime>,<motor_pulse_width>`
 
+<!--
+* `KQ` - Prompt query
+  > `KQ:<version>,<window_size><minimum_interval><image><max_controls>`
+
+* `KC VVVV` - Prompt check version: if not specified version `V`, clear and set version=0
+  > `KC:<version>`
+
+* `KA II DD TTTT VVVV` - Prompt cue add at index `I`, for the given days mask bitmap `D`, time of day (minutes) `T`, with value `V`.
+  > `KA:?` - incomplete/format error
+  > `KA:+` - added
+  > `KA:!` - failed to add
+
+* `KR II` - Prompt read cue at index `I`.
+  > `KR:<index>,<days>,<time>,<value>` - read
+  > `KR:!` - failed to read
+
+* `KS VVVV WW II GG` - Save prompts as version `V`, window_size `W`, minimum_interval `V`, image `I`.
+  > `KR:<index>,<days>,<time>,<value>` - read
+  > `KR:!` - failed to read
+-->
+
 * `M` - Motor on (100 ms)
   > `MOT`
 

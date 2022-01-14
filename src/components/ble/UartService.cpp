@@ -469,7 +469,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                 sprintf(resp, "?Disabled\r\n");
 #endif
 
-            } else if (data[0] == 'J') { // Set current cueing interval: "J <interval> <maximumRuntime> <promptStyle/motorPulseWidth>"
+            } else if (data[0] == 'J') { // Set override cueing/snooze interval: "J <interval> <maximumRuntime> <promptStyle/motorPulseWidth>"
 #ifdef CUEBAND_CUE_ENABLED
                 char *p = (char *)data + 1;
                 uint32_t interval = (uint32_t)strtol(p, &p, 0);
@@ -480,6 +480,14 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                     cueController.SetPromptStyle(promptStyle);
                 }
                 sprintf(resp, "J:%u,%d,%u\r\n", (uint16_t)interval, (int16_t)maximumRuntime, (uint16_t)promptStyle);
+#else
+                sprintf(resp, "?Disabled\r\n");
+#endif
+
+            } else if (data[0] == 'K') { // Prompt cue controls
+#ifdef CUEBAND_CUE_ENABLED
+                // Not backwards-compatible
+                sprintf(resp, "?NotSupp\r\n");
 #else
                 sprintf(resp, "?Disabled\r\n");
 #endif
