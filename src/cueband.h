@@ -52,6 +52,8 @@
 // Streaming includes raw HR signal
 #define CUEBAND_BUFFER_RAW_HR
 
+// While debugging, use the build time to initialize the clock if the time is invalid
+#define CUEBAND_DEBUG_INIT_TIME
 
 // Stream the resampled data
 //#define CUEBAND_STREAM_RESAMPLED

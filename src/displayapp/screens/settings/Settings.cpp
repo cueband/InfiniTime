@@ -49,14 +49,19 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
   std::array<Screens::List::Applications, 4> applications {{
 #if !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
                                                             {Symbols::shoe, "Steps", Apps::SettingSteps},
-#elif defined(CUEBAND_APP_ENABLED)
-                                                            {CUEBAND_APP_SYMBOL, "Info", Apps::CueBand},
+#elif defined(CUEBAND_INFO_APP_ENABLED)
+                                                            {CUEBAND_INFO_APP_SYMBOL, "Info", Apps::Info},
 #else
                                                             {Symbols::none, "None", Apps::None},
 #endif
                                                             {Symbols::clock, "Set date", Apps::SettingSetDate},
                                                             {Symbols::clock, "Set time", Apps::SettingSetTime},
-                                                            {Symbols::batteryHalf, "Battery", Apps::BatteryInfo}}};
+#ifdef CUEBAND_APP_ENABLED
+                                                            {CUEBAND_APP_SYMBOL, "Cues", Apps::CueBand},
+#else
+                                                            {Symbols::batteryHalf, "Battery", Apps::BatteryInfo}
+#endif
+}};
 
   return std::make_unique<Screens::List>(1, 3, app, settingsController, applications);
 }

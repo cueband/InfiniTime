@@ -269,6 +269,7 @@ void DisplayApp::Refresh() {
               case TouchEvents::Tap:  //  Tap / LongTap / DoubleTap / SwipeLeft / SwipeUp
                 if (cueController.IsEnabled()) {
                   LoadApp(Apps::CueBand, DisplayApp::FullRefreshDirections::None);
+touchHandler.CancelTap();
                 }
                 break;
 #endif
@@ -517,10 +518,7 @@ case Apps::Weather: break;
           , cueController
         #endif
       );
-      #ifdef CUEBAND_DISABLE_APP_LAUNCHER
-        // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
-        ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
-      #endif
+      ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::SwipeDown);
       break;
 #endif
 

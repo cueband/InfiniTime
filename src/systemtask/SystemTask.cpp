@@ -250,6 +250,38 @@ void SystemTask::Work() {
   xTimerStart(dimTimer, 0);
   xTimerStart(measureBatteryTimer, portMAX_DELAY);
 
+  // While debugging, if the time is invalid, initialize the clock with the build time
+#if defined(CUEBAND_DEBUG_INIT_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+  if (dateTimeController.IsUnset()) {
+    //  01234567890123456789
+    // "MMM DD YYYY hh:mm:ss" (initial-caps MMM, space-padded DD)
+    static const char *build = __DATE__ " " __TIME__;
+    uint16_t year = (build[7] - '0') * 1000 + (build[8] - '0') * 100 + (build[9] - '0') * 10 + (build[10] - '0');
+    uint8_t month = 0;
+    if (build[0] == 'J' && build[1] == 'a') month = 1;
+    else if (build[0] == 'F') month = 2;
+    else if (build[0] == 'M' && build[2] == 'r') month = 3;
+    else if (build[0] == 'A' && build[1] == 'p') month = 4;
+    else if (build[0] == 'M' && build[2] == 'y') month = 5;
+    else if (build[0] == 'J' && build[1] == 'u' && build[2] == 'n') month = 6;
+    else if (build[0] == 'J' && build[2] == 'l') month = 7;
+    else if (build[0] == 'A' && build[1] == 'u') month = 8;
+    else if (build[0] == 'S') month = 9;
+    else if (build[0] == 'O') month = 10;
+    else if (build[0] == 'N') month = 11;
+    else if (build[0] == 'D') month = 12;
+    uint8_t day = (build[4] == ' ' ? 0 : build[4] - '0') * 10 + (build[5] - '0');
+    uint8_t dayOfWeek = 0;
+    uint8_t hour = (build[12] - '0') * 10 + (build[13] - '0');
+    uint8_t minute = (build[15] - '0') * 10 + (build[16] - '0');
+    uint8_t second = (build[18] - '0') * 10 + (build[19] - '0');
+    uint32_t systickCounter = 0;
+    if (month > 0) {
+      dateTimeController.SetTime(year, month, day, dayOfWeek, hour, minute, second, systickCounter);
+    }
+  }
+#endif
+
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
   while (true) {
