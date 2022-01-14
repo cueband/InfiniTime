@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "displayapp/screens/Tile.h"
 #include "displayapp/DisplayApp.h"
 #include "displayapp/screens/BatteryIcon.h"
@@ -33,6 +35,11 @@ Tile::Tile(uint8_t screenID,
 
   // Time
   label_time = lv_label_create(lv_scr_act(), nullptr);
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+  if (dateTimeController.IsUnset()) {
+    lv_label_set_text_fmt(label_time, "");
+  } else
+#endif
   lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
   lv_label_set_align(label_time, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label_time, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
@@ -119,6 +126,11 @@ Tile::~Tile() {
 }
 
 void Tile::UpdateScreen() {
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+  if (dateTimeController.IsUnset()) {
+    lv_label_set_text_fmt(label_time, "");
+  } else
+#endif
   lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
   lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 }
