@@ -55,8 +55,10 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
 
   // Battery
   batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(batteryIcon, "");
+  //lv_obj_set_style_local_text_color(batteryIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
   lv_obj_align(batteryIcon, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
+  lv_label_set_text(batteryIcon, Symbols::batteryFull);
+  lv_obj_set_auto_realign(batteryIcon, true);
 
   // Cueing information icon
   lInfoIcon = lv_label_create(lv_scr_act(), nullptr);
@@ -102,7 +104,7 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_set_pos(backgroundLabel, 0, 0);
   lv_label_set_text_static(backgroundLabel, "");
 
-  taskUpdate = lv_task_create(lv_update_task, 1000, LV_TASK_PRIO_LOW, this);
+  taskUpdate = lv_task_create(lv_update_task, 1000, LV_TASK_PRIO_MID, this);
   Update();
 }
 
@@ -114,7 +116,7 @@ CueBandApp::~CueBandApp() {
 
 void CueBandApp::Update() {
   lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
-  lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
+  //lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 
   static char text[80];
   char *p = text;
@@ -153,7 +155,7 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
       cueController.SetInterval(0, 0);    // Return to schedule
     } else {                              // Next snooze step cycle
 // TODO: Next snooze step cycle
-cueController.SetInterval(10, 60);
+cueController.SetInterval(0, 60);
     }
 
   } else if (object == btnRight && event == LV_EVENT_CLICKED) {
@@ -162,11 +164,11 @@ cueController.SetInterval(10, 60);
       cueController.SetInterval(0, 0);    // Return to schedule
     } else {                              // Next impromptu step cycle
 // TODO: Next impromptu step cycle
-cueController.SetInterval(0, 60);
+cueController.SetInterval(10, 60);
     }
 
   }
-  Update();
+  //Update();
 }
 
 

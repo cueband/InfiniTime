@@ -87,6 +87,15 @@ WatchFaceAnalog::WatchFaceAnalog(Pinetime::Applications::DisplayApp* app,
   lv_label_set_align(label_date_day, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label_date_day, NULL, LV_ALIGN_CENTER, 50, 0);
 
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  cue_status = lv_label_create(lv_scr_act(), nullptr);
+  //lv_label_set_text_static(cue_status, "");
+  lv_label_set_text_fmt(cue_status, "");
+  //lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 20);
+  lv_obj_set_style_local_text_color(cue_status, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x999999));
+#endif
+
   minute_body = lv_line_create(lv_scr_act(), NULL);
   minute_body_trace = lv_line_create(lv_scr_act(), NULL);
   hour_body = lv_line_create(lv_scr_act(), NULL);
@@ -122,14 +131,6 @@ WatchFaceAnalog::WatchFaceAnalog(Pinetime::Applications::DisplayApp* app,
   lv_style_set_line_color(&hour_line_style_trace, LV_STATE_DEFAULT, LV_COLOR_WHITE);
   lv_style_set_line_rounded(&hour_line_style_trace, LV_STATE_DEFAULT, false);
   lv_obj_add_style(hour_body_trace, LV_LINE_PART_MAIN, &hour_line_style_trace);
-
-#ifdef CUEBAND_WATCHFACE_CUE_STATUS
-  cue_status = lv_label_create(lv_scr_act(), nullptr);
-  //lv_label_set_text_static(cue_status, "");
-  lv_label_set_text_fmt(cue_status, "");
-  lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
-  lv_obj_align(cue_status, nullptr, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
-#endif
 
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   UpdateClock();
@@ -257,5 +258,6 @@ void WatchFaceAnalog::Refresh() {
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
   const char *description = app->GetCueController().Description();
   lv_label_set_text_fmt(cue_status, "%s", description);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 84);
 #endif
 }

@@ -26,6 +26,8 @@ namespace Pinetime {
       void Init();
       void TimeChanged(uint32_t timestamp, uint32_t uptime);
 
+      bool IsInitialized() { return initialized; }
+
       const static unsigned int INTERVAL_OFF = 0;
       const static unsigned int MAXIMUM_RUNTIME_OFF = 0;
       const static unsigned int DEFAULT_PROMPT_STYLE = 3; // msec
@@ -42,9 +44,9 @@ namespace Pinetime {
       const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_SETTING | OPTIONS_CUE_ENABLED | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_SNOOZE | OPTIONS_CUE_IMPROMPTU | OPTIONS_CUE_CUSTOM;
 
       options_t GetOptionsMaskValue(options_t *mask = nullptr, options_t *value = nullptr);
-      void SetOptionsMaskValue(options_t mask, options_t value);
+      bool SetOptionsMaskValue(options_t mask, options_t value);
 
-      void SetInterval(unsigned int interval, unsigned int maximumRuntime);
+      bool SetInterval(unsigned int interval, unsigned int maximumRuntime);
       void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
         this->promptStyle = promptStyle;
       }
@@ -68,6 +70,9 @@ namespace Pinetime {
       void DebugText(char *debugText);
 
     private:
+
+      // State initialized (delay initialized)
+      bool initialized = false;
 
       // Cache description
       bool descriptionValid = false;

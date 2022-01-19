@@ -103,8 +103,9 @@ WatchFaceDigital::WatchFaceDigital(DisplayApp* app,
   cue_status = lv_label_create(lv_scr_act(), nullptr);
   //lv_label_set_text_static(cue_status, "");
   lv_label_set_text_fmt(cue_status, "");
-  lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
-  lv_obj_align(cue_status, nullptr, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+  //lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 84);
+  lv_obj_set_style_local_text_color(cue_status, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x999999));
 #endif
 
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
@@ -275,5 +276,6 @@ void WatchFaceDigital::Refresh() {
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
     const char *description = app->GetCueController().Description();
     lv_label_set_text_fmt(cue_status, "%s", description);
+    lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 84);
 #endif
 }

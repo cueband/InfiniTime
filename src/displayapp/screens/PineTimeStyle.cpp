@@ -94,6 +94,15 @@ PineTimeStyle::PineTimeStyle(DisplayApp* app,
   lv_label_set_text(timeAMPM, "");
   lv_obj_align(timeAMPM, timebar, LV_ALIGN_IN_BOTTOM_LEFT, 2, -20);
 
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  cue_status = lv_label_create(lv_scr_act(), nullptr);
+  //lv_label_set_text_static(cue_status, "");
+  lv_label_set_text_fmt(cue_status, "");
+  //lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_style_local_text_color(cue_status, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x999999));
+#endif
+
   // Create a 40px wide bar down the right side of the screen
   sidebar = lv_obj_create(lv_scr_act(), nullptr);
   lv_obj_set_style_local_bg_color(sidebar, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Convert(settingsController.GetPTSColorBar()));
@@ -298,14 +307,6 @@ PineTimeStyle::PineTimeStyle(DisplayApp* app,
   lv_obj_set_style_local_text_font(lbl_btnSet, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_sys_48);
   lv_label_set_text_static(lbl_btnSet, Symbols::settings);
   lv_obj_set_hidden(btnSet, true);
-
-#ifdef CUEBAND_WATCHFACE_CUE_STATUS
-  cue_status = lv_label_create(lv_scr_act(), nullptr);
-  //lv_label_set_text_static(cue_status, "");
-  lv_label_set_text_fmt(cue_status, "");
-  lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
-  lv_obj_align(cue_status, nullptr, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
-#endif
 
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   Refresh();
@@ -513,6 +514,7 @@ void PineTimeStyle::Refresh() {
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
   const char *description = app->GetCueController().Description();
   lv_label_set_text_fmt(cue_status, "%s", description);
+  lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 84);
 #endif
 }
 

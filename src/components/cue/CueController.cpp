@@ -124,6 +124,9 @@ void CueController::Init() {
     store.Updated(version);
     // Notify activity controller of current version
     activityController.PromptConfigurationChanged(store.GetVersion());
+    // Flag as initialized
+    initialized = true;
+    descriptionValid = false;
 }
 
 void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint32_t *override_remaining, uint32_t *intensity, uint32_t *interval, uint32_t *duration) {
@@ -136,28 +139,36 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
         *max_control_points = PROMPT_MAX_CONTROLS;
     }
     if (current_control_point != nullptr) {
-        *current_control_point = (uint16_t)currentCueIndex;
+        *current_control_point = (uint16_t)(initialized ? currentCueIndex : (uint16_t)-1);
     }
-    unsigned int remaining = scheduled ? 0 : (overrideEndTime - currentUptime);
+    unsigned int remaining = (initialized ? (scheduled ? 0 : (overrideEndTime - currentUptime)) : 0);
     if (override_remaining != nullptr) {
         *override_remaining = remaining;
     }
     if (intensity != nullptr) {
-        if (scheduled) {
+        if (!initialized) {
+            *intensity = 0;
+        } else if (scheduled) {
             *intensity = (uint16_t)currentControlPoint.GetVolume();
         } else {
             *intensity = promptStyle;
         }
     }
     if (interval != nullptr) {
-        if (scheduled) {
-            *intensity = (uint16_t)currentControlPoint.GetInterval();
+        if (!initialized) {
+            *interval = 0;
+        } else if (scheduled) {
+            *interval = (uint16_t)currentControlPoint.GetInterval();
         } else {
             *interval = this->interval;
         }
     }
     if (duration != nullptr) {
-        *duration = cueRemaining;
+        if (!initialized) {
+            *duration = 0;
+        } else {
+            *duration = cueRemaining;
+        }
     }
 }
 
@@ -172,7 +183,9 @@ options_t CueController::GetOptionsMaskValue(options_t *mask, options_t *value) 
     return effectiveValue;
 }
 
-void CueController::SetOptionsMaskValue(options_t mask, options_t value) {
+bool CueController::SetOptionsMaskValue(options_t mask, options_t value) {
+    if (!initialized) return false;
+
     options_t oldMask = options_overridden_mask;
     options_t oldValue = options_overridden_value & options_overridden_mask;
 
@@ -195,6 +208,8 @@ void CueController::SetOptionsMaskValue(options_t mask, options_t value) {
     if (options_overridden_mask != oldMask || options_overridden_value != oldValue) {
         WriteCues();
     }
+
+    return true;
 }
 
 int CueController::ReadCues(uint32_t *version) {
@@ -299,7 +314,9 @@ int CueController::WriteCues() {
     return 0;
 }
 
-void CueController::SetInterval(unsigned int interval, unsigned int maximumRuntime) {
+bool CueController::SetInterval(unsigned int interval, unsigned int maximumRuntime) {
+    if (!initialized) return false;
+
     // New configuration
     if (maximumRuntime != (unsigned int)-1) this->overrideEndTime = currentUptime + maximumRuntime;
     if (interval != (unsigned int)-1) this->interval = interval;
@@ -310,6 +327,7 @@ void CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
     }
     
     descriptionValid = false;
+    return true;
 }
 
 void CueController::Reset() {
@@ -340,7 +358,7 @@ void CueController::DebugText(char *debugText) {
   char *p = debugText;
 
   // File debug
-  p += sprintf(p, "Fil: r%d w%d\n", readError, writeError);
+  p += sprintf(p, "Fil: i%s r%d w%d\n", initialized ? "T" : "F", readError, writeError);
 
   // Version
   p += sprintf(p, "Ver: %lu\n", (unsigned long)version);
@@ -349,7 +367,7 @@ void CueController::DebugText(char *debugText) {
   p += sprintf(p, "Opt: ");
   options_t mask;
   options_t effectiveOptions = GetOptionsMaskValue(&mask, nullptr);
-  for (int i = 7; i >= 0; i--) {
+  for (int i = 6; i >= 0; i--) {
       char masked = (mask & (1 << i)) ? 1 : 0;
       char value = (effectiveOptions & (1 << i)) ? 1 : 0;
       char label = (masked ? "AESDZICX" : "aesdzicx")[i];
@@ -430,7 +448,9 @@ const char *CueController::Description(bool detailed, const char **symbol) {
         uint32_t duration;
         GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
 
-        if (override_remaining > 0) {
+        if (!initialized) {
+            p += sprintf(p, "Initializing...");
+        } else if (override_remaining > 0) {
             if (interval > 0) {
                 // Temporary cueing
                 p += sprintf(p, "Manual (%s)", niceTime(override_remaining));

@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "displayapp/screens/List.h"
 #include "displayapp/DisplayApp.h"
 #include "displayapp/screens/Symbols.h"
@@ -81,6 +83,13 @@ List::List(uint8_t screenID,
       labelBtIco = lv_label_create(itemApps[i], nullptr);
       lv_obj_set_style_local_text_color(labelBtIco, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_YELLOW);
       lv_label_set_text_static(labelBtIco, applications[i].icon);
+
+#ifdef CUEBAND_SYMBOLS
+      // Set font for this icon
+      if (!strcmp(CUEBAND_APP_SYMBOL, applications[i].icon)) {
+        lv_obj_set_style_local_text_font(labelBtIco, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_20);
+      }
+#endif
 
       labelBt = lv_label_create(itemApps[i], nullptr);
       lv_label_set_text_fmt(labelBt, " %s", applications[i].name);

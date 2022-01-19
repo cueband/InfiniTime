@@ -67,12 +67,12 @@
 // See: displayapp/screens/CueBandApp.h
 // See: displayapp/screens/CueBandApp.cpp
 #define CUEBAND_APP_ENABLED
-#define CUEBAND_APP_SYMBOL "!" // "C"
+#define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
 
 // See: displayapp/screens/InfoApp.h
 // See: displayapp/screens/InfoApp.cpp
 #define CUEBAND_INFO_APP_ENABLED
-#define CUEBAND_INFO_APP_SYMBOL "?" // "I"
+#define CUEBAND_INFO_APP_SYMBOL "\xEF\x84\xA9" // info // "?" // "I"
 
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
