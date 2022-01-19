@@ -3,6 +3,7 @@
 #ifdef CUEBAND_CUE_ENABLED
 
 #include "CueController.h"
+#include "displayapp/screens/Symbols.h"
 
 using namespace Pinetime::Controllers;
 
@@ -300,11 +301,15 @@ int CueController::WriteCues() {
 
 void CueController::SetInterval(unsigned int interval, unsigned int maximumRuntime) {
     // New configuration
-    this->overrideEndTime = currentUptime + maximumRuntime;
-    this->interval = interval;
+    if (maximumRuntime != (unsigned int)-1) this->overrideEndTime = currentUptime + maximumRuntime;
+    if (interval != (unsigned int)-1) this->interval = interval;
 
     // Record this as the last prompt time so that the full interval must elapse
-    lastPrompt = currentUptime;
+    if (interval != (unsigned int)-1 || maximumRuntime != (unsigned int)-1) {
+        lastPrompt = currentUptime;
+    }
+    
+    descriptionValid = false;
 }
 
 void CueController::Reset() {
@@ -382,20 +387,33 @@ const char *niceTime(unsigned int seconds) {
     if (seconds == 0) {
         sprintf(buffer, "now");
     } if (seconds < 60) {
-        sprintf(buffer, "%uls", seconds);
+        sprintf(buffer, "%is", (int)seconds);
     } else if (seconds < 60 * 60) {
-        sprintf(buffer, "%ulm", seconds / 60);
+        sprintf(buffer, "%im", (int)(seconds / 60));
     } else if (seconds < 24 * 60 * 60) {
-        sprintf(buffer, "%ulh", seconds / 60 / 60);
+        sprintf(buffer, "%ih", (int)(seconds / 60 / 60));
     } else if (seconds < 0xffffffff) {
-        sprintf(buffer, "%uld", seconds / 60 / 60 / 24);
+        sprintf(buffer, "%id", (int)(seconds / 60 / 60 / 24));
     } else {
         sprintf(buffer, "-");
     }
     return buffer;
 }
 
-const char *CueController::Description() {
+
+// Status Description
+const char *CueController::Description(bool detailed, const char **symbol) {
+    const char *icon = "";
+    // #ifdef CUEBAND_SYMBOLS
+    // cueband_20.c & cueband_48.c
+    // static constexpr const char* cuebandCue       = "\xEF\xA0\xBE";                  // 0xf83e, wave-square
+    // static constexpr const char* cuebandIsCueing  = "\xEF\x89\xB4";                  // 0xf274, calendar-check
+    // static constexpr const char* cuebandNotCueing = "\xEF\x89\xB2";                  // 0xf272, calendar-minus
+    // static constexpr const char* cuebandScheduled = "\xEF\x81\xB3";                  // 0xf073, calendar-alt
+    // static constexpr const char* cuebandSilence   = "\xEF\x81\x8C";                  // 0xf04c, pause
+    // static constexpr const char* cuebandImpromptu = "\xEF\x81\x8B";                  // 0xf04b, play
+    icon = Applications::Screens::Symbols::cuebandCue;
+
     if (!descriptionValid) {
         char *p = description;
         *p = '\0';
@@ -414,25 +432,42 @@ const char *CueController::Description() {
             if (interval > 0) {
                 // Temporary cueing
                 p += sprintf(p, "Manual (%s)", niceTime(override_remaining));
+                icon = Applications::Screens::Symbols::cuebandImpromptu;
+                if (detailed) {
+                    p += sprintf(p, " [@%is]", (int)interval);
+                }
             } else {
                 // Temporary snooze
                 p += sprintf(p, "Snooze (%s)", niceTime(override_remaining));
+                icon = Applications::Screens::Symbols::cuebandSilence;
             }
         } else if (!IsEnabled()) {
             // Scheduled cueing Disabled
             //p += sprintf(p, ".");
+            //icon = Applications::Screens::Symbols::cuebandDisabled;
         } else if (current_control_point < 0xffff) {
             // Scheduled cueing in progress
             p += sprintf(p, "Cue (%s)", niceTime(duration));
+            if (detailed) {
+                p += sprintf(p, " [@%is]", (int)interval);
+            }
+            icon = Applications::Screens::Symbols::cuebandIsCueing;
         } else if (duration <= (7 * 24 * 60 * 60)) {
             // Scheduled cueing
             p += sprintf(p, "Not Cueing (%s)", niceTime(duration));
+            icon = Applications::Screens::Symbols::cuebandNotCueing;
         } else {
             // No scheduled cueing
-            p += sprintf(p, "Not Cueing");
+            p += sprintf(p, "None Scheduled");
+            icon = Applications::Screens::Symbols::cuebandScheduled;
         }
         descriptionValid = true;
     }
+
+    if (symbol != nullptr) {
+        *symbol = icon;
+    }
+
     return description;
 }
 

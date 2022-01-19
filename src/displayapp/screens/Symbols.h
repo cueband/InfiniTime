@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 namespace Pinetime {
   namespace Applications {
     namespace Screens {
@@ -56,6 +58,16 @@ namespace Pinetime {
         static constexpr const char* notificationsOn = "\xEE\xA4\x8C";  // e90c
 
         static constexpr const char* highlight = "\xEE\xA4\x87"; // e907
+
+#ifdef CUEBAND_SYMBOLS
+        // cueband_20.c & cueband_48.c
+        static constexpr const char* cuebandCue       = "\xEF\xA0\xBE";                  // 0xf83e, wave-square
+        static constexpr const char* cuebandIsCueing  = "\xEF\x89\xB4";                  // 0xf274, calendar-check
+        static constexpr const char* cuebandNotCueing = "\xEF\x89\xB2";                  // 0xf272, calendar-minus
+        static constexpr const char* cuebandScheduled = "\xEF\x81\xB3";                  // 0xf073, calendar-alt
+        static constexpr const char* cuebandSilence   = "\xEF\x81\x8C";                  // 0xf04c, pause
+        static constexpr const char* cuebandImpromptu = "\xEF\x81\x8B";                  // 0xf04b, play
+#endif
 
       }
     }

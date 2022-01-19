@@ -513,7 +513,7 @@ case Apps::Weather: break;
 #ifdef CUEBAND_APP_ENABLED
     case Apps::CueBand:
       currentScreen = std::make_unique<Screens::CueBandApp>(
-        this, *systemTask, settingsController
+        this, *systemTask, batteryController, dateTimeController, settingsController
         #ifdef CUEBAND_CUE_ENABLED
           , cueController
         #endif

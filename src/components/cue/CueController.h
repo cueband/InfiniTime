@@ -64,7 +64,7 @@ namespace Pinetime {
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }
 
-      const char *Description();
+      const char *Description(bool detailed = false, const char **symbol = nullptr);
       void DebugText(char *debugText);
 
     private:

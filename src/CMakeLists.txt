@@ -537,6 +537,8 @@ list(APPEND SOURCE_FILES
         components/cue/ControlPointStore.cpp
         displayapp/screens/CueBandApp.cpp
         displayapp/screens/InfoApp.cpp
+        displayapp/fonts/cueband_20.c
+        displayapp/fonts/cueband_48.c
         )
 
 list(APPEND RECOVERY_SOURCE_FILES

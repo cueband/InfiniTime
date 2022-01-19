@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 /**
  * @file lv_conf.h
  * Configuration file for v7.7.0-dev
@@ -413,12 +415,23 @@ typedef void* lv_indev_drv_user_data_t;            /*Type of user data in the in
  *                                LV_FONT_DECLARE(my_font_2)
  */
 
+#ifdef CUEBAND_SYMBOLS
+#define LV_FONT_CUSTOM_DECLARE LV_FONT_DECLARE(jetbrains_mono_bold_20) \
+                               LV_FONT_DECLARE(jetbrains_mono_extrabold_compressed) \
+                               LV_FONT_DECLARE(jetbrains_mono_42) \
+                               LV_FONT_DECLARE(jetbrains_mono_76) \
+                               LV_FONT_DECLARE(open_sans_light) \
+                               LV_FONT_DECLARE(lv_font_sys_48) \
+                               LV_FONT_DECLARE(cueband_20) \
+                               LV_FONT_DECLARE(cueband_48)
+#else
 #define LV_FONT_CUSTOM_DECLARE LV_FONT_DECLARE(jetbrains_mono_bold_20) \
                                LV_FONT_DECLARE(jetbrains_mono_extrabold_compressed) \
                                LV_FONT_DECLARE(jetbrains_mono_42) \
                                LV_FONT_DECLARE(jetbrains_mono_76) \
                                LV_FONT_DECLARE(open_sans_light) \
                                LV_FONT_DECLARE(lv_font_sys_48)
+#endif
 
 /* Enable it if you have fonts with a lot of characters.
  * The limit depends on the font size, font face and bpp

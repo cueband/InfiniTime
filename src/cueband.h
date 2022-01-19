@@ -101,6 +101,8 @@
 
 #define CUEBAND_DETECT_UNSET_TIME 1577836800  // Before 2020-01-01 00:00:00
 
+#define CUEBAND_SYMBOLS
+
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
 
