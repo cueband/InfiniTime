@@ -69,9 +69,11 @@ namespace Pinetime {
 
     private:
 
+      // Cache description
+      bool descriptionValid = false;
       char description[80];
       const char *icon = "";
-      bool descriptionValid = false;
+      bool descriptionDetailed = false;
 
       // Options
       options_t options_overridden_mask = 0;

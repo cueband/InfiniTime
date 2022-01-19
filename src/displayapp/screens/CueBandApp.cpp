@@ -153,7 +153,7 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
       cueController.SetInterval(0, 0);    // Return to schedule
     } else {                              // Next snooze step cycle
 // TODO: Next snooze step cycle
-cueController.SetInterval(30, 60);
+cueController.SetInterval(10, 60);
     }
 
   } else if (object == btnRight && event == LV_EVENT_CLICKED) {

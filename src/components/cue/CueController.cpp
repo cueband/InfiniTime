@@ -366,10 +366,13 @@ void CueController::DebugText(char *debugText) {
   p += sprintf(p, "S/S: %d %d /%d\n", countStored, countScratch, PROMPT_MAX_CONTROLS);
 
   // Current scheduled cue control point
-  p += sprintf(p, "Cue: #%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? "E" : "d", currentControlPoint.GetWeekdays());
+  p += sprintf(p, "Cue: ##%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? "E" : "d", currentControlPoint.GetWeekdays());
   p += sprintf(p, " @%d i%d v%d\n", currentControlPoint.GetTimeOfDay(), currentControlPoint.GetInterval(), currentControlPoint.GetVolume());
 
   // Status
+  //uint32_t active_schedule_id;
+  //uint16_t max_control_points;
+  //uint16_t current_control_point;
   uint32_t override_remaining;
   uint32_t intensity;
   uint32_t interval;
@@ -412,7 +415,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
     // static constexpr const char* cuebandSilence   = "\xEF\x81\x8C";                  // 0xf04c, pause
     // static constexpr const char* cuebandImpromptu = "\xEF\x81\x8B";                  // 0xf04b, play
 
-    if (!descriptionValid) {
+    if (!descriptionValid || descriptionDetailed != detailed) {
         icon = Applications::Screens::Symbols::cuebandCue;
         char *p = description;
         *p = '\0';
@@ -460,6 +463,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
             p += sprintf(p, "None Scheduled");
             icon = Applications::Screens::Symbols::cuebandScheduled;
         }
+        descriptionDetailed = detailed;
         descriptionValid = true;
     }
 
