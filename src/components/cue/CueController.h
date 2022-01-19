@@ -70,6 +70,7 @@ namespace Pinetime {
     private:
 
       char description[80];
+      const char *icon = "";
       bool descriptionValid = false;
 
       // Options

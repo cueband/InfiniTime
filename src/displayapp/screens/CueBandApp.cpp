@@ -116,12 +116,12 @@ void CueBandApp::Update() {
   lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
   lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 
-  static char text[64];
+  static char text[80];
   char *p = text;
   *p = '\0';
 
   const char *symbol = "";
-  p += sprintf(text, "%s\n", cueController.Description(true, &symbol));
+  p += sprintf(text, "%s", cueController.Description(true, &symbol));
 
   // Left button: Snooze prompts / return to scheduled
   if (cueController.IsTemporary()) {
@@ -141,7 +141,8 @@ void CueBandApp::Update() {
 
   lv_label_set_text_static(lInfoIcon, symbol);
 
-  lv_label_set_text_fmt(lInfo, "%s", text);
+  //lv_label_set_text_fmt(lInfo, "%s", text);
+  lv_label_set_text_static(lInfo, text);
 }
 
 

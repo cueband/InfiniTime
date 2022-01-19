@@ -403,7 +403,6 @@ const char *niceTime(unsigned int seconds) {
 
 // Status Description
 const char *CueController::Description(bool detailed, const char **symbol) {
-    const char *icon = "";
     // #ifdef CUEBAND_SYMBOLS
     // cueband_20.c & cueband_48.c
     // static constexpr const char* cuebandCue       = "\xEF\xA0\xBE";                  // 0xf83e, wave-square
@@ -412,9 +411,9 @@ const char *CueController::Description(bool detailed, const char **symbol) {
     // static constexpr const char* cuebandScheduled = "\xEF\x81\xB3";                  // 0xf073, calendar-alt
     // static constexpr const char* cuebandSilence   = "\xEF\x81\x8C";                  // 0xf04c, pause
     // static constexpr const char* cuebandImpromptu = "\xEF\x81\x8B";                  // 0xf04b, play
-    icon = Applications::Screens::Symbols::cuebandCue;
 
     if (!descriptionValid) {
+        icon = Applications::Screens::Symbols::cuebandCue;
         char *p = description;
         *p = '\0';
 
