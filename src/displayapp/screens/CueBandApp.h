@@ -64,6 +64,9 @@ namespace Pinetime {
           lv_obj_t* btnRight;
           lv_obj_t* btnRight_lbl;
 
+          // Updates
+          bool changes = true;
+          uint32_t lastTime = 0;
       };
     }
   }

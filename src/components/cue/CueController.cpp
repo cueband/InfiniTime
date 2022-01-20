@@ -466,10 +466,12 @@ const char *niceTime(unsigned int seconds) {
     static char buffer[12];
     if (seconds == 0) {
         sprintf(buffer, "now");
+    } if (seconds < 10) {
+        sprintf(buffer, "shortly");
     } if (seconds < 60) {
-        sprintf(buffer, "%is", (int)seconds);
-    } else if (seconds < 60 * 60) {
-        sprintf(buffer, "%im", (int)(seconds / 60));
+        sprintf(buffer, "%is", (int)((seconds + 2) / 5) * 5);
+    } else if (seconds < 90 * 60) {
+        sprintf(buffer, "%im", (int)((seconds + 30) / 60));
     } else if (seconds < 24 * 60 * 60) {
         sprintf(buffer, "%ih", (int)(seconds / 60 / 60));
     } else if (seconds < 0xffffffff) {

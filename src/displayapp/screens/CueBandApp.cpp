@@ -104,7 +104,7 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_set_pos(backgroundLabel, 0, 0);
   lv_label_set_text_static(backgroundLabel, "");
 
-  taskUpdate = lv_task_create(lv_update_task, 1000, LV_TASK_PRIO_MID, this);
+  taskUpdate = lv_task_create(lv_update_task, 200, LV_TASK_PRIO_MID, this);
   Update();
 }
 
@@ -115,47 +115,67 @@ CueBandApp::~CueBandApp() {
 }
 
 void CueBandApp::Update() {
-  lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
-  //lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
+  uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
+  if (now != lastTime) changes = true;
+  lastTime = now;
 
-  static char text[80];
-  char *p = text;
-  *p = '\0';
+  if (changes) {
+    changes = false;
 
-  const char *symbol = "";
-  p += sprintf(text, "%s", cueController.Description(true, &symbol));
+    lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
+    //lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 
-  // Left button: Snooze prompts / return to scheduled
-  if (cueController.IsTemporary()) {
-    lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandScheduled);
-  } else {
-    lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandSilence);
+    static char text[80];
+    char *p = text;
+    *p = '\0';
+
+    const char *symbol = "";
+    p += sprintf(text, "%s", cueController.Description(true, &symbol));
+
+    // Left button: Snooze prompts / return to scheduled
+    if (cueController.IsTemporary()) {
+      lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandScheduled);
+    } else {
+      lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandSilence);
+    }
+    //lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+
+    // Right button: Impromptu prompts / return to scheduled
+    if (cueController.IsSnoozed()) {
+      lv_label_set_text_static(btnRight_lbl, Symbols::cuebandScheduled);
+    } else {
+      lv_label_set_text_static(btnRight_lbl, Symbols::cuebandImpromptu);
+    }
+    //lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+
+    lv_label_set_text_static(lInfoIcon, symbol);
+
+    //lv_label_set_text_fmt(lInfo, "%s", text);
+    lv_label_set_text_static(lInfo, text);
   }
-  //lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
-
-  // Right button: Impromptu prompts / return to scheduled
-  if (cueController.IsSnoozed()) {
-    lv_label_set_text_static(btnRight_lbl, Symbols::cuebandScheduled);
-  } else {
-    lv_label_set_text_static(btnRight_lbl, Symbols::cuebandImpromptu);
-  }
-  //lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
-
-  lv_label_set_text_static(lInfoIcon, symbol);
-
-  //lv_label_set_text_fmt(lInfo, "%s", text);
-  lv_label_set_text_static(lInfo, text);
 }
 
+static const uint32_t snoozeIntervals[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
+static const uint32_t impromptuIntervals[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
+
+static uint32_t nextInterval(const uint32_t *intervals, uint32_t current, uint32_t margin = 30) {
+  for (const uint32_t *interval = intervals; *interval != 0; interval++) {
+    if (current + margin < *interval) return *interval;
+  }
+  return intervals[0];
+}
 
 void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
+  uint32_t override_remaining = 0;
+  cueController.GetStatus(nullptr, nullptr, nullptr, &override_remaining, nullptr, nullptr, nullptr);
+
   if (object == btnLeft && event == LV_EVENT_CLICKED) {
     // Left button: Snooze prompts / return to scheduled
     if (cueController.IsTemporary()) {    // Temporary cueing: return to schedule
       cueController.SetInterval(0, 0);    // Return to schedule
     } else {                              // Next snooze step cycle
-// TODO: Next snooze step cycle
-cueController.SetInterval(0, 60);
+      uint32_t interval = nextInterval(snoozeIntervals, override_remaining);
+      cueController.SetInterval(0, interval);
     }
 
   } else if (object == btnRight && event == LV_EVENT_CLICKED) {
@@ -163,11 +183,12 @@ cueController.SetInterval(0, 60);
     if (cueController.IsSnoozed()) {      // Snoozed cueing: return to schedule
       cueController.SetInterval(0, 0);    // Return to schedule
     } else {                              // Next impromptu step cycle
-// TODO: Next impromptu step cycle
-cueController.SetInterval(10, 60);
+      uint32_t interval = nextInterval(snoozeIntervals, override_remaining);
+      cueController.SetInterval((unsigned int)-1, interval);
     }
 
   }
+  changes = true;
   //Update();
 }
 
