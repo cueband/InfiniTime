@@ -27,10 +27,12 @@ namespace Pinetime {
       void TimeChanged(uint32_t timestamp, uint32_t uptime);
 
       bool IsInitialized() { return initialized; }
+      void Vibrate(unsigned int style);
 
       const static unsigned int INTERVAL_OFF = 0;
       const static unsigned int MAXIMUM_RUNTIME_OFF = 0;
-      const static unsigned int DEFAULT_PROMPT_STYLE = 3; // msec
+      const static unsigned int DEFAULT_PROMPT_STYLE = 3;
+      const static unsigned int DEFAULT_INTERVAL = 60;
 
       // Options
       const static options_t OPTIONS_CUE_SETTING   = (1 << 0); // Feature: Allow user to disable/enable cueing in the settings menu.
@@ -49,12 +51,14 @@ namespace Pinetime {
 
       bool SetInterval(unsigned int interval, unsigned int maximumRuntime);
       void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
-        this->promptStyle = promptStyle;
+        if (promptStyle < 0xffff) {
+          this->promptStyle = promptStyle;
+          this->settingsChanged = 1;
+        }
       }
-      int ReadCues(uint32_t *version);
-      int WriteCues();
 
       void GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint32_t *override_remaining, uint32_t *intensity, uint32_t *interval, uint32_t *duration);
+      void GetLastImpromptu(unsigned int *lastInterval, unsigned int *promptStyle);
 
       void Reset();
       ControlPoint GetStoredControlPoint(int index);
@@ -71,6 +75,10 @@ namespace Pinetime {
       void DebugText(char *debugText);
 
     private:
+
+      int ReadCues(uint32_t *version);
+      int WriteCues();
+      void DeferWriteCues();
 
       // State initialized (delay initialized)
       bool initialized = false;
@@ -109,9 +117,11 @@ namespace Pinetime {
       uint32_t lastPrompt = UPTIME_NONE;    // Uptime at the last prompt
 
       uint32_t overrideEndTime = 0;         // End of override time
-      unsigned int interval = INTERVAL_OFF; // override prompt interval (seconds), 0=snooze sheduled prompts
+      unsigned int interval = INTERVAL_OFF; // Current prompt interval (seconds), 0=snooze sheduled prompts
 
-      unsigned int promptStyle = 0;
+      unsigned int lastInterval = DEFAULT_INTERVAL;         // Last configured prompt interval
+      unsigned int promptStyle = DEFAULT_PROMPT_STYLE;      // Last configured prompt style
+      unsigned int settingsChanged = 0;                     // Settings change -> save debounce
 
       int readError = -1;                 // (Debug) File read status
       int writeError = -1;                // (Debug) File write status

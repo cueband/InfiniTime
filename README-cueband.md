@@ -214,7 +214,9 @@ The internal `CUES.BIN` file is structured as:
 >     uint16_t options_base_value;            // @8 base user-selected values for the options
 >     uint16_t options_overridden_mask;       // @10 mask of overridden options
 >     uint16_t options_overridden_value;      // @12 values of overridden options
->     uint8_t reserved[6];                    // @14 reserved
+>     uint16_t reserved;                      // @14 (reserved: duration?)
+>     uint16_t interval;                      // @16 last set interval
+>     uint16_t intensity;                     // @18 last set intensity style
 >     uint32_t prompt_type;                   // @20 the type of prompts (CUE_PROMPT_TYPE=0)
 >     uint32_t prompt_version;                // @24 version of the prompts
 >     uint32_t prompt_count;                  // @28 number of prompts stored

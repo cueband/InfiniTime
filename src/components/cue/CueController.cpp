@@ -28,6 +28,28 @@ CueController::CueController(Controllers::Settings& settingsController,
     SetInterval(INTERVAL_OFF, MAXIMUM_RUNTIME_OFF);
 }
 
+void CueController::Vibrate(unsigned int style) {
+    // Use as raw width unless matching a style number
+    unsigned int motorPulseWidth = style;
+
+    // TODO: Customize this range and/or add patterns
+    switch (style % 8) { 
+        case 0: motorPulseWidth = 50; break;
+        case 1: motorPulseWidth = 75; break;
+        case 2: motorPulseWidth = 100; break;
+        case 3: motorPulseWidth = 150; break;
+        case 4: motorPulseWidth = 200; break;
+        case 5: motorPulseWidth = 300; break;
+        case 6: motorPulseWidth = 400; break;
+        case 7: motorPulseWidth = 500; break;
+    }
+
+    // Safety limit
+    if (motorPulseWidth > 10 * 1000) motorPulseWidth = 10 * 1000;
+
+    // Prompt
+    motorController.RunForDuration(motorPulseWidth);   // milliseconds
+}
 
 // Called at 1Hz
 void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
@@ -82,26 +104,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
         bool prompt = (elapsed == UPTIME_NONE || elapsed >= effectiveInterval);
         if (prompt) {
             if (!snoozed) {
-                // Use as raw width unless matching a style number
-                unsigned int motorPulseWidth = effectivePromptStyle;
-
-                // TODO: Customize this range and/or add patterns
-                switch (effectivePromptStyle % 8) { 
-                    case 0: motorPulseWidth = 15; break;
-                    case 1: motorPulseWidth = 30; break;
-                    case 2: motorPulseWidth = 45; break;
-                    case 3: motorPulseWidth = 60; break;
-                    case 4: motorPulseWidth = 75; break;
-                    case 5: motorPulseWidth = 90; break;
-                    case 6: motorPulseWidth = 105; break;
-                    case 7: motorPulseWidth = 120; break;
-                }
-
-                // Safety limit
-                if (motorPulseWidth > 10 * 1000) motorPulseWidth = 10 * 1000;
-
-                // Prompt
-                motorController.RunForDuration(motorPulseWidth);   // milliseconds
+                Vibrate(effectivePromptStyle);
 
                 // Notify activityController of prompt
                 activityController.PromptGiven(false);
@@ -114,6 +117,15 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
             lastPrompt = currentUptime;
         }
     }
+
+    // Settings change debounce
+    if (this->settingsChanged != 0) {
+        if (++this->settingsChanged >= 10) {
+            this->settingsChanged = 0;
+            WriteCues();
+        }
+    }
+
 }
 
 void CueController::Init() {
@@ -173,6 +185,12 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
     }
 }
 
+void CueController::GetLastImpromptu(unsigned int *lastInterval, unsigned int *promptStyle) {
+    if (lastInterval != nullptr) *lastInterval = this->lastInterval;
+    if (promptStyle != nullptr) *promptStyle = this->promptStyle;
+}
+
+
 options_t CueController::GetOptionsMaskValue(options_t *base, options_t *mask, options_t *value) {
     // overridden_mask:  0=default, 1=remote-set
     // overridden_value: 0=off, 1=on
@@ -208,7 +226,7 @@ bool CueController::SetOptionsMaskValue(options_t mask, options_t value) {
 
     // If changed, save
     if (options_overridden_mask != oldMask || options_overridden_value != oldValue) {
-        WriteCues();
+        DeferWriteCues();
     }
 
     return true;
@@ -217,6 +235,7 @@ bool CueController::SetOptionsMaskValue(options_t mask, options_t value) {
 int CueController::ReadCues(uint32_t *version) {
     int ret;
     if (!initialized) return 9;
+    this->settingsChanged = 0;
 
     // Now used default options (instead of startup options)
     options_base_value = OPTIONS_DEFAULT;
@@ -250,6 +269,15 @@ int CueController::ReadCues(uint32_t *version) {
     options_overridden_mask = headerBuffer[10] | (headerBuffer[11] << 8);
     options_overridden_value = headerBuffer[12] | (headerBuffer[13] << 8);
 
+    // Reserved (duration?)
+    //uint16_t reserved = headerBuffer[14] | (headerBuffer[15] << 8);
+
+    // Last impromptu settings
+    this->lastInterval = headerBuffer[16] | (headerBuffer[17] << 8);
+    if (this->lastInterval == 0 || this->lastInterval >= 0xffff) this->lastInterval = DEFAULT_INTERVAL;
+    this->promptStyle = headerBuffer[18] | (headerBuffer[19] << 8);
+    if (this->promptStyle >= 0xffff) this->promptStyle = DEFAULT_PROMPT_STYLE;
+
     // Prompt details
     unsigned int promptType  = headerBuffer[20] | (headerBuffer[21] << 8) | (headerBuffer[22] << 16) | (headerBuffer[23] << 24);
     uint32_t promptVersion   = headerBuffer[24] | (headerBuffer[25] << 8) | (headerBuffer[26] << 16) | (headerBuffer[27] << 24);
@@ -282,9 +310,16 @@ int CueController::ReadCues(uint32_t *version) {
     return 0;
 }
 
+void CueController::DeferWriteCues() {
+    if (this->settingsChanged == 0) {
+        this->settingsChanged = 1;
+    }
+}
+
 int CueController::WriteCues() {
     int ret;
     if (!initialized) return 9;
+    this->settingsChanged = 0;
 
     int promptCount = sizeof(controlPoints) / sizeof(controlPoints[0]);
     uint32_t promptVersion = store.GetVersion();
@@ -296,8 +331,8 @@ int CueController::WriteCues() {
     headerBuffer[10] = (uint8_t)options_overridden_mask; headerBuffer[11] = (uint8_t)(options_overridden_mask >> 8);
     headerBuffer[12] = (uint8_t)options_overridden_value; headerBuffer[13] = (uint8_t)(options_overridden_value >> 8);
     headerBuffer[14] = 0; headerBuffer[15] = 0; // reserverd
-    headerBuffer[16] = 0; headerBuffer[17] = 0; // reserverd 
-    headerBuffer[18] = 0; headerBuffer[19] = 0; // reserverd
+    headerBuffer[16] = (uint8_t)this->lastInterval; headerBuffer[17] = (uint8_t)(this->lastInterval >> 8);
+    headerBuffer[18] = (uint8_t)this->promptStyle; headerBuffer[19] = (uint8_t)(this->promptStyle >> 8);
     headerBuffer[20] = (uint8_t)CUE_PROMPT_TYPE; headerBuffer[21] = (uint8_t)(CUE_PROMPT_TYPE >> 8); headerBuffer[22] = (uint8_t)(CUE_PROMPT_TYPE >> 16); headerBuffer[23] = (uint8_t)(CUE_PROMPT_TYPE >> 24); 
     headerBuffer[24] = (uint8_t)promptVersion; headerBuffer[25] = (uint8_t)(promptVersion >> 8); headerBuffer[26] = (uint8_t)(promptVersion >> 16); headerBuffer[27] = (uint8_t)(promptVersion >> 24); 
     headerBuffer[28] = (uint8_t)promptCount; headerBuffer[29] = (uint8_t)(promptCount >> 8); headerBuffer[30] = (uint8_t)(promptCount >> 16); headerBuffer[31] = (uint8_t)(promptCount >> 24); 
@@ -337,7 +372,10 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
 
     // New configuration
     if (maximumRuntime != (unsigned int)-1) this->overrideEndTime = currentUptime + maximumRuntime;
-    if (interval != (unsigned int)-1) this->interval = interval;
+    if (interval != (unsigned int)-1) {
+        this->lastInterval = interval;
+    }
+    this->interval = this->lastInterval;
 
     // Record this as the last prompt time so that the full interval must elapse
     if (interval != (unsigned int)-1 || maximumRuntime != (unsigned int)-1) {
@@ -350,7 +388,7 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
 
 void CueController::Reset() {
     store.Reset();
-    WriteCues();
+    DeferWriteCues();
 }
 
 ControlPoint CueController::GetStoredControlPoint(int index) {
@@ -367,7 +405,7 @@ void CueController::SetScratchControlPoint(int index, ControlPoint controlPoint)
 
 void CueController::CommitScratch(uint32_t version) {
     store.CommitScratch(version);
-    WriteCues();
+    DeferWriteCues();
     descriptionValid = false;
 }
 
@@ -376,7 +414,7 @@ void CueController::DebugText(char *debugText) {
   char *p = debugText;
 
   // File debug
-  p += sprintf(p, "Fil: i%s r%d w%d\n", initialized ? "T" : "F", readError, writeError);
+  p += sprintf(p, "Fil: %s%d r%d w%d\n", initialized ? "i" : "I", this->settingsChanged, readError, writeError);
 
   // Version
   p += sprintf(p, "Ver: %lu\n", (unsigned long)version);
