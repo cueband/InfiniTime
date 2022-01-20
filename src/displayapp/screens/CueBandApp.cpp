@@ -98,11 +98,12 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_set_style_local_text_font(btnRight_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
   lv_label_set_text_static(btnRight_lbl, "");
 
-  lv_obj_t* backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
+  backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_long_mode(backgroundLabel, LV_LABEL_LONG_CROP);
   lv_obj_set_size(backgroundLabel, 240, 240);
   lv_obj_set_pos(backgroundLabel, 0, 0);
   lv_label_set_text_static(backgroundLabel, "");
+  lv_obj_set_event_cb(backgroundLabel, ButtonEventHandler);
 
   taskUpdate = lv_task_create(lv_update_task, 200, LV_TASK_PRIO_MID, this);
   Update();
@@ -116,11 +117,11 @@ CueBandApp::~CueBandApp() {
 
 void CueBandApp::Update() {
   uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
-  if (now != lastTime) changes = true;
-  lastTime = now;
-
-  if (changes) {
+  if (now != lastTime || changes) {
+    if (changes) timeout = 0;
+    if (now != lastTime && timeout++ > 12) Close();
     changes = false;
+    lastTime = now;
 
     lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
     //lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
@@ -134,19 +135,30 @@ void CueBandApp::Update() {
 
     // Left button: Snooze prompts / return to scheduled
     if (cueController.IsTemporary()) {
-      lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandScheduled);
+      lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandCancel);
+      lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
     } else {
       lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandSilence);
+      if (cueController.IsSnoozed()) {
+        lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_RED);
+      } else {
+        lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+      }
     }
-    //lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+    
 
     // Right button: Impromptu prompts / return to scheduled
     if (cueController.IsSnoozed()) {
-      lv_label_set_text_static(btnRight_lbl, Symbols::cuebandScheduled);
+      lv_label_set_text_static(btnRight_lbl, Symbols::cuebandCancel);
+      lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
     } else {
       lv_label_set_text_static(btnRight_lbl, Symbols::cuebandImpromptu);
+      if (cueController.IsTemporary()) {
+        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+      } else {
+        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+      }
     }
-    //lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
 
     lv_label_set_text_static(lInfoIcon, symbol);
 
@@ -165,11 +177,17 @@ static uint32_t nextInterval(const uint32_t *intervals, uint32_t current, uint32
   return intervals[0];
 }
 
+void CueBandApp::Close() {
+  this->running = false;
+}
+
 void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
   uint32_t override_remaining = 0;
   cueController.GetStatus(nullptr, nullptr, nullptr, &override_remaining, nullptr, nullptr, nullptr);
 
-  if (object == btnLeft && event == LV_EVENT_CLICKED) {
+  if (object == backgroundLabel && event == LV_EVENT_CLICKED) {
+    Close();
+  } else if (object == btnLeft && event == LV_EVENT_CLICKED) {
     // Left button: Snooze prompts / return to scheduled
     if (cueController.IsTemporary()) {    // Temporary cueing: return to schedule
       cueController.SetInterval(0, 0);    // Return to schedule

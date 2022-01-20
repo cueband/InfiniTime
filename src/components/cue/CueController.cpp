@@ -372,10 +372,28 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
 
     // New configuration
     if (maximumRuntime != (unsigned int)-1) this->overrideEndTime = currentUptime + maximumRuntime;
-    if (interval != (unsigned int)-1) {
-        this->lastInterval = interval;
+
+    // If not snoozing...
+    if (interval > 0) {
+
+        // Reset last interval if its ever invalid
+        if (this->lastInterval == 0 && this->lastInterval != DEFAULT_INTERVAL) {
+            this->lastInterval = DEFAULT_INTERVAL;
+// TODO:  DeferWriteCues();
+        }
+
+        // If not keeping default interval, and interval has changed...
+        if (interval != (unsigned int)-1 && interval != this->lastInterval) {
+            this->lastInterval = interval;
+// TODO:  DeferWriteCues();
+        }
+
+        // Impromptu interval
+        this->interval = this->lastInterval;
+    } else {
+        // Snoozing
+        this->interval = 0;
     }
-    this->interval = this->lastInterval;
 
     // Record this as the last prompt time so that the full interval must elapse
     if (interval != (unsigned int)-1 || maximumRuntime != (unsigned int)-1) {
@@ -517,7 +535,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
                 p += sprintf(p, "Manual (%s)", niceTime(override_remaining));
                 icon = Applications::Screens::Symbols::cuebandImpromptu;
                 if (detailed) {
-                    p += sprintf(p, " [@%is]", (int)interval);
+                    p += sprintf(p, "\n[interval %is]", (int)interval);
                 }
             } else {
                 // Temporary snooze
@@ -532,7 +550,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
             // Scheduled cueing in progress
             p += sprintf(p, "Cue (%s)", niceTime(duration));
             if (detailed) {
-                p += sprintf(p, " [@%is]", (int)interval);
+                p += sprintf(p, "\n[interval %is]", (int)interval);
             }
             icon = Applications::Screens::Symbols::cuebandIsCueing;
         } else if (duration <= (7 * 24 * 60 * 60)) {

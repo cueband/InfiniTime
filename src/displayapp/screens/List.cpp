@@ -87,6 +87,7 @@ List::List(uint8_t screenID,
 #ifdef CUEBAND_SYMBOLS
       // Set font for this icon
       if (!strcmp(CUEBAND_APP_SYMBOL, applications[i].icon)) {
+        //lv_label_set_text_static(labelBtIco, CUEBAND_APP_SYMBOL);
         lv_obj_set_style_local_text_font(labelBtIco, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_20);
       }
 #endif

@@ -265,10 +265,23 @@ void DisplayApp::Refresh() {
               case TouchEvents::SwipeRight:
                 LoadApp(Apps::QuickSettings, DisplayApp::FullRefreshDirections::RightAnim);
                 break;
+#ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
+              case TouchEvents::SwipeLeft:
+                if (cueController.IsEnabled()) {
+                  LoadApp(Apps::CueBand, DisplayApp::FullRefreshDirections::LeftAnim);
+                }
+                break;
+#endif
 #ifdef CUEBAND_TAP_WATCHFACE_LAUNCH_APP
               case TouchEvents::Tap:  //  Tap / LongTap / DoubleTap / SwipeLeft / SwipeUp
                 if (cueController.IsEnabled()) {
-                  LoadApp(Apps::CueBand, DisplayApp::FullRefreshDirections::None);
+                  LoadApp(Apps::CueBand, 
+#ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
+                    DisplayApp::FullRefreshDirections::LeftAnim
+#else
+                    DisplayApp::FullRefreshDirections::None
+#endif
+                  );
 touchHandler.CancelTap();
                 }
                 break;
@@ -518,7 +531,11 @@ case Apps::Weather: break;
           , cueController
         #endif
       );
+#ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
+      ReturnApp(Apps::Clock, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+#else
       ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+#endif
       break;
 #endif
 

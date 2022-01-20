@@ -37,6 +37,7 @@ namespace Pinetime {
           ~CueBandApp() override;
 
           void Update();
+          void Close();
 
           void OnButtonEvent(lv_obj_t* object, lv_event_t event);
           //bool OnTouchEvent(TouchEvents event) override;
@@ -64,9 +65,12 @@ namespace Pinetime {
           lv_obj_t* btnRight;
           lv_obj_t* btnRight_lbl;
 
+          lv_obj_t* backgroundLabel;
+
           // Updates
           bool changes = true;
           uint32_t lastTime = 0;
+          unsigned int timeout = 0;
       };
     }
   }

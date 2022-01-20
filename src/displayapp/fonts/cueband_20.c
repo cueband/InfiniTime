@@ -1,6 +1,3 @@
-#include "cueband.h"
-#ifdef CUEBAND_SYMBOLS
-
 /*******************************************************************************
  * Size: 20 px
  * Bpp: 1
@@ -64,6 +61,14 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0x1, 0xff, 0xe0, 0xff, 0xfc, 0x7f, 0xff, 0xbf,
     0xff, 0xff, 0xfd, 0xff, 0xfe,
 
+    /* U+F410 "" */
+    0x7f, 0xff, 0xef, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xfc, 0xf3, 0xff, 0x86, 0x1f, 0xfc,
+    0x3, 0xff, 0xe0, 0x7f, 0xff, 0xf, 0xff, 0xe0,
+    0x7f, 0xfc, 0x3, 0xff, 0x86, 0x1f, 0xfc, 0xf3,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x7f, 0xff, 0xe0,
+
     /* U+F83E "" */
     0x7, 0xfc, 0x0, 0x3, 0xfe, 0x0, 0x1, 0xc7,
     0x0, 0x0, 0xe3, 0x80, 0x0, 0x71, 0xc0, 0x0,
@@ -86,7 +91,8 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 87, .adv_w = 280, .box_w = 18, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
     {.bitmap_index = 132, .adv_w = 280, .box_w = 18, .box_h = 21, .ofs_x = 0, .ofs_y = -3},
     {.bitmap_index = 180, .adv_w = 280, .box_w = 18, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 225, .adv_w = 400, .box_w = 25, .box_h = 17, .ofs_x = 0, .ofs_y = -1}
+    {.bitmap_index = 225, .adv_w = 320, .box_w = 20, .box_h = 17, .ofs_x = 0, .ofs_y = -1},
+    {.bitmap_index = 268, .adv_w = 400, .box_w = 25, .box_h = 17, .ofs_x = 0, .ofs_y = -1}
 };
 
 /*---------------------
@@ -94,7 +100,7 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
  *--------------------*/
 
 static const uint16_t unicode_list_0[] = {
-    0x0, 0x1, 0x28, 0x227, 0x229, 0x7f3
+    0x0, 0x1, 0x28, 0x227, 0x229, 0x3c5, 0x7f3
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
@@ -102,7 +108,7 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
 {
     {
         .range_start = 61515, .range_length = 2036, .glyph_id_start = 1,
-        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 6, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 7, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 
@@ -162,4 +168,3 @@ lv_font_t cueband_20 = {
 
 #endif /*#if CUEBAND_20*/
 
-#endif

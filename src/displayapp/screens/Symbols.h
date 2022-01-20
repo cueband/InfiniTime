@@ -67,6 +67,7 @@ namespace Pinetime {
         static constexpr const char* cuebandScheduled = "\xEF\x81\xB3";                  // 0xf073, calendar-alt
         static constexpr const char* cuebandSilence   = "\xEF\x81\x8C";                  // 0xf04c, pause
         static constexpr const char* cuebandImpromptu = "\xEF\x81\x8B";                  // 0xf04b, play
+        static constexpr const char* cuebandCancel    = "\xEF\x90\x90";                  // 0xf410, window-close
 #endif
 
       }
