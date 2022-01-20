@@ -138,12 +138,13 @@ The BLE service can be used to:
 >     uint16_t max_control_points;    // @4 Maximum number of control points supported
 >     uint16_t current_control_point; // @6 Current active control point (0xffff=none)
 >     uint16_t override_remaining;    // @8 (0=not overridden), remaining override duration (seconds, saturates to 0xffff)
->     uint8_t intensity;              // @10 Effective cueing intensity (saturates to 255)
->     uint8_t status_flags;           // @11 Status flags, 0x01=initialized
+>     uint16_t intensity;             // @10 Effective cueing intensity
 >     uint16_t interval;              // @12 Effective cueing interval (seconds)
 >     uint16_t duration;              // @14 Remaining scheduled cueing duration (seconds, saturates to 0xffff)
->     uint16_t options_mask;          // @16 Device interface options mask
->     uint16_t options_value;         // @18 Device interface options value
+>     uint8_t options_base;           // @16 Device interface options base value (lower 8-bits only)
+>     uint8_t options_mask;           // @17 Device interface options remote mask (lower 8-bits only)
+>     uint8_t options_value;          // @18 Device interface options effective value (lower 8-bits only)
+>     uint8_t status_flags;           // @19 Status flags, 0x01=initialized
 > } // @20
 > ```
 
@@ -175,7 +176,8 @@ The BLE service can be used to:
 > * `b4` - Feature: Can snooze from cue details
 > * `b5` - Feature: Can start impromptu temporary cueing from cue details
 > * `b6` - Feature: Customize vibration level from cue details
-> * `b7-b15` - (reserved)
+> * `b7` - (reserved)
+> * `b8-b15` - (unused)
 >
 
 `set_impromtu` is:
@@ -199,6 +201,28 @@ The BLE service can be used to:
 >     uint32_t schedule_id;           // @4 Schedule ID to use to store the current scratch schedule information
 > } // @8
 > ```
+
+
+<!--
+
+The internal `CUES.BIN` file is structured as:
+
+> ```c
+> struct {
+>     uint8_t header[4];                      // @0 "CUES"
+>     uint32_t file_version;                  // @4 file version (CUE_FILE_VERSION=1)
+>     uint16_t options_base_value;            // @8 base user-selected values for the options
+>     uint16_t options_overridden_mask;       // @10 mask of overridden options
+>     uint16_t options_overridden_value;      // @12 values of overridden options
+>     uint8_t reserved[6];                    // @14 reserved
+>     uint32_t prompt_type;                   // @20 the type of prompts (CUE_PROMPT_TYPE=0)
+>     uint32_t prompt_version;                // @24 version of the prompts
+>     uint32_t prompt_count;                  // @28 number of prompts stored
+>     uint32_t control_points[prompt_count];  // @32 prompt control point data
+> } // @32+
+> ```
+-->
+
 
 
 #### Characteristic: Schedule Data
