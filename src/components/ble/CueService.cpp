@@ -88,15 +88,15 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             uint16_t current_control_point;
             uint32_t override_remaining;
             uint32_t intensity;
-            uint8_t status_flags = 0x00;
             uint32_t interval;
             uint32_t duration;
+            uint8_t status_flags = 0x00;
             cueController.GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
             if (override_remaining > 0xffff) override_remaining = 0xffff;
-            if (intensity > 0xff) intensity = 0xff;
-            if (cueController.IsInitialized()) status_flags |= 0x01;        // initialized
+            if (intensity > 0xffff) intensity = 0xffff;
             if (interval > 0xffff) interval = 0xffff;
             if (duration > 0xffff) duration = 0xffff;
+            if (cueController.IsInitialized()) status_flags |= 0x01;        // initialized
 
             // @0 Active cue schedule ID
             status[0] = (uint8_t)(active_schedule_id >> 0);
@@ -112,15 +112,13 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             status[6] = (uint8_t)(current_control_point >> 0);
             status[7] = (uint8_t)(current_control_point >> 8);
 
-            // @6 @8 (0=not overridden), remaining override duration (seconds, saturates to 0xffff)
+            // @8 (0=not overridden), remaining override duration (seconds, saturates to 0xffff)
             status[8] = (uint8_t)(override_remaining >> 0);
             status[9] = (uint8_t)(override_remaining >> 8);
 
             // @10 Effective cueing intensity
-            status[10] = (uint8_t)(intensity);
-
-            // @11 Status flags, 0x01=initialized
-            status[11] = (uint8_t)(status_flags);
+            status[10] = (uint8_t)(intensity >> 0);
+            status[11] = (uint8_t)(intensity >> 8);
 
             // @12 Effective cueing interval (seconds)
             status[12] = (uint8_t)(interval >> 0);
@@ -131,12 +129,15 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             status[15] = (uint8_t)(duration >> 8);
 
             // @16 Options mask and value
+            options_t base;
             options_t mask;
-            options_t effectiveValue = cueController.GetOptionsMaskValue(&mask, nullptr);
-            status[16] = (uint8_t)(mask >> 0);
-            status[17] = (uint8_t)(mask >> 8);
-            status[18] = (uint8_t)(effectiveValue >> 0);
-            status[19] = (uint8_t)(effectiveValue >> 8);
+            options_t effectiveValue = cueController.GetOptionsMaskValue(&base, &mask, nullptr);
+            status[16] = (uint8_t)(base);
+            status[17] = (uint8_t)(mask);
+            status[18] = (uint8_t)(effectiveValue);
+
+            // @19 Status flags, 0x01=initialized
+            status[19] = (uint8_t)(status_flags);
 
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;

@@ -8,7 +8,8 @@
 using namespace Pinetime::Controllers;
 
 #define CUE_DATA_FILENAME "CUES.BIN"
-#define CUE_FILE_VERSION 0
+#define CUE_FILE_VERSION 1
+#define CUE_FILE_MIN_VERSION 1
 #define CUE_PROMPT_TYPE 0
 
 CueController::CueController(Controllers::Settings& settingsController, 
@@ -172,11 +173,12 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
     }
 }
 
-options_t CueController::GetOptionsMaskValue(options_t *mask, options_t *value) {
+options_t CueController::GetOptionsMaskValue(options_t *base, options_t *mask, options_t *value) {
     // overridden_mask:  0=default, 1=remote-set
     // overridden_value: 0=off, 1=on
-    options_t effectiveValue = (OPTIONS_DEFAULT & ~options_overridden_mask) | (options_overridden_mask & options_overridden_value);
+    options_t effectiveValue = (options_base_value & ~options_overridden_mask) | (options_overridden_mask & options_overridden_value);
 
+    if (base != nullptr) *base = options_base_value;
     if (mask != nullptr) *mask = options_overridden_mask;
     if (value != nullptr) *value = options_overridden_value;
 
@@ -214,6 +216,10 @@ bool CueController::SetOptionsMaskValue(options_t mask, options_t value) {
 
 int CueController::ReadCues(uint32_t *version) {
     int ret;
+    if (!initialized) return 9;
+
+    // Now used default options (instead of startup options)
+    options_base_value = OPTIONS_DEFAULT;
 
     // Restore previous control points
     lfs_file_t file_p = {0};
@@ -224,7 +230,7 @@ int CueController::ReadCues(uint32_t *version) {
     }
 
     // Read header
-    uint8_t headerBuffer[24];
+    uint8_t headerBuffer[32];
     ret = fs.FileRead(&file_p, headerBuffer, sizeof(headerBuffer));
     if (ret != sizeof(headerBuffer)) {
         fs.FileClose(&file_p);
@@ -234,18 +240,25 @@ int CueController::ReadCues(uint32_t *version) {
     // Parse header
     bool headerValid = (headerBuffer[0] == 'C' && headerBuffer[1] == 'U' && headerBuffer[2] == 'E' && headerBuffer[3] == 'S');
     unsigned int fileVersion = headerBuffer[4] | (headerBuffer[5] << 8) | (headerBuffer[6] << 16) | (headerBuffer[7] << 24);
-    unsigned int promptType = headerBuffer[8] | (headerBuffer[9] << 8) | (headerBuffer[10] << 16) | (headerBuffer[11] << 24);
-    options_overridden_mask = headerBuffer[12] | (headerBuffer[13] << 8);
-    options_overridden_value = headerBuffer[14] | (headerBuffer[15] << 8);
-
-    if (version != NULL) {
-        *version = headerBuffer[16] | (headerBuffer[17] << 8) | (headerBuffer[18] << 16) | (headerBuffer[19] << 24);
-    }
-    unsigned int promptCount = headerBuffer[20] | (headerBuffer[21] << 8) | (headerBuffer[22] << 16) | (headerBuffer[23] << 24);
-    if (!headerValid || fileVersion > CUE_FILE_VERSION || promptType != CUE_PROMPT_TYPE) {
+    if (!headerValid || fileVersion < CUE_FILE_MIN_VERSION || fileVersion > CUE_FILE_VERSION) {
         fs.FileClose(&file_p);
         return 3;
     }
+
+    // Options
+    options_base_value = headerBuffer[8] | (headerBuffer[9] << 8);
+    options_overridden_mask = headerBuffer[10] | (headerBuffer[11] << 8);
+    options_overridden_value = headerBuffer[12] | (headerBuffer[13] << 8);
+
+    // Prompt details
+    unsigned int promptType  = headerBuffer[20] | (headerBuffer[21] << 8) | (headerBuffer[22] << 16) | (headerBuffer[23] << 24);
+    uint32_t promptVersion   = headerBuffer[24] | (headerBuffer[25] << 8) | (headerBuffer[26] << 16) | (headerBuffer[27] << 24);
+    unsigned int promptCount = headerBuffer[28] | (headerBuffer[29] << 8) | (headerBuffer[30] << 16) | (headerBuffer[31] << 24);
+    if (promptType != CUE_PROMPT_TYPE) {
+        fs.FileClose(&file_p);
+        return 4;
+    }
+    if (version != NULL) *version = promptVersion;
 
     // Read prompts
     unsigned int maxControls = sizeof(controlPoints) / sizeof(controlPoints[0]);
@@ -254,7 +267,7 @@ int CueController::ReadCues(uint32_t *version) {
 
     if (ret != (int)(count * sizeof(controlPoints[0]))) {
         fs.FileClose(&file_p);
-        return 4;
+        return 5;
     }
 
     // Position after cue values
@@ -262,7 +275,7 @@ int CueController::ReadCues(uint32_t *version) {
     ret = fs.FileSeek(&file_p, pos);
     if (ret != (int)pos) {
         fs.FileClose(&file_p);
-        return 5;
+        return 6;
     }
 
     fs.FileClose(&file_p);
@@ -271,18 +284,23 @@ int CueController::ReadCues(uint32_t *version) {
 
 int CueController::WriteCues() {
     int ret;
+    if (!initialized) return 9;
 
     int promptCount = sizeof(controlPoints) / sizeof(controlPoints[0]);
     uint32_t promptVersion = store.GetVersion();
 
-    uint8_t headerBuffer[24];
+    uint8_t headerBuffer[32];
     headerBuffer[0] = 'C'; headerBuffer[1] = 'U'; headerBuffer[2] = 'E'; headerBuffer[3] = 'S'; 
     headerBuffer[4] = (uint8_t)CUE_FILE_VERSION; headerBuffer[5] = (uint8_t)(CUE_FILE_VERSION >> 8); headerBuffer[6] = (uint8_t)(CUE_FILE_VERSION >> 16); headerBuffer[7] = (uint8_t)(CUE_FILE_VERSION >> 24); 
-    headerBuffer[8] = (uint8_t)CUE_PROMPT_TYPE; headerBuffer[9] = (uint8_t)(CUE_PROMPT_TYPE >> 8); headerBuffer[10] = (uint8_t)(CUE_PROMPT_TYPE >> 16); headerBuffer[11] = (uint8_t)(CUE_PROMPT_TYPE >> 24); 
-    headerBuffer[12] = (uint8_t)options_overridden_mask; headerBuffer[13] = (uint8_t)(options_overridden_mask >> 8);
-    headerBuffer[14] = (uint8_t)options_overridden_value; headerBuffer[15] = (uint8_t)(options_overridden_value >> 8);
-    headerBuffer[16] = (uint8_t)promptVersion; headerBuffer[17] = (uint8_t)(promptVersion >> 8); headerBuffer[18] = (uint8_t)(promptVersion >> 16); headerBuffer[19] = (uint8_t)(promptVersion >> 24); 
-    headerBuffer[20] = (uint8_t)promptCount; headerBuffer[21] = (uint8_t)(promptCount >> 8); headerBuffer[22] = (uint8_t)(promptCount >> 16); headerBuffer[23] = (uint8_t)(promptCount >> 24); 
+    headerBuffer[8] = (uint8_t)options_base_value; headerBuffer[9] = (uint8_t)(options_base_value >> 8);
+    headerBuffer[10] = (uint8_t)options_overridden_mask; headerBuffer[11] = (uint8_t)(options_overridden_mask >> 8);
+    headerBuffer[12] = (uint8_t)options_overridden_value; headerBuffer[13] = (uint8_t)(options_overridden_value >> 8);
+    headerBuffer[14] = 0; headerBuffer[15] = 0; // reserverd
+    headerBuffer[16] = 0; headerBuffer[17] = 0; // reserverd 
+    headerBuffer[18] = 0; headerBuffer[19] = 0; // reserverd
+    headerBuffer[20] = (uint8_t)CUE_PROMPT_TYPE; headerBuffer[21] = (uint8_t)(CUE_PROMPT_TYPE >> 8); headerBuffer[22] = (uint8_t)(CUE_PROMPT_TYPE >> 16); headerBuffer[23] = (uint8_t)(CUE_PROMPT_TYPE >> 24); 
+    headerBuffer[24] = (uint8_t)promptVersion; headerBuffer[25] = (uint8_t)(promptVersion >> 8); headerBuffer[26] = (uint8_t)(promptVersion >> 16); headerBuffer[27] = (uint8_t)(promptVersion >> 24); 
+    headerBuffer[28] = (uint8_t)promptCount; headerBuffer[29] = (uint8_t)(promptCount >> 8); headerBuffer[30] = (uint8_t)(promptCount >> 16); headerBuffer[31] = (uint8_t)(promptCount >> 24); 
     
     // Open control points file for writing
     lfs_file_t file_p = {0};
@@ -365,13 +383,16 @@ void CueController::DebugText(char *debugText) {
 
   // Options
   p += sprintf(p, "Opt: ");
+  options_t base;
   options_t mask;
-  options_t effectiveOptions = GetOptionsMaskValue(&mask, nullptr);
+  options_t effectiveOptions = GetOptionsMaskValue(&base, &mask, nullptr);
   for (int i = 6; i >= 0; i--) {
+      char original = (base & (1 << i)) ? 1 : 0;
       char masked = (mask & (1 << i)) ? 1 : 0;
-      char value = (effectiveOptions & (1 << i)) ? 1 : 0;
-      char label = (masked ? "AESDZICX" : "aesdzicx")[i];
-      p += sprintf(p, "%c%d", label, value);
+      char effective = (effectiveOptions & (1 << i)) ? 1 : 0;
+      char label = (original ? "AESDZICX" : "aesdzicx")[i]; // case of flag indicates base value "unset"/"SET"
+      char value = (masked ? "-+" : "01")[(int)effective];  // base value is '0'/'1', overridden high '+', overridden low '-'
+      p += sprintf(p, "%c%c", label, value);
   }
   p += sprintf(p, "\n");
 
