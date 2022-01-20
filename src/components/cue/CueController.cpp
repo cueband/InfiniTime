@@ -131,14 +131,14 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
 void CueController::Init() {
     // Store currently contains the Reset() values (e.g. VERSION_NONE and no enabled cues)
     uint32_t version = store.GetVersion();
+    // Flag as initialized (here so that ReadCues succeeds)
+    initialized = true;
     // Read from file
     readError = ReadCues(&version);
     // Notify control points externally modified
     store.Updated(version);
     // Notify activity controller of current version
     activityController.PromptConfigurationChanged(store.GetVersion());
-    // Flag as initialized
-    initialized = true;
     descriptionValid = false;
 }
 
