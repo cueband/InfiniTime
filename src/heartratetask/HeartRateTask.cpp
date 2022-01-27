@@ -65,13 +65,15 @@ void HeartRateTask::Work() {
     }
 
     if (measurementStarted) {
-      auto hrs = heartRateSensor.ReadHrs();
 #ifdef CUEBAND_BUFFER_RAW_HR
+      auto hrs = heartRateSensor.ReadHrs();
       auto als = heartRateSensor.ReadAls();
       uint32_t hrmValue = (((uint32_t)als) << 16) | ((uint16_t)hrs);
       hrmBuffer[numSamples++ % hrmCapacity] = hrmValue;
-#endif
       ppg.Preprocess(hrs);
+#else
+      ppg.Preprocess(static_cast<float>(heartRateSensor.ReadHrs()));
+#endif
       auto bpm = ppg.HeartRate();
 
       if (lastBpm == 0 && bpm == 0)
