@@ -76,7 +76,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) { // Reading
 
         if (attr_handle == statusHandle) {  // STATUS: Read `status`
-            uint8_t status[15];
+            uint8_t status[20];
             memset(status, 0, sizeof(status));
             
             // Reset read index
