@@ -115,6 +115,7 @@ printf("[CACHE: Within control point #%d, elapsed %d, remaining %d, next #%d; ca
 printf("[CACHE: No control points all day (%d-%d) on day #%d.]", this->cachedTime, this->cachedUntilTime, this->cachedDay);
 #endif
         }
+        this->cachedRemainingEnd = time + remaining;
     }
 
     // Return additional info
@@ -122,7 +123,7 @@ printf("[CACHE: No control points all day (%d-%d) on day #%d.]", this->cachedTim
         *cueIndex = this->cachedCue;
     }
     if (cueRemaining != nullptr) {
-        *cueRemaining = remaining;
+        *cueRemaining = this->cachedRemainingEnd - time;
     }
 
     // Return the value of the currently-active cue

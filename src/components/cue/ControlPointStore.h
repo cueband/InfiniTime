@@ -22,6 +22,7 @@ namespace Pinetime::Controllers {
       unsigned int cachedDay;			// Day of the week the cache is valid for
       unsigned int cachedTime;		// Time (on the cached day) the cache is valid from (inclusive)
       unsigned int cachedUntilTime;	// Time (on the cached day) the cache is valid until (exclusive)
+      unsigned int cachedRemainingEnd;	// Timestamp calculated after "remaining"
 
       // Invalidate the cache
       void Invalidate();
