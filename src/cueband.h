@@ -34,7 +34,7 @@
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
-#define CUEBAND_DEVICE_NAME "InfiniTime-######"  // "InfiniTime"
+#define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
 #define CUEBAND_SERIAL_ADDRESS
 
 // Simple UART service
