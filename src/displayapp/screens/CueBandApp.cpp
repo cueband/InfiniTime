@@ -123,8 +123,13 @@ void CueBandApp::Update() {
     changes = false;
     lastTime = now;
 
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+    if (dateTimeController.IsUnset()) {
+      lv_label_set_text_fmt(label_time, "");
+    } else
+#endif
     lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
-    //lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
+    lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 
     static char text[80];
     char *p = text;
