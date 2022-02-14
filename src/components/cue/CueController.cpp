@@ -186,7 +186,10 @@ void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_contro
 }
 
 void CueController::GetLastImpromptu(unsigned int *lastInterval, unsigned int *promptStyle) {
-    if (lastInterval != nullptr) *lastInterval = this->lastInterval;
+    if (lastInterval != nullptr) {
+        if (this->lastInterval == 0) *lastInterval = DEFAULT_INTERVAL;
+        else { *lastInterval = this->lastInterval; }
+    }
     if (promptStyle != nullptr) *promptStyle = this->promptStyle;
 }
 

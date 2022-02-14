@@ -43,6 +43,8 @@ namespace Pinetime {
           //bool OnTouchEvent(TouchEvents event) override;
 
         private:
+          int screen = 0;   // 0=cue details & snooze/impromptu override;  1=cue preferences (interval and intensity)
+
           Pinetime::System::SystemTask& systemTask;
           Pinetime::Controllers::Battery& batteryController;
           Controllers::DateTime& dateTimeController;
