@@ -527,7 +527,9 @@ const char *CueController::Description(bool detailed, const char **symbol) {
         uint32_t duration;
         GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
 
-        if (!initialized) {
+        if (!IsEnabled()) {
+            // (leave empty)
+        } else if (!initialized) {
             p += sprintf(p, "Initializing...");
         } else if (override_remaining > 0) {
             if (interval > 0) {
