@@ -57,6 +57,16 @@ namespace Pinetime {
         return pairingKey;
       }
 
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+      bool IsTrusted() const {
+        return trusted;
+      }
+      bool SetTrusted() {
+        trusted = true;
+      }
+      bool trusted = false;
+#endif
+
 #if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
       void SetMtu(size_t newMtu) {
         mtu = newMtu;

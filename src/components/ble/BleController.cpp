@@ -4,12 +4,18 @@ using namespace Pinetime::Controllers;
 
 void Ble::Connect() {
   isConnected = true;
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+  trusted = false;
+#endif
 }
 
 void Ble::Disconnect() {
   isConnected = false;
 #if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
   SetMtu(23);   // reset to base MTU
+#endif
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+  trusted = false;
 #endif
 }
 

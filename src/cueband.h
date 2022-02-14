@@ -37,6 +37,8 @@
 #define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
 #define CUEBAND_SERIAL_ADDRESS
 
+#define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted (required)
+
 // Simple UART service
 // See: src/components/ble/UartService.cpp
 // See: src/components/ble/UartService.h
