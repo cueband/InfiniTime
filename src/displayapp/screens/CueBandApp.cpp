@@ -107,6 +107,11 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
 
   taskUpdate = lv_task_create(lv_update_task, 200, LV_TASK_PRIO_MID, this);
   Update();
+
+  // If the app was opened from the menu but is disabled, immediately close
+  if (!cueController.IsOpenDetails()) {
+    Close();
+  }
 }
 
 CueBandApp::~CueBandApp() {

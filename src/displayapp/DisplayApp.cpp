@@ -267,14 +267,14 @@ void DisplayApp::Refresh() {
                 break;
 #ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
               case TouchEvents::SwipeLeft:
-                if (cueController.IsEnabled()) {
+                if (cueController.IsOpenDetails()) {
                   LoadApp(Apps::CueBand, DisplayApp::FullRefreshDirections::LeftAnim);
                 }
                 break;
 #endif
 #ifdef CUEBAND_TAP_WATCHFACE_LAUNCH_APP
               case TouchEvents::Tap:  //  Tap / LongTap / DoubleTap / SwipeLeft / SwipeUp
-                if (cueController.IsEnabled()) {
+                if (cueController.IsOpenDetails()) {
                   LoadApp(Apps::CueBand, 
 #ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
                     DisplayApp::FullRefreshDirections::LeftAnim

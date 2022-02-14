@@ -256,8 +256,10 @@ void WatchFaceAnalog::Refresh() {
   }
 
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
-  const char *description = app->GetCueController().Description();
-  lv_label_set_text_fmt(cue_status, "%s", description);
-  lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 30);
+  if (app->GetCueController().IsShowStatus()) {
+    const char *description = app->GetCueController().Description();
+    lv_label_set_text_fmt(cue_status, "%s", description);
+    lv_obj_align(cue_status, nullptr, LV_ALIGN_CENTER, 0, 30);
+  }
 #endif
 }

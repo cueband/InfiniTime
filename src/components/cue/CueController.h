@@ -67,6 +67,14 @@ namespace Pinetime {
       void CommitScratch(uint32_t version);
 
       bool IsEnabled() { return (GetOptionsMaskValue() & OPTIONS_CUE_ENABLED) != 0; }
+      bool IsShowStatus() { 
+        options_t options = GetOptionsMaskValue();
+        return ((options & OPTIONS_CUE_ENABLED) != 0) && ((options & OPTIONS_CUE_STATUS) != 0);
+      }
+      bool IsOpenDetails() { 
+        options_t options = GetOptionsMaskValue();
+        return ((options & OPTIONS_CUE_ENABLED) != 0) && ((options & OPTIONS_CUE_DETAILS) != 0);
+      }
       bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }

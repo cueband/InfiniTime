@@ -500,9 +500,11 @@ void PineTimeStyle::Refresh() {
   }
 
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
-  const char *description = app->GetCueController().Description();
-  lv_label_set_text_fmt(cue_status, "%s", description);
-  lv_obj_align(cue_status, timebar, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
+  if (app->GetCueController().IsShowStatus()) {
+    const char *description = app->GetCueController().Description();
+    lv_label_set_text_fmt(cue_status, "%s", description);
+    lv_obj_align(cue_status, timebar, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
+  }
 #endif
 }
 
