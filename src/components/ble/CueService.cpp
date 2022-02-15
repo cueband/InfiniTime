@@ -96,7 +96,9 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             if (intensity > 0xffff) intensity = 0xffff;
             if (interval > 0xffff) interval = 0xffff;
             if (duration > 0xffff) duration = 0xffff;
-            if (cueController.IsInitialized()) status_flags |= 0x01;        // initialized
+            if (cueController.IsInitialized()) status_flags |= 0x01;        // b0 = service initialized
+            if (firmwareValidator.IsValidated()) status_flags |= 0x02;      // b1 = firmware validated
+            if (bleController.IsTrusted()) status_flags |= 0x04;            // b2 = connection trusted
 
             // @0 Active cue schedule ID
             status[0] = (uint8_t)(active_schedule_id >> 0);
