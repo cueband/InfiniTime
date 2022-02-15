@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "components/ble/DfuService.h"
 #include <cstring>
 #include "components/ble/BleController.h"
@@ -77,6 +79,10 @@ void DfuService::Init() {
 }
 
 int DfuService::OnServiceData(uint16_t connectionHandle, uint16_t attributeHandle, ble_gatt_access_ctxt* context) {
+#ifdef CUEBAND_TRUSTED_DFU
+  // TODO: Return correct error packet for some requests/states
+  if (!bleController.IsTrusted()) return 0;
+#endif
   if (bleController.IsFirmwareUpdating()) {
     xTimerStart(timeoutTimer, 0);
   }

@@ -38,6 +38,7 @@
 #define CUEBAND_SERIAL_ADDRESS
 
 #define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted (required)
+#define CUEBAND_TRUSTED_DFU             // Only allow DFU over trusted connection (risky?)
 
 // Simple UART service
 // See: src/components/ble/UartService.cpp
