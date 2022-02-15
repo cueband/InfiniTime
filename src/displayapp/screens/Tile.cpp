@@ -40,7 +40,7 @@ Tile::Tile(uint8_t screenID,
     lv_label_set_text_fmt(label_time, "");
   } else
 #endif
-  lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
+  lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
   lv_label_set_align(label_time, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label_time, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
 
@@ -137,7 +137,7 @@ void Tile::UpdateScreen() {
     lv_label_set_text_fmt(label_time, "");
   } else
 #endif
-  lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
+  lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
   lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 }
 
