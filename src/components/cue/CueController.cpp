@@ -407,8 +407,19 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
     return true;
 }
 
-void CueController::Reset() {
+void CueController::Reset(bool everything) {
+    // Reset store
     store.Reset();
+    // Reset full cue state
+    if (everything) {
+        options_base_value = OPTIONS_STARTING;
+        options_overridden_mask = 0;
+        options_overridden_value = 0;
+        lastInterval = DEFAULT_INTERVAL;
+        promptStyle = DEFAULT_PROMPT_STYLE;
+    }
+    // Store
+    descriptionValid = false;
     DeferWriteCues();
 }
 

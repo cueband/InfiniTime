@@ -120,6 +120,9 @@ namespace Pinetime {
       void CommsCue() {
             commsCount++;
       }
+      Pinetime::Controllers::CueController& GetCueController() {
+            return cueController;
+      }
 #endif
 
     private:

@@ -417,7 +417,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                     activityController.DestroyData();
 #endif
 #ifdef CUEBAND_CUE_ENABLED
-                    // TODO: Clear cue data
+                    m_system.GetCueController().Reset(true);
 #endif
                     // TODO: Reset watch settings?
                 } else {

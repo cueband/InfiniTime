@@ -278,6 +278,9 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 const char *cmdErase = "Erase!";
                 if (notifSize == strlen(cmdErase) && memcmp(data, cmdErase, strlen(cmdErase)) == 0) {
                     activityController.DestroyData();
+#ifdef CUEBAND_CUE_ENABLED
+                    m_system.GetCueController().Reset(true);
+#endif
                 }
             }
 
