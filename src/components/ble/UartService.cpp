@@ -681,6 +681,26 @@ if (!read) {
                 sprintf(resp, "?Disabled\r\n");
 #endif
 
+            } else if (data[0] == 'U') {    // Unlock / authenticate
+
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+                if (data[1] >= '0' && data[1] <= '9') {
+                    uint32_t response = atoi((const char *)data + 2);
+                    bleController.ProvideChallengeResponse(response);
+                }
+#endif
+
+                if (bleController.IsTrusted()) {
+                    sprintf(resp, "Authenticated\r\n");
+                } else {
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+                    uint32_t challenge = bleController.GetChallenge();
+                    sprintf(resp, "!#%u\r\n", challenge);
+#else
+                    sprintf(resp, "!\r\n");
+#endif
+                }
+
             } else if (data[0] == 'X') {    // Remote admin
 
                 if (data[1] == 'W') {       // Remote wake

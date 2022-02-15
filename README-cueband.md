@@ -577,6 +577,12 @@ A response may be prefixed with:
 
 * `R+<id>` - Read block id (Base-64 encoded) -- can be interpreted as `activity_log` (see above: *Device Activity Log Block Format*).
 
+* `U` - Check unlock/authenticate status
+  > `!#<challenge>` (decimal)
+
+* `U<response>` - Unlock/authenticate using challenge response (decimal)
+  > `Authenticated` (or `!#` above if not authenticated)
+
 * `X!` - Remotely reset device (risky?)
   > (resets device)
 
