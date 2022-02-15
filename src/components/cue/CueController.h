@@ -60,7 +60,7 @@ namespace Pinetime {
       void GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint32_t *override_remaining, uint32_t *intensity, uint32_t *interval, uint32_t *duration);
       void GetLastImpromptu(unsigned int *lastInterval, unsigned int *promptStyle);
 
-      void Reset();
+      void Reset(bool everything);
       ControlPoint GetStoredControlPoint(int index);
       void ClearScratch();
       void SetScratchControlPoint(int index, ControlPoint controlPoint);

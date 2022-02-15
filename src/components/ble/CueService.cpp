@@ -189,7 +189,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
         if (attr_handle == statusHandle) {
 
             if (notifSize == 0) {   // STATUS: Write *(no data)* - reset schedule
-                cueController.Reset();
+                cueController.Reset(false);
 
             } else {
 
