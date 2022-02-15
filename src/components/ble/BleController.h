@@ -68,11 +68,16 @@ namespace Pinetime {
         if (trusted) return true;
         return false;
       }
-      bool SetTrusted() {
-        trusted = true;
+      void SetTrusted(bool nearFuture) {
+        // Trust the current connection, if established
+        if (isConnected) trusted = true;
+        else if (nearFuture) {
+          // Otherwise, a connection in the near future
+          trustSoonTime = elapsed;
+        }
       }
-      bool SetBonded() {
-        bonded = true;
+      void SetBonded() {
+        if (isConnected) bonded = true;
       }
       void TimeChanged(uint32_t now) {
         // now
@@ -85,6 +90,7 @@ namespace Pinetime {
       bool trusted = false;
       bool bonded = false;
       uint32_t connectedTime = 0xffffffff;
+      uint32_t trustSoonTime = 0xffffffff;
 #else
       bool IsTrusted() const { return true; }
 #endif

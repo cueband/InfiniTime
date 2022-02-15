@@ -89,6 +89,9 @@ namespace Pinetime {
 #if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
       Pinetime::Controllers::CueController& GetCueController() { return cueController; }
 #endif
+#ifdef CUEBAND_TRUSTED_CONNECTION
+      Pinetime::Controllers::Ble& GetBleController() { return bleController; }
+#endif
 
     private:
       Pinetime::Drivers::St7789& lcd;

@@ -32,6 +32,11 @@ FirmwareValidation::FirmwareValidation(Pinetime::Applications::DisplayApp* app, 
                         Version::GitCommitHash());
   lv_obj_align(labelVersion, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
 
+#ifdef CUEBAND_TRUSTED_CONNECTION
+  // Trust the current connection, or connection soon after now, when opening the validator
+  app->GetBleController().SetTrusted(true);
+#endif
+
   labelIsValidated = lv_label_create(lv_scr_act(), nullptr);
   lv_obj_align(labelIsValidated, labelVersion, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
   lv_label_set_recolor(labelIsValidated, true);

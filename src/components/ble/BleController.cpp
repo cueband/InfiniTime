@@ -8,6 +8,14 @@ void Ble::Connect() {
   connectedTime = elapsed;
   trusted = false;
   bonded = false;
+  if (trustSoonTime != 0xffffffff) {
+    // Trust a connection within two minutes
+    if (trustSoonTime + 2 * 60 < elapsed) {
+      trusted = true;
+    }
+    // Do not trust additional connections
+    trustSoonTime = 0xffffffff;
+  }
 #endif
 }
 
