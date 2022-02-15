@@ -290,6 +290,7 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Write `uint8_t[6]`            | `"Erase!"`: resets the activity log.             |
 |                               | `"Validate!"`: remotely validates the firmware (risky)  |
 |                               | `"Reset!"`: remotely resets the device (risky?)  |
+|                               | `"!####"`: trusted connection challenge response where '#' represents the bytes of the uint32_t value |
 
 Where `status` is:
 
@@ -301,7 +302,8 @@ Where `status` is:
 >     uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
 >     uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
 >     uint8_t  status_flags;              // @14 Status flags (b0 = firmware validated, b1 = service initialized, b2 = connection trusted)
-> } // @14
+>     uint8_t  reserved;                  // @15 Reserved
+>     uint32_t challenge;                 // @16 Challenge for trusted connection
 > ```
 
 #### Characteristic: Activity Block

@@ -215,8 +215,21 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             if (firmwareValidator.IsValidated()) status_flags |= 0x01;      // b0 = firmware validated
             if (activityController.IsInitialized()) status_flags |= 0x02;   // b1 = service initialized
             if (bleController.IsTrusted()) status_flags |= 0x04;            // b2 = connection trusted
-
             status[14] = status_flags;
+
+            // @15 Reserved
+            status[15] = 0x00;
+
+            // @16 Challenge bytes
+            uint32_t challenge = 0;
+#ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
+            challenge = bleController.GetChallenge();
+#endif
+            status[16] = (uint8_t)(challenge >> 0);
+            status[17] = (uint8_t)(challenge >> 8);
+            status[18] = (uint8_t)(challenge >> 16);
+            status[19] = (uint8_t)(challenge >> 24);
+
 
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
@@ -283,6 +296,16 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 const char *cmdReset = "Reset!";
                 if (notifSize == strlen(cmdReset) && memcmp(data, cmdReset, strlen(cmdReset)) == 0) {
                     firmwareValidator.Reset();
+                }
+            }
+
+            // Challenge Response
+            {
+                if (data[0] == '!' && notifSize >= 1 + 4) {
+                    uint32_t response = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
+#ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
+                    bleController.ProvideChallengeResponse(response);
+#endif
                 }
             }
 

@@ -63,34 +63,38 @@ namespace Pinetime {
         // Bonded connections are trusted
         if (bonded) return true;
         // Connections established shortly after restarting are trusted
-        if (connectedTime < 5 * 60) return true;
+        if (connectedElapsed < 5 * 60) return true;
         // Connections that have been authenticated are trusted
         if (trusted) return true;
         return false;
       }
-      void SetTrusted(bool nearFuture) {
+      void SetTrusted(bool nearFuture = false) {
         // Trust the current connection, if established
         if (isConnected) trusted = true;
         else if (nearFuture) {
           // Otherwise, a connection in the near future
-          trustSoonTime = elapsed;
+          trustSoonElapsed = elapsed;
         }
       }
+      uint32_t GetChallenge();
+      bool ProvideChallengeResponse(uint32_t response);
       void SetBonded() {
         if (isConnected) bonded = true;
       }
       void TimeChanged(uint32_t now) {
-        // now
+        this->now = now;
         elapsed++;
       }
       uint32_t GetElapsed() {   // Elapsed up-time (incremented rather than blindly trust system uptime), e.g. to only allow DFU within a certain time after reboot
         return elapsed;
       }
+      uint32_t now = 0;
       uint32_t elapsed = 0;
       bool trusted = false;
       bool bonded = false;
+      uint32_t trustSoonElapsed = 0xffffffff;
+      uint32_t connectedElapsed = 0xffffffff;
       uint32_t connectedTime = 0xffffffff;
-      uint32_t trustSoonTime = 0xffffffff;
 #else
       bool IsTrusted() const { return true; }
 #endif

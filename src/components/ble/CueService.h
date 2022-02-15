@@ -19,6 +19,7 @@
 #include "components/ble/BleController.h"
 #include "components/settings/Settings.h"
 #include "components/cue/CueController.h"
+#include "components/firmwarevalidator/FirmwareValidator.h"
 
 // faa20000-3a02-417d-90a7-23f4a9c6745f
 #define CUE_SERVICE_UUID_BASE       { 0x5f, 0x74, 0xc6, 0xa9, 0xf4, 0x23, 0xa7, 0x90, 0x7d, 0x41, 0x02, 0x3a, 0x00, 0x00, 0xa2, 0xfa }
