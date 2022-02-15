@@ -109,7 +109,6 @@ void InfoApp::Update() {
     char *p = debugText;
 #if defined(CUEBAND_TRUSTED_CONNECTION)
     // Connection overview
-    Pinetime::Controllers::Ble& GetBleController() { return bleController; }
     p += sprintf(p, "BLE: %s %s\n", 
       systemTask.nimble().GetBleController().IsConnected() ? "con" : "n/c", 
       systemTask.nimble().GetBleController().IsTrusted() ? "trust" : "untrust"

@@ -210,9 +210,13 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             status[12] = (uint8_t)(maxSamplesPerBlock >> 0);
             status[13] = (uint8_t)(maxSamplesPerBlock >> 8);
 
-            // @14 Flags
-            status[14] = 0;
-            status[14] |= (uint8_t)(firmwareValidator.IsValidated() ? 0x01 : 0x00);  // Firmware validated flag
+            // @14 Status flags
+            uint8_t status_flags = 0x00;
+            if (firmwareValidator.IsValidated()) status_flags |= 0x01;      // b0 = firmware validated
+            if (activityController.IsInitialized()) status_flags |= 0x02;   // b1 = service initialized
+            if (bleController.IsTrusted()) status_flags |= 0x04;            // b2 = connection trusted
+
+            status[14] = status_flags;
 
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;

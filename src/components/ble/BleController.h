@@ -60,10 +60,19 @@ namespace Pinetime {
 #if defined(CUEBAND_TRUSTED_CONNECTION)
       bool IsTrusted() const {
         if (!isConnected) return false;
-        return trusted;
+        // Bonded connections are trusted
+        if (bonded) return true;
+        // Connections established shortly after restarting are trusted
+        if (connectedTime < 5 * 60) return true;
+        // Connections that have been authenticated are trusted
+        if (trusted) return true;
+        return false;
       }
       bool SetTrusted() {
         trusted = true;
+      }
+      bool SetBonded() {
+        bonded = true;
       }
       void TimeChanged(uint32_t now) {
         // now
@@ -74,6 +83,10 @@ namespace Pinetime {
       }
       uint32_t elapsed = 0;
       bool trusted = false;
+      bool bonded = false;
+      uint32_t connectedTime = 0xffffffff;
+#else
+      bool IsTrusted() const { return true; }
 #endif
 
 #if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)

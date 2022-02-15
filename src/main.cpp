@@ -125,10 +125,6 @@ Pinetime::Controllers::AlarmController alarmController {dateTimeController};
 Pinetime::Controllers::TouchHandler touchHandler(touchPanel, lvgl);
 Pinetime::Controllers::ButtonHandler buttonHandler;
 
-Pinetime::Controllers::FS fs {spiNorFlash};
-Pinetime::Controllers::Settings settingsController {fs};
-Pinetime::Controllers::MotorController motorController {};
-
 #ifdef CUEBAND_ACTIVITY_ENABLED
 Pinetime::Controllers::ActivityController activityController {settingsController, fs};
 #endif

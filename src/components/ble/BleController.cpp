@@ -5,7 +5,9 @@ using namespace Pinetime::Controllers;
 void Ble::Connect() {
   isConnected = true;
 #if defined(CUEBAND_TRUSTED_CONNECTION)
+  connectedTime = elapsed;
   trusted = false;
+  bonded = false;
 #endif
 }
 

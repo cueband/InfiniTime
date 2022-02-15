@@ -57,6 +57,9 @@ namespace Pinetime {
       ble_uuid128_t cueStatusCharUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = CUE_SERVICE_UUID_STATUS};
       ble_uuid128_t cueDataCharUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = CUE_SERVICE_UUID_DATA};
 
+      // For status_flags
+      Pinetime::Controllers::FirmwareValidator firmwareValidator;
+
       struct ble_gatt_chr_def characteristicDefinition[3];
       struct ble_gatt_svc_def serviceDefinition[2];
 
