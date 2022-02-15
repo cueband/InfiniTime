@@ -210,6 +210,9 @@ namespace Pinetime {
       bool wasPowered = false;
       bool wasSleeping = false;
 #endif
+#ifdef CUEBAND_TRUSTED_CONNECTION
+      uint32_t bleLastSecond = 0;
+#endif
 
 #if defined(CUEBAND_POLLED_ENABLED) || defined(CUEBAND_FIFO_ENABLED)
       bool IsSampling();

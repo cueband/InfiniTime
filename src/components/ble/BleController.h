@@ -59,11 +59,20 @@ namespace Pinetime {
 
 #if defined(CUEBAND_TRUSTED_CONNECTION)
       bool IsTrusted() const {
+        if (!isConnected) return false;
         return trusted;
       }
       bool SetTrusted() {
         trusted = true;
       }
+      void TimeChanged(uint32_t now) {
+        // now
+        elapsed++;
+      }
+      uint32_t GetElapsed() {   // Elapsed up-time (incremented rather than blindly trust system uptime), e.g. to only allow DFU within a certain time after reboot
+        return elapsed;
+      }
+      uint32_t elapsed = 0;
       bool trusted = false;
 #endif
 

@@ -501,6 +501,10 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
         ble_gap_conn_find(event->enc_change.conn_handle, &desc);
         if (desc.sec_state.bonded) {
           PersistBond(desc);
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+          // Bonded connections are automatically trusted
+          bleController.SetTrusted();
+#endif
         }
 
         NRF_LOG_INFO("new state: encrypted=%d authenticated=%d bonded=%d key_size=%d",

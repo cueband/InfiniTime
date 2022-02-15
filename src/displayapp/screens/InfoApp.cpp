@@ -106,7 +106,16 @@ void InfoApp::Update() {
 
 #ifdef CUEBAND_CUE_ENABLED
   if (screen == thisScreen++) {
-    cueController.DebugText(debugText);   // basic info
+    char *p = debugText;
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+    // Connection overview
+    Pinetime::Controllers::Ble& GetBleController() { return bleController; }
+    p += sprintf(p, "BLE: %s %s\n", 
+      systemTask.nimble().GetBleController().IsConnected() ? "con" : "n/c", 
+      systemTask.nimble().GetBleController().IsTrusted() ? "trust" : "untrust"
+    );
+#endif    
+    cueController.DebugText(p);   // basic info
   }
 #endif
 
