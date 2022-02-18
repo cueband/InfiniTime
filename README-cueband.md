@@ -290,7 +290,8 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Write `uint8_t[6]`            | `"Erase!"`: resets the activity log.             |
 |                               | `"Validate!"`: remotely validates the firmware (risky)  |
 |                               | `"Reset!"`: remotely resets the device (risky?)  |
-|                               | `"!####"`: trusted connection challenge response where '#' represents the bytes of the uint32_t value |
+|                               | `"!####"`: trusted connection challenge response, where '#' represents the bytes of the uint32_t value |
+|                               | `"@..."`: directly provide key for trusted connection, where '.' represents the bytes of the key (for testing only, use challenge response in production) |
 
 Where `status` is:
 
@@ -580,7 +581,10 @@ A response may be prefixed with:
 * `U` - Check unlock/authenticate status
   > `!#<challenge>` (decimal)
 
-* `U<response>` - Unlock/authenticate using challenge response (decimal)
+* `U<response>` - Unlock/authenticate using challenge response (decimal digits '0'-'9')
+  > `Authenticated` (or `!#` above if not authenticated)
+
+* `U@<key>` - Unlock/authenticate using key bytes directly (for testing only, use challenge response in production) 
   > `Authenticated` (or `!#` above if not authenticated)
 
 * `X!` - Remotely reset device (risky?)
