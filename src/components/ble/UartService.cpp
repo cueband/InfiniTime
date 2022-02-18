@@ -700,7 +700,7 @@ if (!read) {
                 } else {
 #if defined(CUEBAND_TRUSTED_CONNECTION)
                     uint32_t challenge = bleController.GetChallenge();
-                    sprintf(resp, "!#%u\r\n", challenge);
+                    sprintf(resp, "!#%u\r\n", (unsigned int)challenge);
 #else
                     sprintf(resp, "!\r\n");
 #endif
