@@ -10,6 +10,30 @@
 
 using namespace Pinetime::Applications::Screens;
 
+static const uint32_t snoozeDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
+static const uint32_t impromptuDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
+static const uint32_t promptIntervals[] = { 30, 60, 90, 120, 180, 240, 0 };
+static const uint32_t promptStyles[] = { 1, 2, 3, 4, 5, 6, 7, 0 };
+static const char *const promptDescription[] = {
+  // TODO: Proper descriptions for each style (limit 0-7 or 0-15?)
+  "0", // 0
+  "1", // 1
+  "2", // 2
+  "3", // 3
+  "4", // 4
+  "5", // 5
+  "6", // 6
+  "7", // 7
+  "8", // 8
+  "9", // 9
+  "10", // 10
+  "11", // 11
+  "12", // 12
+  "13", // 13
+  "14", // 14
+  "15", // 15
+};
+
 static void ButtonEventHandler(lv_obj_t* obj, lv_event_t event) {
   auto* screen = static_cast<CueBandApp*>(obj->user_data);
   screen->OnButtonEvent(obj, event);
@@ -46,6 +70,16 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
   static constexpr uint8_t buttonWidth = (LV_HOR_RES_MAX - innerDistance) / 2; // wide buttons
   //static constexpr uint8_t buttonWidth = buttonHeight; // square buttons
   static constexpr uint8_t buttonXOffset = (LV_HOR_RES_MAX - buttonWidth * 2 - innerDistance) / 2;
+
+  // Background label
+  backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
+  backgroundLabel->user_data = this;
+  lv_obj_set_click(backgroundLabel, true);
+  lv_label_set_long_mode(backgroundLabel, LV_LABEL_LONG_CROP);
+  lv_obj_set_size(backgroundLabel, 240, 240);
+  lv_obj_set_pos(backgroundLabel, 0, 0);
+  lv_label_set_text_static(backgroundLabel, "");
+  lv_obj_set_event_cb(backgroundLabel, ButtonEventHandler);
 
   // Time
   label_time = lv_label_create(lv_scr_act(), nullptr);
@@ -98,14 +132,6 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_set_style_local_text_font(btnRight_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
   lv_label_set_text_static(btnRight_lbl, "");
 
-  backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
-  backgroundLabel->user_data = this;
-  lv_label_set_long_mode(backgroundLabel, LV_LABEL_LONG_CROP);
-  lv_obj_set_size(backgroundLabel, 240, 240);
-  lv_obj_set_pos(backgroundLabel, 0, 0);
-  lv_label_set_text_static(backgroundLabel, "");
-  lv_obj_set_event_cb(backgroundLabel, ButtonEventHandler);
-
   taskUpdate = lv_task_create(lv_update_task, 200, LV_TASK_PRIO_MID, this);
   Update();
 
@@ -146,7 +172,7 @@ void CueBandApp::Update() {
       // Cue Preferences
       unsigned int lastInterval = 0, promptStyle = 0;
       cueController.GetLastImpromptu(&lastInterval, &promptStyle);
-      p += sprintf(text, "Cue Preferences\nInterval %ds\nIntensity #%d", lastInterval, promptStyle);
+      p += sprintf(text, "Cue Preferences\nInterval %ds\nStyle %s", lastInterval, promptDescription[promptStyle % 16]);
 
     } else {
       // Cue description
@@ -174,8 +200,8 @@ void CueBandApp::Update() {
     // Right button (screen 0): Impromptu prompts / return to scheduled
     // Right button (screen 1): Intensity
     if (screen == 1) {
-      lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandIntensity);
-      lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+      lv_label_set_text_static(btnRight_lbl, Symbols::cuebandIntensity);
+      lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
     } else if (cueController.IsSnoozed()) {
       lv_label_set_text_static(btnRight_lbl, Symbols::cuebandCancel);
       lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
@@ -195,11 +221,6 @@ void CueBandApp::Update() {
   }
 }
 
-static const uint32_t snoozeDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
-static const uint32_t impromptuDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
-static const uint32_t promptIntervals[] = { 30, 60, 90, 120, 180, 240, 0 };
-static const uint32_t promptStyles[] = { 1, 2, 3, 4, 5, 6, 7, 0 };
-
 static uint32_t nextDuration(const uint32_t *durations, uint32_t current, uint32_t margin = 30) {
   for (const uint32_t *duration = durations; *duration != 0; duration++) {
     if (current + margin < *duration) return *duration;
@@ -214,11 +235,15 @@ void CueBandApp::Close() {
 void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
   uint32_t override_remaining = 0;
   cueController.GetStatus(nullptr, nullptr, nullptr, &override_remaining, nullptr, nullptr, nullptr);
+  changes = true;
 
   if (object == backgroundLabel && event == LV_EVENT_CLICKED) {
     if (screen == 0) { screen = 1; }
     else {
-      Close();
+      changes = false;
+      // HACK: Hackily indirectly trigger the close because directly closing triggers the global click to relaunch -- investigate
+      //Close()
+      lastTime = 0xffffffff; timeout = 999;
     }
   } else if (object == btnLeft && event == LV_EVENT_CLICKED) {
 
@@ -263,7 +288,6 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
     }
 
   }
-  changes = true;
   //Update();
 }
 
