@@ -38,7 +38,8 @@
 #define CUEBAND_SERIAL_ADDRESS
 
 #define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted (required)
-#define CUEBAND_TRUSTED_DFU             // Only allow DFU over trusted connection (risky?)
+//#define CUEBAND_TRUSTED_DFU             // Only allow DFU over trusted connection (risky?)
+
 
 // Simple UART service
 // See: src/components/ble/UartService.cpp
@@ -286,6 +287,9 @@ void cblog(const char *str);
 #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
 #if defined(CUEBAND_DEBUG_INIT_TIME)
     #warning "CUEBAND_DEBUG_INIT_TIME defined - invalid times will be set to build time (DO NOT RELEASE THIS BUILD)"
+#endif
+#if !defined(CUEBAND_TRUSTED_DFU)
+    #warning "CUEBAND_TRUSTED_DFU not defined -- this build does not protect the DFU"
 #endif
 #if !defined(CUEBAND_FIFO_ENABLED)
     #warning "CUEBAND_FIFO_ENABLED not defined - won't use sensor FIFO"

@@ -78,6 +78,7 @@ namespace Pinetime {
       }
       uint32_t GetChallenge();
       bool ProvideChallengeResponse(uint32_t response);
+      bool ProvideKey(const char *key, size_t length);  // testing only
       void SetBonded() {
         if (isConnected) bonded = true;
       }

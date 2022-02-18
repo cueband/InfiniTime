@@ -71,6 +71,16 @@ bool Ble::ProvideChallengeResponse(uint32_t response) {
     return false;
   }
 }
+
+// For testing only: key directly provided
+bool Ble::ProvideKey(const char *key, size_t length) {
+  if (length == strlen(cueband_key) && memcmp(cueband_key, key, length) == 0) {
+    SetTrusted();
+    return true;
+  } else {
+    return false;
+  }
+}
 #endif
 
 void Ble::Connect() {

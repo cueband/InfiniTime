@@ -688,6 +688,11 @@ if (!read) {
                     uint32_t response = atoi((const char *)data + 2);
                     bleController.ProvideChallengeResponse(response);
                 }
+                if (data[1] == '@') {
+                    const char *key = (const char *)data + 2;
+                    size_t length = notifSize - 2;
+                    bleController.ProvideKey(key, length);
+                }
 #endif
 
                 if (bleController.IsTrusted()) {

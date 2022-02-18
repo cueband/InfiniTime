@@ -306,8 +306,19 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             {
                 if (data[0] == '!' && notifSize >= 1 + 4) {
                     uint32_t response = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
-#ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
+#if defined(CUEBAND_TRUSTED_CONNECTION)
                     bleController.ProvideChallengeResponse(response);
+#endif
+                }
+            }
+
+            // Provide key directly (testing only)
+            {
+                if (data[0] == '@' && notifSize >= 1) {
+                    const char *key = (const char *)data + 1;
+                    size_t length = notifSize - 1;
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+                    bleController.ProvideKey(key, length);
 #endif
                 }
             }
