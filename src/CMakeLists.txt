@@ -641,7 +641,6 @@ set(INCLUDE_FILES
         displayapp/screens/InfiniPaint.h
         displayapp/screens/StopWatch.h
         displayapp/screens/Paddle.h
-        displayapp/screens/DropDownDemo.h
         displayapp/screens/BatteryIcon.h
         displayapp/screens/BleIcon.h
         displayapp/screens/NotificationIcon.h

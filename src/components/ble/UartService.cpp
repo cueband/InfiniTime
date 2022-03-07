@@ -12,6 +12,7 @@
 #ifdef CUEBAND_SERVICE_UART_ENABLED
 
 #include "UartService.h"
+#include "components/battery/BatteryController.h"
 
 #include "systemtask/SystemTask.h"
 #include <hal/nrf_rtc.h>

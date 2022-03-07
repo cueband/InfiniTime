@@ -15,7 +15,6 @@
 #include <components/motion/MotionController.h>
 
 #include "systemtask/SystemMonitor.h"
-#include "components/battery/BatteryController.h"
 #include "components/ble/NimbleController.h"
 #include "components/ble/NotificationManager.h"
 #include "components/motor/MotorController.h"
@@ -56,6 +55,7 @@ namespace Pinetime {
     class Hrs3300;
   }
   namespace Controllers {
+    class Battery;
     class TouchHandler;
     class ButtonHandler;
   }

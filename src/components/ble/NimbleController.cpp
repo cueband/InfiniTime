@@ -160,8 +160,8 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
     immediateAlertService {systemTask, notificationManager},
     heartRateService {systemTask, heartRateController},
     motionService {systemTask, motionController},
-    serviceDiscovery({&currentTimeClient, &alertNotificationClient}),
-    fsService {systemTask, fs}
+    fsService {systemTask, fs},
+    serviceDiscovery({&currentTimeClient, &alertNotificationClient})
 #ifdef CUEBAND_SERVICE_UART_ENABLED
     , uartService {
       systemTask, 

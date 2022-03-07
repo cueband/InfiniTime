@@ -36,6 +36,7 @@
 #include "components/battery/BatteryController.h"
 #include "components/ble/BleController.h"
 #include "components/ble/NotificationManager.h"
+#include "components/brightness/BrightnessController.h"
 #include "components/motor/MotorController.h"
 #include "components/datetime/DateTimeController.h"
 #include "components/heartrate/HeartRateController.h"
@@ -124,6 +125,7 @@ Pinetime::Controllers::TimerController timerController;
 Pinetime::Controllers::AlarmController alarmController {dateTimeController};
 Pinetime::Controllers::TouchHandler touchHandler(touchPanel, lvgl);
 Pinetime::Controllers::ButtonHandler buttonHandler;
+Pinetime::Controllers::BrightnessController brightnessController {};
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
 Pinetime::Controllers::ActivityController activityController {settingsController, fs};
@@ -146,6 +148,7 @@ Pinetime::Applications::DisplayApp displayApp(lcd,
                                               motionController,
                                               timerController,
                                               alarmController,
+                                              brightnessController,
                                               touchHandler
 #if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
                                               , activityController
