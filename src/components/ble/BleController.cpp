@@ -83,6 +83,10 @@ bool Ble::ProvideKey(const char *key, size_t length) {
 }
 #endif
 
+bool Ble::IsConnected() const {
+  return isConnected;
+}
+
 void Ble::Connect() {
   isConnected = true;
 #if defined(CUEBAND_TRUSTED_CONNECTION)
@@ -109,6 +113,18 @@ void Ble::Disconnect() {
 #if defined(CUEBAND_TRUSTED_CONNECTION)
   trusted = false;
 #endif
+}
+
+bool Ble::IsRadioEnabled() const {
+  return isRadioEnabled;
+}
+
+void Ble::EnableRadio() {
+  isRadioEnabled = true;
+}
+
+void Ble::DisableRadio() {
+  isRadioEnabled = false;
 }
 
 void Ble::StartFirmwareUpdate() {

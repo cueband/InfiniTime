@@ -16,6 +16,7 @@
 #include "components/ble/CurrentTimeService.h"
 #include "components/ble/DeviceInformationService.h"
 #include "components/ble/DfuService.h"
+#include "components/ble/FSService.h"
 #include "components/ble/HeartRateService.h"
 #include "components/ble/ImmediateAlertService.h"
 #include "components/ble/MusicService.h"
@@ -24,7 +25,6 @@
 #include "components/ble/MotionService.h"
 #include "components/ble/weather/WeatherService.h"
 #include "components/fs/FS.h"
-#include "components/ble/FSService.h"
 
 #ifdef CUEBAND_SERVICE_UART_ENABLED
 #include "UartService.h"
@@ -59,38 +59,28 @@ namespace Pinetime {
 
     public:
       NimbleController(Pinetime::System::SystemTask& systemTask,
-                       Pinetime::Controllers::Ble& bleController,
+                       Ble& bleController,
                        DateTime& dateTimeController,
-                       Pinetime::Controllers::NotificationManager& notificationManager,
-                       Controllers::Battery& batteryController,
+                       NotificationManager& notificationManager,
+                       Battery& batteryController,
                        Pinetime::Drivers::SpiNorFlash& spiNorFlash,
-                       Controllers::HeartRateController& heartRateController,
-                       Controllers::MotionController& motionController,
-                       Pinetime::Controllers::FS& fs
+                       HeartRateController& heartRateController,
+                       MotionController& motionController,
+                       FS& fs
 #ifdef CUEBAND_SERVICE_UART_ENABLED
                        , Controllers::Settings& settingsController
-                       , Pinetime::Controllers::MotorController& motorController
+                       , MotorController& motorController
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
-                       , Pinetime::Controllers::ActivityController& activityController
+                       , ActivityController& activityController
 #endif
 #ifdef CUEBAND_CUE_ENABLED
-                       , Pinetime::Controllers::CueController& cueController
+                       , CueController& cueController
 #endif
-                       );
+);
       void Init();
       void StartAdvertising();
       int OnGAPEvent(ble_gap_event* event);
-
-      int OnDiscoveryEvent(uint16_t i, const ble_gatt_error* pError, const ble_gatt_svc* pSvc);
-      int OnCTSCharacteristicDiscoveryEvent(uint16_t connectionHandle, const ble_gatt_error* error, const ble_gatt_chr* characteristic);
-      int OnANSCharacteristicDiscoveryEvent(uint16_t connectionHandle, const ble_gatt_error* error, const ble_gatt_chr* characteristic);
-      int OnCurrentTimeReadResult(uint16_t connectionHandle, const ble_gatt_error* error, ble_gatt_attr* attribute);
-      int OnANSDescriptorDiscoveryEventCallback(uint16_t connectionHandle,
-                                                const ble_gatt_error* error,
-                                                uint16_t characteristicValueHandle,
-                                                const ble_gatt_dsc* descriptor);
-
       void StartDiscovery();
 
       Pinetime::Controllers::MusicService& music() {
@@ -111,7 +101,10 @@ namespace Pinetime {
 
       void RestartFastAdv() {
         fastAdvCount = 0;
-      }
+      };
+
+      void EnableRadio();
+      void DisableRadio();
 
       bool IsSending();
 #ifdef CUEBAND_STREAM_ENABLED
@@ -138,12 +131,12 @@ namespace Pinetime {
       static constexpr const char* deviceName = "InfiniTime";
 #endif
       Pinetime::System::SystemTask& systemTask;
-      Pinetime::Controllers::Ble& bleController;
+      Ble& bleController;
       DateTime& dateTimeController;
-      Pinetime::Controllers::NotificationManager& notificationManager;
+      NotificationManager& notificationManager;
       Pinetime::Drivers::SpiNorFlash& spiNorFlash;
-      Pinetime::Controllers::FS& fs;
-      Pinetime::Controllers::DfuService dfuService;
+      FS& fs;
+      DfuService dfuService;
 
       DeviceInformationService deviceInformationService;
       CurrentTimeClient currentTimeClient;
