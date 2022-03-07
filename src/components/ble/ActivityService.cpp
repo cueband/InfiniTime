@@ -179,7 +179,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) { // Reading
 
         if (attr_handle == statusHandle) {
-            uint8_t status[15];
+            uint8_t status[20];
 
             // @0 Earliest available logical block ID
             uint32_t earliestBlockId = activityController.EarliestLogicalBlock();
