@@ -222,11 +222,7 @@ namespace Pinetime {
       uint32_t samplingTickIndex = 0;
 #endif
 
-#if configUSE_TRACE_FACILITY == 1
-      SystemMonitor<FreeRtosMonitor> monitor;
-#else
-      SystemMonitor<DummyMonitor> monitor;
-#endif
+      SystemMonitor monitor;
     };
   }
 }

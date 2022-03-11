@@ -516,6 +516,7 @@ list(APPEND SOURCE_FILES
         displayapp/lv_pinetime_theme.c
 
         systemtask/SystemTask.cpp
+        systemtask/SystemMonitor.cpp
         drivers/TwiMaster.cpp
 
         heartratetask/HeartRateTask.cpp
@@ -592,6 +593,7 @@ list(APPEND RECOVERY_SOURCE_FILES
         FreeRTOS/port_cmsis.c
 
         systemtask/SystemTask.cpp
+        systemtask/SystemMonitor.cpp
         drivers/TwiMaster.cpp
         components/gfx/Gfx.cpp
         components/rle/RleDecoder.cpp
