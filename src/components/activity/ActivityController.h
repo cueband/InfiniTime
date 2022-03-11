@@ -9,7 +9,7 @@
 #include "components/fs/FS.h"
 
 #if defined(CUEBAND_BUFFER_ENABLED)
-#include "src/components/motion/MotionController.h"
+#include "components/motion/MotionController.h"
 #endif
 
 #include <array>
