@@ -148,9 +148,9 @@ WatchFaceAnalog::~WatchFaceAnalog() {
 }
 
 void WatchFaceAnalog::UpdateClock() {
-  hour = dateTimeController.Hours();
-  minute = dateTimeController.Minutes();
-  second = dateTimeController.Seconds();
+  uint8_t hour = dateTimeController.Hours();
+  uint8_t minute = dateTimeController.Minutes();
+  uint8_t second = dateTimeController.Seconds();
 
 #if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
   if (dateTimeController.IsUnset()) {
@@ -233,9 +233,9 @@ void WatchFaceAnalog::Refresh() {
   currentDateTime = dateTimeController.CurrentDateTime();
 
   if (currentDateTime.IsUpdated()) {
-    month = dateTimeController.Month();
-    day = dateTimeController.Day();
-    dayOfWeek = dateTimeController.DayOfWeek();
+    Pinetime::Controllers::DateTime::Months month = dateTimeController.Month();
+    uint8_t day = dateTimeController.Day();
+    Pinetime::Controllers::DateTime::Days dayOfWeek = dateTimeController.DayOfWeek();
 
     UpdateClock();
 
