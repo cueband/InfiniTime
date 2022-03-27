@@ -135,6 +135,9 @@
     #define CUEBAND_SERVICE_NAV_DISABLED
     #define CUEBAND_SERVICE_HR_DISABLED
 
+    // !!! TEMPORARY: Saves 14 kB
+    //#define CUEBAND_NO_ANALOG_CLOCK_BACKGROUND
+
 #endif
 
 

@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 /*  Copyright (C) 2020 Avamander
 
     This file is part of InfiniTime.
@@ -28,6 +30,8 @@
 #endif
 
 const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_IMG_DISC uint8_t disc_map[] = {
+#ifdef CUEBAND_SERVICE_MUSIC_DISABLED
+#else
     0xbd, 0xc1, 0xbe, 0xff,  /* Color of index 0: foreground */
     0x00, 0x00, 0x00, 0x00,  /* Color of index 1: background */
     
@@ -95,6 +99,7 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_IMG_DISC uint8_t disc_map[] = {
     0xff, 0xff, 0xf0, 0x0f, 0xf8, 0x07, 0xff, 0xff,
     0xff, 0xff, 0xfc, 0x00, 0x00, 0x1f, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xc0, 0x01, 0xff, 0xff, 0xff,
+#endif
 };
 
 const lv_img_dsc_t disc = {
