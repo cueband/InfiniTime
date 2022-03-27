@@ -74,7 +74,7 @@ namespace Pinetime {
         return uptime;
       }
 #ifdef CUEBAND_DETECT_UNSET_TIME
-      bool IsUnset() {
+      bool IsUnset() const {
           uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(CurrentDateTime().time_since_epoch()).count();
           return now < CUEBAND_DETECT_UNSET_TIME;
       }
