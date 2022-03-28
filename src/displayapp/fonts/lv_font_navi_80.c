@@ -1,3 +1,7 @@
+#include "cueband.h"
+#ifdef CUEBAND_SERVICE_NAV_DISABLED
+#else
+
 /*******************************************************************************
  * Size: 80 px
  * Bpp: 2
@@ -2634,3 +2638,5 @@ lv_font_t lv_font_navi_80 = {
 
 #endif /*#if LV_FONT_NAVI_80*/
 
+
+#endif // CUEBAND_SERVICE_NAV_DISABLED
