@@ -375,13 +375,16 @@ The device activity log blocks are of the form `activity_log`:
 > } // @(BLOCK_SIZE)
 > ```
 
-Where `format` is one of:
+Where `format` is:
 
 > |  Value | Description                                                |
 > |:------:|:-----------------------------------------------------------|
-> | 0x0000 | 30 Hz resampled data, no high-pass filter, no SVMMO.       |
-> | 0x0001 | 30 Hz resampled data, no high-pass filter, SVMMO present.  |
 > | 0x0002 | 40 Hz resampled data, high-pass filter SVMMO and unfiltered SVMMO. |
+
+<!--
+| 0x0000 | 30 Hz resampled data, no high-pass filter, no SVMMO.       |
+| 0x0001 | 30 Hz resampled data, no high-pass filter, SVMMO present.  |
+-->
 
 Each sample is of the form `activity_sample`:
 
