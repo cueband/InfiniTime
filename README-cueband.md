@@ -362,7 +362,7 @@ The device activity log blocks are of the form `activity_log`:
 >     uint8_t    count;                   // @20 Number of valid samples (up to 28 samples when 8-bytes each in a 256-byte block)
 >     uint8_t    epoch_interval;          // @21 Epoch interval (seconds, = 60)
 >     uint32_t   prompt_configuration;    // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
->     uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=charging, lower 7-bits: percentage)
+>     uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=power-present, lower 7-bits: percentage)
 >     uint8_t    accelerometer;           // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
 >     int8_t     temperature;             // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
 >     uint8_t    firmware;                // @29 Firmware version

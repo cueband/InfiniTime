@@ -714,7 +714,7 @@ void SystemTask::UpdateMotion() {
   motionController.Update(motionValues.x, motionValues.y, motionValues.z, motionValues.steps);
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
-  lastBattery = (batteryController.IsCharging() ? 0x80 : 0x00) + batteryController.PercentRemaining(); // 0xff = unknown
+  lastBattery = (batteryController.IsPowerPresent() ? 0x80 : 0x00) + batteryController.PercentRemaining(); // 0xff = unknown
   
   // TODO: Store temperature from MotionController
   //lastTemperature = motionValues.temperature;                 // 0x80 = unknown

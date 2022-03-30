@@ -311,7 +311,7 @@ bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
   activeBlock[21] = (uint8_t)(epochInterval > 255 ? 255 : epochInterval);                                               // @21 Epoch interval (seconds, = 60)
   activeBlock[22] = (uint8_t)promptConfigurationId; activeBlock[25] = (uint8_t)(promptConfigurationId >> 8);            // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
   activeBlock[24] = (uint8_t)(promptConfigurationId >> 16); activeBlock[25] = (uint8_t)(promptConfigurationId >> 24);   //     ...
-  activeBlock[26] = lastBattery;                                                                                        // @26 Battery (0xff=unknown; percentage?)
+  activeBlock[26] = lastBattery;                                                                                        // @26 Battery (0xff=unknown; bottom 7-bits: percentage, top-bit: power present)
   activeBlock[27] = accelerometerInfo;                                                                                  // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
   activeBlock[28] = lastTemperature;                                                                                    // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
   activeBlock[29] = CUEBAND_VERSION_NUMBER;                                                                             // @29 Firmware version
