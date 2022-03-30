@@ -67,7 +67,7 @@
             "type": "gdb",
             "request": "attach",
             "executable": "${workspaceRoot}/build/src/pinetime-app-1.8.0.out",  // "${workspaceRoot}/build/src/pinetime-app-1.8.0.out", // "${command:cmake.launchTargetPath}", 
-            "target": "172.255.255.1:3333",
+            "target": "172.255.255.1:3333",  // host.docker.internal localhost 172.255.255.1
             "remote": true,
             "cwd": "${workspaceRoot}", 
             "gdbpath": "/opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gdb",
@@ -77,7 +77,7 @@
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "autorun": [
-                "target extended-remote 172.255.255.1:3333",
+                "target extended-remote 172.255.255.1:3333",  // host.docker.internal localhost 172.255.255.1
                 //"symbol-file ./build/src/pinetime-app-1.8.0.out",
                 "monitor reset halt", // "monitor swdp_scan",
                 // "attach 1",
@@ -98,7 +98,7 @@
             // This may need to be arm-none-eabi-gdb depending on your system
             "gdbPath" : "${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin/arm-none-eabi-gdb",
             // Connect to an already running OpenOCD instance
-            "gdbTarget": "172.255.255.1:3333",
+            "gdbTarget": "172.255.255.1:3333",  // host.docker.internal localhost 172.255.255.1
             "svdFile": "${workspaceRoot}/nrf52.svd",
             "runToMain": true,
             "internalConsoleOptions": "openOnSessionStart",
