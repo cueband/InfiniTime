@@ -1,0 +1,9 @@
+[
+    {
+        "name": "GNU Arm Embedded Toolchain V9 (2020 Q2 Update)",
+        "compilers": {
+            "C": "/opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gcc",
+            "CXX": "/opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-g++"
+        }
+    }
+]

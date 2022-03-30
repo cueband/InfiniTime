@@ -13,7 +13,7 @@
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash",
-		"editor.formatOnSave": true,
+		"editor.formatOnSave": false,
 		"clang-format.executable": "clang-format-12"
 	},
 
@@ -27,7 +27,15 @@
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	"forwardPorts": [
+		3333
+	],
+
+	"portsAttributes": {
+		"3333": {
+			"label": "Programmer"
+		}
+	},
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "bash /opt/create_build_openocd.sh",
