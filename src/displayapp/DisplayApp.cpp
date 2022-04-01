@@ -230,7 +230,7 @@ void DisplayApp::Refresh() {
       case Messages::TimerDone:
         if (currentApp == Apps::Timer) {
           auto* timer = static_cast<Screens::Timer*>(currentScreen.get());
-          timer->setDone();
+          timer->SetDone();
         } else {
           LoadApp(Apps::Timer, DisplayApp::FullRefreshDirections::Down);
         }
@@ -352,13 +352,13 @@ touchHandler.CancelTap();
     }
   }
 
+  if (touchHandler.IsTouching()) {
+    currentScreen->OnTouchEvent(touchHandler.GetX(), touchHandler.GetY());
+  }
+
   if (nextApp != Apps::None) {
     LoadApp(nextApp, nextDirection);
     nextApp = Apps::None;
-  }
-
-  if (touchHandler.IsTouching()) {
-    currentScreen->OnTouchEvent(touchHandler.GetX(), touchHandler.GetY());
   }
 }
 
