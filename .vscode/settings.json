@@ -67,7 +67,8 @@
         "assert.h": "c",
         "cueband.h": "c",
         "hal_timer.h": "c",
-        "qcbor_common.h": "c"
+        "qcbor_common.h": "c",
+        "lvgl.h": "c"
     },
     "cmake.configureOnOpen": true
 }

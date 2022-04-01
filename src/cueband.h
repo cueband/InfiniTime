@@ -113,8 +113,6 @@
 
 #ifdef CUEBAND_CUSTOMIZATION
 
-    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from analog watch face (to make room for cue status)
-
     // See: src/displayapp/screens/WatchFaceDigital.cpp
     // See: src/displayapp/screens/WatchFaceAnalog.cpp
     // See: src/displayapp/screens/PineTimeStyle.cpp
@@ -135,8 +133,11 @@
     #define CUEBAND_SERVICE_NAV_DISABLED
     #define CUEBAND_SERVICE_HR_DISABLED
 
-    // !!! TEMPORARY: Saves 14 kB
-    //#define CUEBAND_NO_ANALOG_CLOCK_BACKGROUND
+    // Remove analog clock background (do not use!), saves 14 kB, untested
+    //#define CUEBAND_ANALOG_WATCHFACE_NO_IMAGE
+    // Use 1-bit-per-pixel version of the analog clock background (do not use!), saves ~7 kB, untested
+    #define CUEBAND_ANALOG_WATCHFACE_1BPP_IMAGE
+    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from original analog watch face (to make room for cue status)
 
 #endif
 
