@@ -59,10 +59,10 @@ namespace Pinetime::Controllers {
       void Updated(uint32_t version);
 
       // Determine the control point currently active for the given day/time-of-day
-      ControlPoint CueValue(unsigned int day, unsigned int time, int *cueIndex = nullptr, unsigned int *cueRemaining = nullptr);
+      ControlPoint CueValue(unsigned int day, unsigned int time, int *cueIndex = nullptr, unsigned int *cueRemaining = nullptr, bool ignoreAdjacentEquivalent = true);
 
       // Determine the control point currently active for the given epoch timestamp
-      ControlPoint CueValue(unsigned int timestamp, int *cueIndex = nullptr, unsigned int *cueRemaining = nullptr);
+      ControlPoint CueValue(unsigned int timestamp, int *cueIndex = nullptr, unsigned int *cueRemaining = nullptr, bool ignoreAdjacentEquivalent = true);
 
       uint32_t GetVersion() { return version; }
 

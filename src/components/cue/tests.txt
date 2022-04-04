@@ -3,7 +3,7 @@
 RESET
 
 # RESET
-# SET index days time value
+# SET index days time value volume
 # CLEAR
 # SAVE version
 # CUETEST day time value
@@ -26,7 +26,7 @@ CUETEST 1 720 -1
 
 # CUETEST single value
 CLEAR
-SET 42 4 720 123
+SET 42 4 720 123 1
 SAVE 1
 CUETEST 0 0 123
 CUETEST 1 720 123
@@ -35,8 +35,8 @@ CUETEST 6 720 123
 
 # CUETEST two values
 CLEAR
-SET 1  4 720 100	## 4=Day 2
-SET 2 16 720 200	## 16=Day 4
+SET 1  4 720 100 1	## 4=Day 2
+SET 2 16 720 200 1	## 16=Day 4
 SAVE 1
 CUETEST 0 60 200
 CUETEST 1 60 200
@@ -54,8 +54,8 @@ CUETEST 6 720 200
 
 # CUETEST two values, control point indices reversed
 CLEAR
-SET 1 16 720 200	## 16=Day 4
-SET 2  4 720 100	## 4=Day 2
+SET 1 16 720 200 1	## 16=Day 4
+SET 2  4 720 100 1	## 4=Day 2
 SAVE 1
 CUETEST 0 60 200
 CUETEST 1 60 200
@@ -73,8 +73,8 @@ CUETEST 6 720 200
 
 # CUETEST two values, CUETESTs reversed (CUETESTs cache)
 CLEAR
-SET 1  4 720 100	## 4=Day 2
-SET 2 16 720 200	## 16=Day 4
+SET 1  4 720 100 1	## 4=Day 2
+SET 2 16 720 200 1	## 16=Day 4
 SAVE 1
 CUETEST 6 720 200
 CUETEST 5 720 200
@@ -92,8 +92,8 @@ CUETEST 0 60 200
 
 # CUETEST two values, control point indices reversed, CUETESTs reversed (CUETESTs cache)
 CLEAR
-SET 1 16 720 200	## 16=Day 4
-SET 2  4 720 100	## 4=Day 2
+SET 1 16 720 200 1	## 16=Day 4
+SET 2  4 720 100 1	## 4=Day 2
 SAVE 1
 CUETEST 6 720 200
 CUETEST 5 720 200
@@ -111,12 +111,12 @@ CUETEST 0 60 200
 
 # CUETEST weekday (62) / weekend (65)
 RESET
-SET 1 62    0   0  	## 62=Weekday, 0=midnight
-SET 2 62  480 200	## 62=Weekday, 480=8am
-SET 3 62 1200   0	## 62=Weekday, 1200=8pm
-SET 4 65    0   0  	## 65=Weekend, 0=midnight
-SET 5 65  480 100	## 65=Weekend, 480=8am
-SET 6 65 1200   0	## 65=Weekend, 1200=8pm
+SET 1 62    0   0 1  	## 62=Weekday, 0=midnight
+SET 2 62  480 200 1	## 62=Weekday, 480=8am
+SET 3 62 1200   0 1	## 62=Weekday, 1200=8pm
+SET 4 65    0   0 1	## 65=Weekend, 0=midnight
+SET 5 65  480 100 1	## 65=Weekend, 480=8am
+SET 6 65 1200   0 1	## 65=Weekend, 1200=8pm
 SAVE 1
 
 CUETEST 0  478   0          ## Sun 07:58

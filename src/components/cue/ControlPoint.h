@@ -48,8 +48,11 @@ namespace Pinetime::Controllers {
         // Packed value
         control_point_packed_t Value();
 
-        // Cue enabled for prompting
+        // Cue is valid/set (not whether this is a prompt/rest period)
         bool IsEnabled();
+
+        // Whether this beings a non-prompting period
+        bool IsNonPrompting();
 
         // Weekday bitmap (b0=Sunday, ..., b6=Saturday)
         unsigned int GetWeekdays();
@@ -78,7 +81,21 @@ namespace Pinetime::Controllers {
         // outElapsed - duration control point has already been active
         // outNextIndex - next control point index (<0 if none)
         // outRemaining - remaining time until the next control point is active
-        static bool CueNearest(control_point_packed_t *controlPoints, size_t numControlPoints, unsigned int day, unsigned int time, int *outIndex, unsigned int *outElapsed, int *outNextIndex, unsigned int *outRemaining);
+        static bool CueNearest(control_point_packed_t *controlPoints, size_t numControlPoints, unsigned int day, unsigned int time, int *outIndex, unsigned int *outElapsed, int *outNextIndex, unsigned int *outRemaining, bool ignoreAdjacentEquivalent);
+
+        static bool Equivalent(ControlPoint a, ControlPoint b) {
+            // Not equivalent if either is invalid (not set)
+            if (!a.IsEnabled() || !b.IsEnabled()) return false;
+
+            // Equivalent if both are non-prompting
+            if (a.IsNonPrompting() && b.IsNonPrompting()) return true;
+
+            // (Optional) Equivalent if both are prompting (neither are non-prompting) and are exactly the same interval and volume/intensity
+            //if (!a.IsNonPrompting() && !b.IsNonPrompting() && a.GetInterval() == b.GetInterval() && a.GetVolume() == b.GetVolume()) return true;
+            
+            // Not equivalent otherwise
+            return false;
+        }
 
     };
 

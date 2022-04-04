@@ -44,10 +44,10 @@ int processLine(test_state_t *state, const char *line)
         int index;
         unsigned int days, timeMinutes;
         unsigned int value;
-        const int volume = 0;
-        if (sscanf(line, "SET %u %u %u %u", &index, &days, &timeMinutes, &value) != 4)
+        unsigned int volume;
+        if (sscanf(line, "SET %u %u %u %u %u", &index, &days, &timeMinutes, &value, &volume) != 5)
         {
-            fprintf(stderr, "ERROR: Unable to parse 'SET' command (index, days, time, value): %s\n", line);
+            fprintf(stderr, "ERROR: Unable to parse 'SET' command (index, days, time, value, volume): %s\n", line);
             return -1;
         }
         unsigned int time = timeMinutes * 60;
@@ -81,7 +81,7 @@ int processLine(test_state_t *state, const char *line)
         unsigned int time = timeMinutes * 60;
         Pinetime::Controllers::ControlPoint controlPoint = state->store.CueValue(day, time);
         unsigned int cueValue = controlPoint.GetInterval();
-        if (cueValue == value || (!controlPoint.IsEnabled() && value < 0))
+        if (cueValue == value || (controlPoint.IsNonPrompting() && value < 0))
         {
             state->success++;
         }
