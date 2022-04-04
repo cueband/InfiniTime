@@ -40,7 +40,7 @@ namespace Pinetime {
       SettingSetTime,
       SettingChimes,
       SettingShakeThreshold,
-      SettingAirplaneMode,
+      SettingBluetooth,
       Error
 #ifdef CUEBAND_APP_ENABLED
       , CueBand
