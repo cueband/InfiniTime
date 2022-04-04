@@ -24,20 +24,99 @@ void MotorController::Ring(void* p_context) {
 }
 
 void MotorController::RunForDuration(uint8_t motorDuration) {
+#ifdef CUEBAND_MOTOR_PATTERNS
+  BeginPattern(nullptr);
+#endif
   nrf_gpio_pin_clear(PinMap::Motor);
   app_timer_start(shortVibTimer, APP_TIMER_TICKS(motorDuration), nullptr);
 }
 
 void MotorController::StartRinging() {
+#ifdef CUEBAND_MOTOR_PATTERNS
+  BeginPattern(nullptr);
+#endif
   Ring(this);
   app_timer_start(longVibTimer, APP_TIMER_TICKS(1000), this);
 }
 
 void MotorController::StopRinging() {
+#ifdef CUEBAND_MOTOR_PATTERNS
+  BeginPattern(nullptr);
+#endif
   app_timer_stop(longVibTimer);
   nrf_gpio_pin_set(PinMap::Motor);
 }
 
 void MotorController::StopMotor(void* p_context) {
   nrf_gpio_pin_set(PinMap::Motor);
+#ifdef CUEBAND_MOTOR_PATTERNS
+  auto* motorController = static_cast<MotorController*>(p_context);
+  if (motorController != nullptr) {
+    motorController->AdvancePattern();
+  }
+#endif
 }
+
+#ifdef CUEBAND_MOTOR_PATTERNS
+
+const int patternNone[]        = { 0 };
+const int patternShort[]       = { 100, 0 };
+const int patternMedium[]      = { 175, 0 };
+const int patternLong[]        = { 250, 0 };
+const int patternDoubleShort[] = { 100, 100,  100, 0 };
+const int patternDoubleLong[]  = { 250, 250,  250, 0 };
+const int patternTripleShort[] = { 100, 100,  100, 100,  100, 0 };   // "PDCue v3.0 MSD"
+const int patternTripleLong[]  = { 250, 250,  250, 250,  250, 0 };   // "CWA-PDQ"
+
+const int *patterns[] = {
+  patternNone,          // 0
+  patternShort,         // 1
+  patternMedium,        // 2
+  patternLong,          // 3
+  patternDoubleShort,   // 4
+  patternDoubleLong,    // 5
+  patternTripleShort,   // 6
+  patternTripleLong,    // 7
+};
+
+void MotorController::RunIndex(uint32_t index) {
+#ifdef CUEBAND_MOTOR_PATTERNS
+  currentPattern = nullptr;
+#endif
+  if (index < sizeof(patterns) / sizeof(patterns[0])) {
+    BeginPattern(patterns[index]);
+  } else {
+    unsigned int motorPulseWidth = index;
+    if (motorPulseWidth > 255) motorPulseWidth = 255;
+    RunForDuration(motorPulseWidth);
+  }
+}
+
+void MotorController::BeginPattern(const int *pattern) {
+  currentPattern = pattern;
+  currentIndex = 0;
+  AdvancePattern();
+}
+
+void MotorController::AdvancePattern() {
+  if (currentPattern == nullptr) return;
+
+  int duration = currentPattern[currentIndex];
+
+  if (duration <= 0) {
+    nrf_gpio_pin_set(PinMap::Motor);    // Off
+    currentPattern = nullptr;
+    currentIndex = 0;
+    return;
+  }
+  
+  if ((currentIndex & 1) == 0) {
+    nrf_gpio_pin_clear(PinMap::Motor);  // On
+  } else {
+    nrf_gpio_pin_set(PinMap::Motor);    // Off
+  }
+  currentIndex++;
+  app_timer_start(shortVibTimer, APP_TIMER_TICKS(duration), this);
+}
+
+#endif

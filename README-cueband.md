@@ -287,11 +287,13 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Name                          | Activity Status Characteristic                   |
 | UUID                          | `0e1d0001-9d33-4e5e-aead-e062834bd8bb`           |
 | Read `status`                 | Query current activity log status.               |
-| Write `uint8_t[6]`            | `"Erase!"`: resets the activity log.             |
+| Write `uint8_t[]`             | `"Erase!"`: resets the activity log.             |
 |                               | `"Validate!"`: remotely validates the firmware (risky)  |
 |                               | `"Reset!"`: remotely resets the device (risky?)  |
-|                               | `"!####"`: trusted connection challenge response, where '#' represents the bytes of the uint32_t value |
-|                               | `"@..."`: directly provide key for trusted connection, where '.' represents the bytes of the key (for testing only, use challenge response in production) |
+|                               | `"V@####"`: immediately triggers vibration, where '#' represents the 4-bytes of the uint32_t value.  |
+|                               | `"V=..."`: immediately triggers vibration, where '...' represents one or more ASCII characters ('0'-'9') to be interpreted as a decimal value.  |
+|                               | `"!####"`: trusted connection challenge response, where '#' represents the 4-bytes of the uint32_t value.  |
+|                               | `"@..."`: directly provide key for trusted connection, where '...' represents the variable number of bytes of the key (for testing only, use challenge response in production).  |
 
 Where `status` is:
 

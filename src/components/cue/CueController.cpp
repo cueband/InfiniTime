@@ -29,6 +29,9 @@ CueController::CueController(Controllers::Settings& settingsController,
 }
 
 void CueController::Vibrate(unsigned int style) {
+#ifdef CUEBAND_MOTOR_PATTERNS
+    motorController.RunIndex(style);
+#else
     // Use as raw width unless matching a style number
     unsigned int motorPulseWidth = style;
 
@@ -49,6 +52,7 @@ void CueController::Vibrate(unsigned int style) {
 
     // Prompt
     motorController.RunForDuration(motorPulseWidth);   // milliseconds
+#endif
 }
 
 // Called at 1Hz

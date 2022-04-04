@@ -108,6 +108,8 @@
 
 #define CUEBAND_SYMBOLS
 
+#define CUEBAND_MOTOR_PATTERNS
+
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
 

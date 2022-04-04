@@ -125,6 +125,12 @@ namespace Pinetime {
       }
 #endif
 
+#ifdef CUEBAND_MOTOR_PATTERNS
+      Pinetime::Controllers::MotorController& GetMotorController() {
+            return motorController;
+      }
+#endif
+
     private:
       TaskHandle_t taskHandle;
 

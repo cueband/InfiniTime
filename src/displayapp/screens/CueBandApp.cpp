@@ -15,23 +15,15 @@ static const uint32_t impromptuDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
 static const uint32_t promptIntervals[] = { 30, 60, 90, 120, 180, 240, 0 };
 static const uint32_t promptStyles[] = { 1, 2, 3, 4, 5, 6, 7, 0 };
 static const char *const promptDescription[] = {
-  // TODO: Proper descriptions for each style (limit 0-7 or 0-15?)
-  "0", // 0
-  "1", // 1
-  "2", // 2
-  "3", // 3
-  "4", // 4
-  "5", // 5
-  "6", // 6
-  "7", // 7
-  "8", // 8
-  "9", // 9
-  "10", // 10
-  "11", // 11
-  "12", // 12
-  "13", // 13
-  "14", // 14
-  "15", // 15
+  // Proper descriptions for each style
+  "Off",     // 0
+  "Short",   // 1
+  "Medium",  // 2
+  "Long",    // 3
+  "2xShort", // 4
+  "2xLong",  // 5
+  "3xShort", // 6
+  "3xLong",  // 7
 };
 
 static void ButtonEventHandler(lv_obj_t* obj, lv_event_t event) {
@@ -276,6 +268,10 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
       //promptStyle = (promptStyle + 1) % 16;
       promptStyle = nextDuration(promptStyles, promptStyle, 0);
       cueController.SetPromptStyle(promptStyle);
+
+#ifdef CUEBAND_MOTOR_PATTERNS
+      systemTask.GetMotorController().RunIndex(promptStyle);
+#endif
 
     } else {
       // Right button (screen 0): Impromptu prompts / return to scheduled
