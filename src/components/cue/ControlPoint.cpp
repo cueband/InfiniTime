@@ -56,7 +56,7 @@ namespace Pinetime::Controllers {
     // Whether this beings a non-prompting period
     bool ControlPoint::IsNonPrompting()
     {
-        return this->GetVolume() == 0 || this->GetInterval() == 0;
+        return !this->IsEnabled() || this->GetVolume() == 0 || this->GetInterval() == 0;
     }
     
     // Weekday bitmap (b0=Sunday, ..., b6=Saturday)

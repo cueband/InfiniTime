@@ -65,7 +65,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     // Get scheduled interval (0=none)
     currentControlPoint = store.CueValue(timestamp, &currentCueIndex, &cueRemaining);
     unsigned int cueInterval = currentControlPoint.GetInterval();
-    if (!currentControlPoint.IsEnabled()) cueInterval = 0;
+    if (currentControlPoint.IsNonPrompting()) cueInterval = 0;
 
 #ifdef CUEBAND_DETECT_UNSET_TIME
     // Ignore prompt schedule if current time is not set
@@ -475,7 +475,7 @@ void CueController::DebugText(char *debugText) {
   p += sprintf(p, "S/S: %d %d /%d\n", countStored, countScratch, PROMPT_MAX_CONTROLS);
 
   // Current scheduled cue control point
-  p += sprintf(p, "Cue: ##%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? "E" : "d", currentControlPoint.GetWeekdays());
+  p += sprintf(p, "Cue: ##%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? (currentControlPoint.IsNonPrompting() ? "P" : "N") : "D", currentControlPoint.GetWeekdays());
   p += sprintf(p, " @%d i%d v%d\n", currentControlPoint.GetTimeOfDay(), currentControlPoint.GetInterval(), currentControlPoint.GetVolume());
 
   // Status
