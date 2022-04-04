@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #pragma once
 
 #include <lvgl/src/lv_core/lv_obj.h>
@@ -61,8 +63,12 @@ namespace Pinetime {
         lv_obj_t* label_prompt_2;
         lv_obj_t* backgroundLabel;
         lv_obj_t* batteryValue;
+#ifndef CUEBAND_CUSTOMIZATION_NO_HR
         lv_obj_t* heartbeatValue;
+#endif
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
         lv_obj_t* stepValue;
+#endif
         lv_obj_t* notificationIcon;
         lv_obj_t* connectState;
 
