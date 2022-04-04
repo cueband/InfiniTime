@@ -17,6 +17,9 @@ namespace Pinetime {
         int16_t x;
         int16_t y;
         int16_t z;
+#ifdef CUEBAND_MOTION_INCLUDE_TEMPERATURE
+        int32_t temperature;
+#endif
       };
 #ifdef CUEBAND_BUFFER_ENABLED
       void GetBufferData(int16_t **accelValues, unsigned int *lastCount, unsigned int *totalSamples);

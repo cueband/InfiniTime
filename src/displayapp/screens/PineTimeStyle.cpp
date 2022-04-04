@@ -45,12 +45,14 @@ namespace {
     screen->UpdateSelected(obj, event);
   }
 
+/*
   bool IsBleIconVisible(bool isRadioEnabled, bool isConnected) {
     if(!isRadioEnabled) {
       return true;
     }
     return isConnected;
   }
+*/
 }
 
 PineTimeStyle::PineTimeStyle(DisplayApp* app,

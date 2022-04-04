@@ -160,6 +160,8 @@
     #define CUEBAND_ORIGINAL_RANGE 2                                // +/- 2g
     #define CUEBAND_ORIGINAL_SCALE (2048/CUEBAND_ORIGINAL_RANGE)    // at +/- 2g, 1024 (12-bit) raw units = 1 'g'
 
+    #define CUEBAND_MOTION_INCLUDE_TEMPERATURE
+
     // Use the FIFO
     #define CUEBAND_FIFO_ENABLED
 
