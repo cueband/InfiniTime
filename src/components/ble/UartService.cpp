@@ -381,7 +381,17 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
             activityController.Event(ACTIVITY_EVENT_BLUETOOTH_COMMS);
 #endif
 
-            if (data[0] == '#') {  // Device ID query
+            bool unauthorized = false;
+
+#ifdef CUEBAND_TRUSTED_UART
+            if (!bleController.IsTrusted()) unauthorized = true;
+            // Allow-listed commands
+            if (data[0] == '#' || data[0] == 'U' || data[0] == 'B')unauthorized = false;
+#endif
+
+            if (unauthorized) {           // Connection is unautorized
+				sprintf(resp, "!\r\n");
+            } else if (data[0] == '#') {  // Device ID query
                 std::array<uint8_t, 6> addr = bleController.Address();        // using BleAddress = std::array<uint8_t, 6>;
                 sprintf(resp, "AP:%u,%s\r\n#:%02x%02x%02x%02x%02x%02x\r\n", CUEBAND_APPLICATION_TYPE, CUEBAND_VERSION, addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
 

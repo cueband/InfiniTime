@@ -124,6 +124,9 @@ namespace Pinetime {
             return cueController;
       }
 #endif
+#ifdef CUEBAND_USE_TRUSTED_CONNECTION
+      Pinetime::Controllers::Ble& GetBleController() { return bleController; }
+#endif
 
     private:
       TaskHandle_t taskHandle;

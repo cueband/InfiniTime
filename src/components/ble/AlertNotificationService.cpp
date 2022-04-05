@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "components/ble/AlertNotificationService.h"
 #include <hal/nrf_rtc.h>
 #include <cstring>
@@ -45,6 +47,10 @@ AlertNotificationService::AlertNotificationService(System::SystemTask& systemTas
 }
 
 int AlertNotificationService::OnAlert(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt) {
+#ifdef CUEBAND_TRUSTED_ALERT_NOTIFICATION
+  if (!systemTask.GetBleController().IsTrusted()) return 0;
+#endif
+
   if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
     constexpr size_t stringTerminatorSize = 1; // end of string '\0'
     constexpr size_t headerSize = 3;

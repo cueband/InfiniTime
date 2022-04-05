@@ -172,6 +172,11 @@ blockBuffer[i + prefix] = (uint8_t)i;
 
 int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt) {
 
+    bool trusted = true;
+#ifdef CUEBAND_TRUSTED_ACTIVITY
+    trusted = bleController.IsTrusted();
+#endif
+
 #ifdef CUEBAND_ACTIVITY_ENABLED
     m_system.CommsActivity();
 #endif
@@ -222,7 +227,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
 
             // @16 Challenge bytes
             uint32_t challenge = 0;
-#ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
+#ifdef CUEBAND_TRUSTED_CONNECTION
             challenge = bleController.GetChallenge();
 #endif
             status[16] = (uint8_t)(challenge >> 0);
@@ -234,7 +239,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
-        } else if (ble_uuid_cmp(ctxt->chr->uuid, (ble_uuid_t*) &activityBlockIdCharUuid) == 0) {
+        } else if (ble_uuid_cmp(ctxt->chr->uuid, (ble_uuid_t*) &activityBlockIdCharUuid) == 0 && trusted) {
             int res = os_mbuf_append(ctxt->om, &readLogicalBlockIndex, sizeof(readLogicalBlockIndex));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
         }
@@ -245,7 +250,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
         os_mbuf_copydata(ctxt->om, 0, notifSize, data);
 
         // Writing to the block id
-        if (ble_uuid_cmp(ctxt->chr->uuid, (ble_uuid_t*) &activityBlockIdCharUuid) == 0) {
+        if (ble_uuid_cmp(ctxt->chr->uuid, (ble_uuid_t*) &activityBlockIdCharUuid) == 0 && trusted) {
             readLogicalBlockIndex = activityController.ActiveLogicalBlock();
             if (notifSize >= 4) { 
                 readLogicalBlockIndex = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
@@ -260,7 +265,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Wake
             {
                 const char *cmdWake = "Wake!";
-                if (notifSize == strlen(cmdWake) && memcmp(data, cmdWake, strlen(cmdWake)) == 0) {
+                if (trusted && notifSize == strlen(cmdWake) && memcmp(data, cmdWake, strlen(cmdWake)) == 0) {
                     m_system.PushMessage(Pinetime::System::Messages::GoToRunning);
                 }
             }
@@ -268,7 +273,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Sleep
             {
                 const char *cmdSleep = "Sleep!";
-                if (notifSize == strlen(cmdSleep) && memcmp(data, cmdSleep, strlen(cmdSleep)) == 0) {
+                if (trusted && notifSize == strlen(cmdSleep) && memcmp(data, cmdSleep, strlen(cmdSleep)) == 0) {
                     m_system.PushMessage(Pinetime::System::Messages::GoToSleep);
                 }
             }
@@ -276,7 +281,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Erase
             {
                 const char *cmdErase = "Erase!";
-                if (notifSize == strlen(cmdErase) && memcmp(data, cmdErase, strlen(cmdErase)) == 0) {
+                if (trusted && notifSize == strlen(cmdErase) && memcmp(data, cmdErase, strlen(cmdErase)) == 0) {
                     activityController.DestroyData();
 #ifdef CUEBAND_CUE_ENABLED
                     m_system.GetCueController().Reset(true);
@@ -287,7 +292,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Validate
             {
                 const char *cmdValidate = "Validate!";
-                if (notifSize == strlen(cmdValidate) && memcmp(data, cmdValidate, strlen(cmdValidate)) == 0) {
+                if (trusted && notifSize == strlen(cmdValidate) && memcmp(data, cmdValidate, strlen(cmdValidate)) == 0) {
 #ifdef CUEBAND_ALLOW_REMOTE_FIRMWARE_VALIDATE
                     firmwareValidator.Validate();
 #endif
@@ -297,7 +302,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Reset
             {
                 const char *cmdReset = "Reset!";
-                if (notifSize == strlen(cmdReset) && memcmp(data, cmdReset, strlen(cmdReset)) == 0) {
+                if (trusted && notifSize == strlen(cmdReset) && memcmp(data, cmdReset, strlen(cmdReset)) == 0) {
                     firmwareValidator.Reset();
                 }
             }
@@ -305,8 +310,8 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Challenge Response
             {
                 if (data[0] == '!' && notifSize >= 1 + 4) {
-                    uint32_t response = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
 #if defined(CUEBAND_TRUSTED_CONNECTION)
+                    uint32_t response = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
                     bleController.ProvideChallengeResponse(response);
 #endif
                 }
@@ -315,9 +320,9 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             // Provide key directly (testing only)
             {
                 if (data[0] == '@' && notifSize >= 1) {
+#if defined(CUEBAND_TRUSTED_CONNECTION)
                     const char *key = (const char *)data + 1;
                     size_t length = notifSize - 1;
-#if defined(CUEBAND_TRUSTED_CONNECTION)
                     bleController.ProvideKey(key, length);
 #endif
                 }

@@ -70,6 +70,10 @@ void Pinetime::Controllers::CueService::Disconnect() {
 }
 
 int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt) {
+    bool trusted = true;
+#ifdef CUEBAND_TRUSTED_ACTIVITY
+    trusted = bleController.IsTrusted();
+#endif
 
     m_system.CommsCue();
 
@@ -144,7 +148,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
-        } else if (attr_handle == dataHandle) {   // DATA: Read `control_point`
+        } else if (attr_handle == dataHandle && trusted) {   // DATA: Read `control_point`
             uint8_t control_point_data[8];
             memset(control_point_data, 0, sizeof(control_point_data));
 
@@ -181,7 +185,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
 
         }
 
-    } else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) { // Writing
+    } else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR && trusted) { // Writing
         size_t notifSize = OS_MBUF_PKTLEN(ctxt->om);
         uint8_t data[notifSize];
         os_mbuf_copydata(ctxt->om, 0, notifSize, data);

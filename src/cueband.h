@@ -37,9 +37,18 @@
 #define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
 #define CUEBAND_SERIAL_ADDRESS
 
-#define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted (required)
-//#define CUEBAND_TRUSTED_DFU             // Only allow DFU over trusted connection (risky?)
+#define CUEBAND_TRUSTED_CONNECTION      // Determine if a connection is trusted (required)
+//#define CUEBAND_USE_TRUSTED_CONNECTION  // Global switch for specific services to require trusted connections
 
+#if defined(CUEBAND_TRUSTED_CONNECTION) && defined(CUEBAND_USE_TRUSTED_CONNECTION)
+  #define CUEBAND_TRUSTED_DFU           // Only allow DFU over trusted connection (risky?)
+  #define CUEBAND_TRUSTED_UART          // Only allow most UART commands over a trusted connection
+  #define CUEBAND_TRUSTED_ACTIVITY      // Only allow Activity Service commands over a trusted connection
+  #define CUEBAND_TRUSTED_CUE           // Only allow Cue Service commands over a trusted connection
+
+  #define CUEBAND_TRUSTED_IMMEDIATE_ALERT     // Only allow immediate alert over a trusted connection
+  #define CUEBAND_TRUSTED_ALERT_NOTIFICATION  // Only allow alert notification over a trusted connection
+#endif
 
 // Simple UART service
 // See: src/components/ble/UartService.cpp
@@ -132,6 +141,11 @@
     #define CUEBAND_SERVICE_WEATHER_DISABLED
     #define CUEBAND_SERVICE_NAV_DISABLED
     #define CUEBAND_SERVICE_HR_DISABLED
+    #define CUEBAND_SERVICE_MOTION_DISABLED
+    #define CUEBAND_SERVICE_FS_DISABLED
+
+    // Disable discovery for service clients (alert notification client and time client)
+    #define CUEBAND_SERVICE_CLIENTS_DISABLED
 
     // Remove analog clock background (do not use!), saves 14 kB, untested
     //#define CUEBAND_ANALOG_WATCHFACE_NO_IMAGE
@@ -293,7 +307,16 @@ void cblog(const char *str);
     #warning "CUEBAND_DEBUG_INIT_TIME defined - invalid times will be set to build time (DO NOT RELEASE THIS BUILD)"
 #endif
 #if !defined(CUEBAND_TRUSTED_DFU)
-    #warning "CUEBAND_TRUSTED_DFU not defined -- this build does not protect the DFU"
+    #warning "CUEBAND_TRUSTED_DFU not defined -- this build does not require trusted connections for DFU"
+#endif
+#if defined(CUEBAND_SERVICE_UART_ENABLED) && !defined(CUEBAND_TRUSTED_UART)
+    #warning "CUEBAND_TRUSTED_UART not defined -- this build does not require trusted connections for UART"
+#endif
+#if defined(CUEBAND_ACTIVITY_ENABLED) && !defined(CUEBAND_TRUSTED_ACTIVITY)
+    #warning "CUEBAND_TRUSTED_ACTIVITY not defined -- this build does not require trusted connections for Activity Service"
+#endif
+#if defined(CUEBAND_CUE_ENABLED) && !defined(CUEBAND_TRUSTED_CUE)
+    #warning "CUEBAND_TRUSTED_CUE not defined -- this build does not require trusted connections for Cue Service"
 #endif
 #if !defined(CUEBAND_FIFO_ENABLED)
     #warning "CUEBAND_FIFO_ENABLED not defined - won't use sensor FIFO"
