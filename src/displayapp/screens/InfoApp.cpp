@@ -41,6 +41,51 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_align(lInfo, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
   lv_label_set_long_mode(lInfo, LV_LABEL_LONG_EXPAND);
 
+#ifdef CUEBAND_INFO_APP_ID
+  // Use a (26 byte) buffer for holding the encoded payload and ECC calculations
+  uint8_t buffer[QRTINY_BUFFER_SIZE] = { 0 };
+
+  // Encode one or more segments text to the buffer
+  size_t payloadLength = 0;
+  payloadLength += QrTinyWriteAlphanumeric(buffer, payloadLength, "ABCDEFABCDEF");
+??? TODO: Use actual address
+
+  // Choose a format for the QR Code: a mask pattern (binary `000` to `111`) and an error correction level (`LOW`, `MEDIUM`, `QUARTILE`, `HIGH`).
+  uint16_t formatInfo = QRTINY_FORMATINFO_MASK_000_ECC_MEDIUM;
+
+  // Compute the remaining buffer contents: any required padding and the calculated error-correction information
+  bool result = QrTinyGenerate(buffer, payloadLength, formatInfo);
+
+  // Clear image data
+  memset(data_qr, 0, sizeof(data_qr));
+
+  // Set image palette entries
+  data_qr[0] = 0x00; data_qr[1] = 0x00; data_qr[2] = 0x00; data_qr[3] = 0xff; // Color of index 0
+  data_qr[4] = 0xff; data_qr[5] = 0xff; data_qr[6] = 0xff; data_qr[7] = 0xff; // Color of index 1
+
+  // Set image data from QR code
+  for (int y = 0; y < QR_IMAGE_DIMENSION; y++) {
+    for (int x = 0; x < QR_IMAGE_DIMENSION; x++) {
+      int module = QrTinyModuleGet(buffer, formatInfo, x - QRTINY_QUIET_STANDARD, y - QRTINY_QUIET_STANDARD);
+      int ofs = QR_IMAGE_PALETTE + ((y * QR_IMAGE_DIMENSION) >> 3) + (x >> 3);
+      int mask = 1 << (7 - (x & 0x07));
+      if (module) {
+        data_qr[ofs] &= ~mask;  // 1=dark (swapped if inverted)
+      } else {
+        data_qr[ofs] |= mask;   // 0=light (swapped if inverted)
+      }
+    }
+  }
+
+  // Set image header
+  image_qr.header.always_zero = 0;
+  image_qr.header.w = QR_IMAGE_DIMENSION;
+  image_qr.header.h = QR_IMAGE_DIMENSION;
+  image_qr.data_size = QR_IMAGE_SIZE;
+  image_qr.header.cf = LV_IMG_CF_INDEXED_1BIT;
+  image_qr.data = data_qr;
+#endif
+
   taskUpdate = lv_task_create(lv_update_task, 250, LV_TASK_PRIO_LOW, this);
   Update();
 }
@@ -52,6 +97,9 @@ InfoApp::~InfoApp() {
 
 int InfoApp::ScreenCount() {
   int screenCount = 0;
+#ifdef CUEBAND_INFO_APP_ID
+  screenCount++;  // id (address etc)
+#endif
   screenCount++;  // info
 #ifdef CUEBAND_ACTIVITY_ENABLED
   screenCount++;  // activity debug - basic
@@ -72,7 +120,13 @@ void InfoApp::Update() {
   int thisScreen = 0;
 
   static char debugText[200];
-  sprintf(debugText, "-");
+  sprintf(debugText, "%s", "");
+
+#ifdef CUEBAND_INFO_APP_ID
+  if (screen == thisScreen++) {
+    sprintf(debugText, "%s", CUEBAND_INFO_SYSTEM + 1);
+  }
+#endif
 
   if (screen == thisScreen++) {
     uint32_t uptime = dateTimeController.Uptime().count();

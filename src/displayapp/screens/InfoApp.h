@@ -60,6 +60,14 @@ namespace Pinetime {
 #ifdef CUEBAND_CUE_ENABLED
           Controllers::CueController& cueController;
 #endif
+#ifdef CUEBAND_INFO_APP_ID
+          #define QR_IMAGE_PALETTE (2*4)
+          #define QR_IMAGE_DIMENSION (21+5+5+1) // 32
+          #define QR_IMAGE_SIZE (QR_IMAGE_DIMENSION * QR_IMAGE_DIMENSION / 8 + QR_IMAGE_PALETTE)  // 128
+
+          uint8_t data_qr[QR_IMAGE_SIZE] __attribute__((aligned(8)));
+          lv_img_dsc_t image_qr = {0};
+#endif
 
           lv_task_t* taskUpdate;
           lv_obj_t *lInfo;

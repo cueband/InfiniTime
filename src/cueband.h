@@ -86,6 +86,7 @@
 // See: displayapp/screens/InfoApp.cpp
 #define CUEBAND_INFO_APP_ENABLED
 #define CUEBAND_INFO_APP_SYMBOL "\xEF\x84\xA9" // info // "?" // "I"
+//#define CUEBAND_INFO_APP_ID     // FW Version, QR Code and MAC address
 
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
