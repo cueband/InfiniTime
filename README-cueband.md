@@ -243,12 +243,25 @@ Where `control_point`:
 > ```c
 > struct {
 >     uint16_t index;         // @0 Read: the `read_index` being read; Write: control point index to set.
->     uint8_t  intensity;     // @2 Prompt intensity (0=off; non-zero values=prompt)
+>     uint8_t  intensity;     // @2 Prompt intensity style (0=off; non-zero values=prompt)
 >     uint8_t  days;          // @3 Least-significant 7-bits: a bitmap of the days the control point is active for. (b0=Sun, b1=Mon, ..., b6=Sat)
 >     uint16_t minute;        // @4 Least-significant 11-bits: minute of the day the control point begins. (0-1439)
 >     uint16_t interval;      // @6 Number of seconds for the prompting interval
 > } // @8
 > ```
+
+The intensity prompt style is:
+
+| Value  | Short Name  | Description   | Pattern (msec)                             | Notes              |
+|-------:|-------------|---------------|--------------------------------------------|--------------------|
+|     0  | Off         | None          | -                                          |                    |
+|     1  | Short       | Short         | 100 on.                                    |                    |
+|     2  | Medium      | Medium        | 175 on.                                    |                    |
+|     3  | Long        | Long          | 250 on.                                    |                    |
+|     4  | 2xShort     | Double-Short  | 100 on, 100 off, 100 on.                   |                    |
+|     5  | 2xLong      | Double-Long   | 250 on, 250 off, 250 on.                   |                    |
+|     6  | 3xShort     | Triple-Short  | 100 on, 100 off, 100 on, 100 off, 100 on.  | "PDCue V3"         |
+|     7  | 3xLong      | Triple-Long   | 250 on, 250 off, 250 on, 250 off, 250 on.  | Original "CWA-PDQ" |
 
 
 ## Additional Feature: Device Activity Log
@@ -287,11 +300,13 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Name                          | Activity Status Characteristic                   |
 | UUID                          | `0e1d0001-9d33-4e5e-aead-e062834bd8bb`           |
 | Read `status`                 | Query current activity log status.               |
-| Write `uint8_t[6]`            | `"Erase!"`: resets the activity log.             |
+| Write `uint8_t[]`             | `"Erase!"`: resets the activity log.             |
 |                               | `"Validate!"`: remotely validates the firmware (risky)  |
 |                               | `"Reset!"`: remotely resets the device (risky?)  |
-|                               | `"!####"`: trusted connection challenge response, where '#' represents the bytes of the uint32_t value |
-|                               | `"@..."`: directly provide key for trusted connection, where '.' represents the bytes of the key (for testing only, use challenge response in production) |
+|                               | `"V@####"`: immediately triggers vibration, where '#' represents the 4-bytes of the uint32_t value.  |
+|                               | `"V=..."`: immediately triggers vibration, where '...' represents one or more ASCII characters ('0'-'9') to be interpreted as a decimal value.  |
+|                               | `"!####"`: trusted connection challenge response, where '#' represents the 4-bytes of the uint32_t value.  |
+|                               | `"@..."`: directly provide key for trusted connection, where '...' represents the variable number of bytes of the key (for testing only, use challenge response in production).  |
 
 Where `status` is:
 

@@ -30,7 +30,7 @@
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 10      // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 11      // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
@@ -117,6 +117,8 @@
 
 #define CUEBAND_SYMBOLS
 
+#define CUEBAND_MOTOR_PATTERNS
+
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
 
@@ -173,6 +175,8 @@
     // Original firmware expects the MotionController to return values scaled at +/- 2g -- see Bma421::Init()
     #define CUEBAND_ORIGINAL_RANGE 2                                // +/- 2g
     #define CUEBAND_ORIGINAL_SCALE (2048/CUEBAND_ORIGINAL_RANGE)    // at +/- 2g, 1024 (12-bit) raw units = 1 'g'
+
+    #define CUEBAND_MOTION_INCLUDE_TEMPERATURE
 
     // Use the FIFO
     #define CUEBAND_FIFO_ENABLED

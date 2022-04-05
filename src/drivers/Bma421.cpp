@@ -233,17 +233,25 @@ Bma421::Values Bma421::Process() {
   uint32_t steps = 0;
   bma423_step_counter_output(&steps, &bma);
 
-#ifndef CUEBAND_DONT_READ_UNUSED_ACCELEROMETER_VALUES
+#if !defined(CUEBAND_DONT_READ_UNUSED_ACCELEROMETER_VALUES) || defined(CUEBAND_MOTION_INCLUDE_TEMPERATURE)
   int32_t temperature;
   bma4_get_temperature(&temperature, BMA4_DEG, &bma);
+#if !defined(CUEBAND_MOTION_INCLUDE_TEMPERATURE)  // Leave at full scale
   temperature = temperature / 1000;
+#endif
+#endif
 
+#ifndef CUEBAND_DONT_READ_UNUSED_ACCELEROMETER_VALUES
   uint8_t activity = 0;
   bma423_activity_output(&activity, &bma);
 #endif
 
   // X and Y axis are swapped because of the way the sensor is mounted in the PineTime
-  return {steps, data.y, data.x, data.z};
+  return {steps, data.y, data.x, data.z
+#ifdef CUEBAND_MOTION_INCLUDE_TEMPERATURE
+  , temperature
+#endif
+  };
 }
 bool Bma421::IsOk() const {
   return isOk;

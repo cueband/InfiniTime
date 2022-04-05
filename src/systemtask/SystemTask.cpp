@@ -714,10 +714,14 @@ void SystemTask::UpdateMotion() {
   motionController.Update(motionValues.x, motionValues.y, motionValues.z, motionValues.steps);
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
-  lastBattery = (batteryController.IsPowerPresent() ? 0x80 : 0x00) + batteryController.PercentRemaining(); // 0xff = unknown
+  lastBattery = (batteryController.IsPowerPresent() ? 0x80 : 0x00) | batteryController.PercentRemaining(); // 0xff = unknown
   
-  // TODO: Store temperature from MotionController
-  //lastTemperature = motionValues.temperature;                 // 0x80 = unknown
+#ifdef CUEBAND_MOTION_INCLUDE_TEMPERATURE
+  // Store temperature from MotionController
+  int32_t temp = motionValues.temperature / 1000;
+  if (temp < -128 || temp > 127) temp = 0x80; // unknown
+  lastTemperature = temp;
+#endif
 
   currentSteps = motionValues.steps;
 #endif

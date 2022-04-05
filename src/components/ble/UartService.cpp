@@ -521,6 +521,12 @@ cblog("LOG STARTED\n");
 
             } else if (data[0] == 'M') {  // Vibrate motor (original was duration 16 cycles at 8 Hz, mask pattern 0x6565)
                 sprintf(resp, "MOT\r\n");
+#ifdef CUEBAND_MOTOR_PATTERNS
+                if (data[1] >= '0' && data[1] <= '9' ) {
+                    uint32_t value = strtol((const char *)data + 1, NULL, 0);
+                    motorController.RunIndex(value);
+                } else
+#endif
                 motorController.RunForDuration(100);   // milliseconds
 
             } else if (data[0] == 'N') {  // Epoch interval (read-only at the moment)

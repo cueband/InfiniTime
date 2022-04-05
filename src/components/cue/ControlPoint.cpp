@@ -47,12 +47,18 @@ namespace Pinetime::Controllers {
         return controlPoint;
     }
 
-    // Cue enabled
+    // Cue is valid/set (not whether this is a prompt/rest period)
     bool ControlPoint::IsEnabled()
     {
         return (controlPoint & (1 << 31)) != 0;
     }
 
+    // Whether this beings a non-prompting period
+    bool ControlPoint::IsNonPrompting()
+    {
+        return !this->IsEnabled() || this->GetVolume() == 0 || this->GetInterval() == 0;
+    }
+    
     // Weekday bitmap (b0=Sunday, ..., b6=Saturday)
     unsigned int ControlPoint::GetWeekdays()
     {
@@ -156,12 +162,11 @@ namespace Pinetime::Controllers {
     // outElapsed - duration control point has already been active
     // outNextIndex - next control point index (<0 if none)
     // outRemaining - remaining time until the next control point is active
-    bool ControlPoint::CueNearest(control_point_packed_t *controlPoints, size_t numControlPoints, unsigned int day, unsigned int time, int *outIndex, unsigned int *outElapsed, int *outNextIndex, unsigned int *outRemaining)
+    bool ControlPoint::CueNearest(control_point_packed_t *controlPoints, size_t numControlPoints, unsigned int day, unsigned int time, int *outIndex, unsigned int *outElapsed, int *outNextIndex, unsigned int *outRemaining, bool ignoreAdjacentEquivalent)
     {
+        // Find control point before-or-at now
         int closestIndexBefore = INDEX_NONE;
         unsigned int closestDistanceBefore = TIME_NONE;
-        int closestIndexAfter = INDEX_NONE;
-        unsigned int closestDistanceAfter = TIME_NONE;
         for (int i = 0; (size_t)i < numControlPoints; i++)
         {
             ControlPoint controlPoint = ControlPoint(controlPoints[i]);
@@ -178,6 +183,28 @@ namespace Pinetime::Controllers {
                 closestIndexBefore = i;
                 closestDistanceBefore = distance;
             }
+        }
+
+        // Find control point after now, optionally ignore equivalent control points
+        int closestIndexAfter = INDEX_NONE;
+        unsigned int closestDistanceAfter = TIME_NONE;
+        for (int i = 0; (size_t)i < numControlPoints; i++)
+        {
+            ControlPoint controlPoint = ControlPoint(controlPoints[i]);
+            unsigned int distance;
+
+            if (!controlPoint.IsEnabled())
+            {
+                continue;
+            }
+
+            // Optionally, ignore equivalent control points
+            if (ignoreAdjacentEquivalent && closestIndexBefore != INDEX_NONE) {
+                ControlPoint previousControlPoint = ControlPoint(controlPoints[closestIndexBefore]);
+                if (ControlPoint::Equivalent(previousControlPoint, controlPoint)) {
+                    continue;
+                }
+            }
 
             distance = controlPoint.CueTimeAfter(day, time);
             if (distance != TIME_NONE && (distance < closestDistanceAfter || closestIndexAfter == INDEX_NONE))
@@ -186,6 +213,15 @@ namespace Pinetime::Controllers {
                 closestDistanceAfter = distance;
             }
         }
+
+        // Special-case having a value but ignoring all others
+        if (closestIndexBefore != INDEX_NONE && closestIndexAfter == INDEX_NONE) {
+            // Treat self as next index
+            closestIndexAfter = closestIndexBefore;
+            //closestDistanceAfter = ((numDays * timePerDay) / timeUnitSize) - closestDistanceBefore;
+            closestDistanceAfter = ControlPoint(controlPoints[closestIndexAfter]).CueTimeAfter(day, time);
+        }
+
         if (outIndex) *outIndex = closestIndexBefore;
         if (outElapsed) *outElapsed = closestDistanceBefore;
         if (outNextIndex) *outNextIndex = closestIndexAfter;

@@ -246,7 +246,8 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
 
     } if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) { // Writing
         size_t notifSize = OS_MBUF_PKTLEN(ctxt->om);
-        uint8_t data[notifSize];
+        uint8_t data[notifSize + 1];
+        data[notifSize] = '\0';     // NULL-terminate
         os_mbuf_copydata(ctxt->om, 0, notifSize, data);
 
         // Writing to the block id
@@ -304,6 +305,23 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 const char *cmdReset = "Reset!";
                 if (trusted && notifSize == strlen(cmdReset) && memcmp(data, cmdReset, strlen(cmdReset)) == 0) {
                     firmwareValidator.Reset();
+                }
+            }
+
+            // Vibration
+            {
+                uint32_t value = 0xffffffff;
+                if (data[0] == 'V' && data[1] == '@' && notifSize >= 1 + 1 + 4) {
+                    value = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
+                } else if (data[0] == 'V' && data[1] == '#' && notifSize >= 1 + 1) {
+                    value = (uint32_t)strtol((const char *)data + 2, NULL, 0);
+                }
+                if (value != 0xffffffff) {
+#ifdef CUEBAND_MOTOR_PATTERNS
+                    m_system.GetMotorController().RunIndex(value);
+#else
+                    m_system.GetMotorController().RunForDuration(value);
+#endif
                 }
             }
 

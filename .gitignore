@@ -52,4 +52,5 @@ src/arm-none-eabi
 post_build.sh
 compile_commands.json
 *.local.h
+src/components/cue/output-*.txt
 ###

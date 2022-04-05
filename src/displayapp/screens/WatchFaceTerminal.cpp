@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include <date/date.h>
 #include <lvgl/lvgl.h>
 #include "displayapp/screens/WatchFaceTerminal.h"
@@ -66,13 +68,17 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
   lv_obj_set_pos(backgroundLabel, 0, 0);
   lv_label_set_text_static(backgroundLabel, "");
 
+#ifndef CUEBAND_CUSTOMIZATION_NO_HR
   heartbeatValue = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(heartbeatValue, true);
   lv_obj_align(heartbeatValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 20);
+#endif
 
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
   stepValue = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(stepValue, true);
   lv_obj_align(stepValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 0);
+#endif
 
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   Refresh();
@@ -165,6 +171,7 @@ void WatchFaceTerminal::Refresh() {
     }
   }
 
+#ifndef CUEBAND_CUSTOMIZATION_NO_HR
   heartbeat = heartRateController.HeartRate();
   heartbeatRunning = heartRateController.State() != Controllers::HeartRateController::States::Stopped;
   if (heartbeat.IsUpdated() || heartbeatRunning.IsUpdated()) {
@@ -174,10 +181,13 @@ void WatchFaceTerminal::Refresh() {
       lv_label_set_text_static(heartbeatValue, "[L_HR]#ee3311 ---#");
     }
   }
+#endif
 
+#ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
   stepCount = motionController.NbSteps();
   motionSensorOk = motionController.IsSensorOk();
   if (stepCount.IsUpdated() || motionSensorOk.IsUpdated()) {
     lv_label_set_text_fmt(stepValue, "[STEP]#ee3377 %lu steps#", stepCount.Get());
   }
+#endif
 }
