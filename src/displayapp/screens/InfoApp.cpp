@@ -7,6 +7,10 @@
 #include "../DisplayApp.h"
 #include "Symbols.h"
 
+#ifdef CUEBAND_INFO_APP_ID
+#include "components/qrtiny/qrtiny.h"
+#endif
+
 using namespace Pinetime::Applications::Screens;
 
 static void lv_update_task(struct _lv_task_t* task) {
@@ -42,19 +46,22 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   lv_label_set_long_mode(lInfo, LV_LABEL_LONG_EXPAND);
 
 #ifdef CUEBAND_INFO_APP_ID
+  std::array<uint8_t, 6> bleAddr = systemTask.GetBleController().Address();
+  sprintf(longAddress, "%02x:%02x:%02x:%02x:%02x:%02x", bleAddr[5], bleAddr[4], bleAddr[3], bleAddr[2], bleAddr[1], bleAddr[0]);
+  sprintf(shortAddress, "%02X%02X%02X%02X%02X%02X", bleAddr[5], bleAddr[4], bleAddr[3], bleAddr[2], bleAddr[1], bleAddr[0]);
+
   // Use a (26 byte) buffer for holding the encoded payload and ECC calculations
-  uint8_t buffer[QRTINY_BUFFER_SIZE] = { 0 };
+  uint8_t qrBuffer[QRTINY_BUFFER_SIZE] = { 0 };
 
   // Encode one or more segments text to the buffer
   size_t payloadLength = 0;
-  payloadLength += QrTinyWriteAlphanumeric(buffer, payloadLength, "ABCDEFABCDEF");
-??? TODO: Use actual address
+  payloadLength += QrTinyWriteAlphanumeric(qrBuffer, payloadLength, shortAddress);
 
   // Choose a format for the QR Code: a mask pattern (binary `000` to `111`) and an error correction level (`LOW`, `MEDIUM`, `QUARTILE`, `HIGH`).
-  uint16_t formatInfo = QRTINY_FORMATINFO_MASK_000_ECC_MEDIUM;
+  uint16_t formatInfo = QRTINY_FORMATINFO_MASK_000_ECC_QUARTILE;  // Max alphanumeric: High=10, Quartile=16, Medium=20, Low=26 
 
   // Compute the remaining buffer contents: any required padding and the calculated error-correction information
-  bool result = QrTinyGenerate(buffer, payloadLength, formatInfo);
+  bool result = QrTinyGenerate(qrBuffer, payloadLength, formatInfo);
 
   // Clear image data
   memset(data_qr, 0, sizeof(data_qr));
@@ -63,16 +70,18 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   data_qr[0] = 0x00; data_qr[1] = 0x00; data_qr[2] = 0x00; data_qr[3] = 0xff; // Color of index 0
   data_qr[4] = 0xff; data_qr[5] = 0xff; data_qr[6] = 0xff; data_qr[7] = 0xff; // Color of index 1
 
-  // Set image data from QR code
-  for (int y = 0; y < QR_IMAGE_DIMENSION; y++) {
-    for (int x = 0; x < QR_IMAGE_DIMENSION; x++) {
-      int module = QrTinyModuleGet(buffer, formatInfo, x - QRTINY_QUIET_STANDARD, y - QRTINY_QUIET_STANDARD);
-      int ofs = QR_IMAGE_PALETTE + ((y * QR_IMAGE_DIMENSION) >> 3) + (x >> 3);
-      int mask = 1 << (7 - (x & 0x07));
-      if (module) {
-        data_qr[ofs] &= ~mask;  // 1=dark (swapped if inverted)
-      } else {
-        data_qr[ofs] |= mask;   // 0=light (swapped if inverted)
+  // Set image pixels from QR code
+  if (result) {
+    for (int y = 0; y < QR_IMAGE_DIMENSION; y++) {
+      for (int x = 0; x < QR_IMAGE_DIMENSION; x++) {
+        int module = QrTinyModuleGet(qrBuffer, formatInfo, x - QRTINY_QUIET_STANDARD, y - QRTINY_QUIET_STANDARD);
+        int ofs = QR_IMAGE_PALETTE + ((y * QR_IMAGE_DIMENSION) >> 3) + (x >> 3);
+        int mask = 1 << (7 - (x & 0x07));
+        if (module) {
+          data_qr[ofs] &= ~mask;  // 1=dark (swapped if inverted)
+        } else {
+          data_qr[ofs] |= mask;   // 0=light (swapped if inverted)
+        }
       }
     }
   }
@@ -84,6 +93,13 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   image_qr.data_size = QR_IMAGE_SIZE;
   image_qr.header.cf = LV_IMG_CF_INDEXED_1BIT;
   image_qr.data = data_qr;
+
+  // Create image object
+  qr_obj = lv_img_create(lv_scr_act(), NULL);
+  lv_img_set_src(qr_obj, &image_qr);
+  lv_img_set_antialias(qr_obj, false);
+  lv_img_set_zoom(qr_obj, 4*256);   // 256=normal, 512=double
+  lv_obj_align(qr_obj, NULL, LV_ALIGN_CENTER, 0, 0);
 #endif
 
   taskUpdate = lv_task_create(lv_update_task, 250, LV_TASK_PRIO_LOW, this);
@@ -124,7 +140,11 @@ void InfoApp::Update() {
 
 #ifdef CUEBAND_INFO_APP_ID
   if (screen == thisScreen++) {
-    sprintf(debugText, "%s", CUEBAND_INFO_SYSTEM + 1);
+    int battery = systemTask.GetBatteryController().PercentRemaining();
+    sprintf(debugText, "%s [%d%%]\n%s", CUEBAND_INFO_SYSTEM + 1, battery, longAddress);
+    lv_obj_set_hidden(qr_obj, false);
+  } else {
+    lv_obj_set_hidden(qr_obj, true);
   }
 #endif
 
