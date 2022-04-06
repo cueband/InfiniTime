@@ -107,6 +107,7 @@
 // Local build configuration overrides above switches
 #if defined(__has_include)
   #if __has_include("cueband.local.h")
+    #warning "Using local build configuration: cueband.local.h"
     #include "cueband.local.h"    // #define CUEBAND_LOCAL_KEY "secret"
   #else
     #if defined(CUEBAND_CONFIGURATION_WARNINGS)
