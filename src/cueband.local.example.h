@@ -22,5 +22,5 @@
 #endif
 
 // Test the compilation of (close to) upstream firmware
-//#undef CUEBAND_ACTIVITY_ENABLED    // No activity monitoring service etc.
-#undef CUEBAND_CUE_ENABLED         // No cue prompts service etc.
+//#undef CUEBAND_ACTIVITY_ENABLED    // Disable activity monitoring service etc.
+//#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.

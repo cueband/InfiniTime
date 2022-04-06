@@ -71,6 +71,10 @@
 #define CUEBAND_INFO_APP_ENABLED
 #define CUEBAND_INFO_APP_SYMBOL "\xEF\x84\xA9" // info // "?" // "I"
 #define CUEBAND_INFO_APP_ID     // FW Version, QR Code and MAC address
+#ifdef CUEBAND_INFO_APP_ID
+    #define CUEBAND_INFO_APP_QR
+    #define CUEBAND_INFO_APP_BARCODE
+#endif
 
 #define CUEBAND_AXES 3          // Must be 3
 
@@ -107,7 +111,9 @@
 // Local build configuration overrides above switches
 #if defined(__has_include)
   #if __has_include("cueband.local.h")
-    #warning "Using local build configuration: cueband.local.h"
+    #if defined(CUEBAND_CONFIGURATION_WARNINGS)
+      #warning "Using local build configuration: cueband.local.h"
+    #endif
     #include "cueband.local.h"    // #define CUEBAND_LOCAL_KEY "secret"
   #else
     #if defined(CUEBAND_CONFIGURATION_WARNINGS)

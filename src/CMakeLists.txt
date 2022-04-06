@@ -538,7 +538,8 @@ list(APPEND SOURCE_FILES
         components/cue/CueController.cpp
         components/cue/ControlPoint.cpp
         components/cue/ControlPointStore.cpp
-        components/qrtiny/qrtiny.c
+        components/barcode/qrtiny.c
+        components/barcode/barcode.c
         displayapp/screens/CueBandApp.cpp
         displayapp/screens/InfoApp.cpp
         displayapp/fonts/cueband_20.c
@@ -739,7 +740,8 @@ set(INCLUDE_FILES
         components/cue/CueController.h
         components/cue/ControlPoint.h
         components/cue/ControlPointStore.h
-        components/qrtiny/qrtiny.h
+        components/barcode/qrtiny.h
+        components/barcode/barcode.h
         displayapp/screens/CueBandApp.h
         displayapp/screens/InfoApp.h
         )

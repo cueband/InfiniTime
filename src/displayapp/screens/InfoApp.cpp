@@ -7,10 +7,6 @@
 #include "../DisplayApp.h"
 #include "Symbols.h"
 
-#ifdef CUEBAND_INFO_APP_ID
-#include "components/qrtiny/qrtiny.h"
-#endif
-
 using namespace Pinetime::Applications::Screens;
 
 static void lv_update_task(struct _lv_task_t* task) {
@@ -49,6 +45,43 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   std::array<uint8_t, 6> bleAddr = systemTask.GetBleController().Address();
   sprintf(longAddress, "%02x:%02x:%02x:%02x:%02x:%02x", bleAddr[5], bleAddr[4], bleAddr[3], bleAddr[2], bleAddr[1], bleAddr[0]);
   sprintf(shortAddress, "%02X%02X%02X%02X%02X%02X", bleAddr[5], bleAddr[4], bleAddr[3], bleAddr[2], bleAddr[1], bleAddr[0]);
+
+#ifdef CUEBAND_INFO_APP_BARCODE   // --- Barcode ---
+
+  // Clear image data
+  memset(data_barcode, 0, sizeof(data_barcode));
+
+  // Set image palette entries
+  data_barcode[0] = 0x00; data_barcode[1] = 0x00; data_barcode[2] = 0x00; data_barcode[3] = 0xff; // Color of index 0
+  data_barcode[4] = 0xff; data_barcode[5] = 0xff; data_barcode[6] = 0xff; data_barcode[7] = 0xff; // Color of index 1
+
+  // Generates the barcode as a bitmap (0=black, 1=white) using the specified buffer, returns the length in bars/bits.
+  //size_t barcodeWidth = 
+  Barcode(data_barcode + BARCODE_IMAGE_PALETTE, sizeof(data_barcode) - BARCODE_IMAGE_PALETTE, BARCODE_QUIET_STANDARD, shortAddress, BARCODE_CODE_B);
+
+  // Duplicate rows
+  for (int i = 1; i < BARCODE_IMAGE_HEIGHT; i++) {
+    memcpy(data_barcode + BARCODE_IMAGE_PALETTE + i * BARCODE_SPAN, data_barcode + BARCODE_IMAGE_PALETTE, BARCODE_SPAN);
+  }
+  
+  // Set image header
+  image_barcode.header.always_zero = 0;
+  image_barcode.header.w = (BARCODE_SPAN * 8);
+  image_barcode.header.h = BARCODE_IMAGE_HEIGHT;
+  image_barcode.data_size = BARCODE_IMAGE_SIZE;
+  image_barcode.header.cf = LV_IMG_CF_INDEXED_1BIT;
+  image_barcode.data = data_barcode;
+
+  // Create image object
+  barcode_obj = lv_img_create(lv_scr_act(), NULL);
+  lv_img_set_src(barcode_obj, &image_barcode);
+  //lv_img_set_antialias(barcode_obj, false);
+  //lv_img_set_zoom(barcode_obj, 1*256);   // 256=normal, 512=double
+  lv_obj_align(barcode_obj, NULL, LV_ALIGN_CENTER, 0, (4 * 32) + 8);
+
+#endif
+
+#ifdef CUEBAND_INFO_APP_QR    // --- QR Code ---
 
   // Use a (26 byte) buffer for holding the encoded payload and ECC calculations
   uint8_t qrBuffer[QRTINY_BUFFER_SIZE] = { 0 };
@@ -102,6 +135,8 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   lv_obj_align(qr_obj, NULL, LV_ALIGN_CENTER, 0, 0);
 #endif
 
+#endif
+
   taskUpdate = lv_task_create(lv_update_task, 250, LV_TASK_PRIO_LOW, this);
   Update();
 }
@@ -142,9 +177,19 @@ void InfoApp::Update() {
   if (screen == thisScreen++) {
     int battery = systemTask.GetBatteryController().PercentRemaining();
     sprintf(debugText, "%s [%d%%]\n%s", CUEBAND_INFO_SYSTEM + 1, battery, longAddress);
+#ifdef CUEBAND_INFO_APP_BARCODE
+    lv_obj_set_hidden(barcode_obj, false);
+#endif
+#ifdef CUEBAND_INFO_APP_QR
     lv_obj_set_hidden(qr_obj, false);
+#endif
   } else {
+#ifdef CUEBAND_INFO_APP_BARCODE
+    lv_obj_set_hidden(barcode_obj, true);
+#endif
+#ifdef CUEBAND_INFO_APP_QR
     lv_obj_set_hidden(qr_obj, true);
+#endif
   }
 #endif
 
