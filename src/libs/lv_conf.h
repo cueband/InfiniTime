@@ -175,7 +175,11 @@ typedef void* lv_anim_user_data_t;
 #define LV_USE_OPA_SCALE        0
 
 /* 1: Use image zoom and rotation*/
+#ifdef CUEBAND_INFO_APP_QR    // [cueband] needs zoom for QR code
+#define LV_USE_IMG_TRANSFORM    1
+#else
 #define LV_USE_IMG_TRANSFORM    0
+#endif
 
 /* 1: Enable object groups (for keyboard/encoder navigation) */
 #define LV_USE_GROUP            0

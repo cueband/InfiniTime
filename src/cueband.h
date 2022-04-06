@@ -72,8 +72,10 @@
 #define CUEBAND_INFO_APP_SYMBOL "\xEF\x84\xA9" // info // "?" // "I"
 #define CUEBAND_INFO_APP_ID     // FW Version, QR Code and MAC address
 #ifdef CUEBAND_INFO_APP_ID
-    #define CUEBAND_INFO_APP_QR
     #define CUEBAND_INFO_APP_BARCODE
+    #define CUEBAND_INFO_APP_QR
+    #define QR_IMAGE_INVERT     // More recent specs of QR Codes allow light-on dark -- also saves memory as the quiet zone is skipped as the image is displayed on a dark background
+    #define QR_TRUE_COLOR       // Can only transform (zoom) a true color image rather than 1bpp image, but a scale of x4 is (4*4=)x16 the number of pixels, and at LV_COLOR_DEPTH==16 takes the same amount of memory
 #endif
 
 #define CUEBAND_AXES 3          // Must be 3
@@ -146,6 +148,8 @@
 
 #if defined(CUEBAND_APP_ENABLED)
     #define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
+    //#define CUEBAND_APP_SYMBOL_ALTERNATIVE "C"    // For application list as icon not in font for application menu
+    #define CUEBAND_PATCH_FONT 0xf83e   // 0xf83e, wave-square -- patch into font for application menu: jetbrains_mono_bold_20.c 
     #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
     #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
     #define CUEBAND_WATCHFACE_CUE_STATUS

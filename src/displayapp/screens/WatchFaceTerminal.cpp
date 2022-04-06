@@ -40,7 +40,14 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
 
   connectState = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(connectState, true);
-  lv_obj_align(connectState, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 40);
+  lv_obj_align(connectState, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 40
+#ifdef CUEBAND_CUSTOMIZATION_NO_HR
+-20
+#endif
+#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
+-20
+#endif
+  );
 
   notificationIcon = lv_label_create(lv_scr_act(), nullptr);
   lv_obj_align(notificationIcon, nullptr, LV_ALIGN_IN_LEFT_MID, 0, -100);
@@ -54,7 +61,14 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
   lv_label_set_text_static(label_prompt_1, "user@watch:~ $ now");
 
   label_prompt_2 = lv_label_create(lv_scr_act(), nullptr);
-  lv_obj_align(label_prompt_2, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 60);
+  lv_obj_align(label_prompt_2, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 60
+#ifdef CUEBAND_CUSTOMIZATION_NO_HR
+-20
+#endif
+#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
+-20
+#endif
+  );
   lv_label_set_text_static(label_prompt_2, "user@watch:~ $");
 
   label_time = lv_label_create(lv_scr_act(), nullptr);
@@ -71,7 +85,11 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
 #ifndef CUEBAND_CUSTOMIZATION_NO_HR
   heartbeatValue = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(heartbeatValue, true);
-  lv_obj_align(heartbeatValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 20);
+  lv_obj_align(heartbeatValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 20
+#ifdef CUEBAND_CUSTOMIZATION_NO_STEPS
+-20
+#endif
+  );
 #endif
 
 #ifndef CUEBAND_CUSTOMIZATION_NO_STEPS
@@ -90,6 +108,13 @@ WatchFaceTerminal::~WatchFaceTerminal() {
 }
 
 void WatchFaceTerminal::Refresh() {
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+    bool isInvalid = false;
+    #ifdef CUEBAND_DETECT_UNSET_TIME
+      isInvalid = dateTimeController.IsUnset();
+    #endif
+#endif
+
   powerPresent = batteryController.IsPowerPresent();
   batteryPercentRemaining = batteryController.PercentRemaining();
   if (batteryPercentRemaining.IsUpdated() || powerPresent.IsUpdated()) {
@@ -140,6 +165,11 @@ void WatchFaceTerminal::Refresh() {
     uint8_t minute = time.minutes().count();
     uint8_t second = time.seconds().count();
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+    if (isInvalid) {
+      lv_label_set_text_fmt(label_time, "[TIME]#11cc55 ??:??:??");
+    } else
+#endif
     if (displayedHour != hour || displayedMinute != minute || displayedSecond != second) {
       displayedHour = hour;
       displayedMinute = minute;
@@ -161,6 +191,11 @@ void WatchFaceTerminal::Refresh() {
       }
     }
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+    if (isInvalid) {
+      lv_label_set_text_fmt(label_date, "[DATE]#007fff ????.??.??#");
+    } else
+#endif
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
       lv_label_set_text_fmt(label_date, "[DATE]#007fff %04d.%02d.%02d#", short(year), char(month), char(day));
 

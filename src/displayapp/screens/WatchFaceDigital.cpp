@@ -197,6 +197,10 @@ void WatchFaceDigital::Refresh() {
         lv_label_set_text_fmt(label_time, "%2d:%02d", hour, minute);
         lv_obj_align(label_time, lv_scr_act(), LV_ALIGN_IN_RIGHT_MID, 0, 0);
       } else {
+#ifdef CUEBAND_CUSTOMIZATION_NO_INVALID_TIME
+        if (isInvalid) lv_label_set_text_fmt(label_time, "  :  ");
+        else
+#endif
         lv_label_set_text_fmt(label_time, "%02d:%02d", hour, minute);
         lv_obj_align(label_time, lv_scr_act(), LV_ALIGN_CENTER, 0, 0);
       }

@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 /*******************************************************************************
  * Size: 20 px
  * Bpp: 1
@@ -1037,6 +1039,18 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0xc7, 0xef, 0xfc, 0x3c, 0xff, 0xc7, 0xef, 0xfc,
     0x77, 0xff, 0xc6, 0x20, 0x7c, 0x0, 0x3, 0xc0,
     0x0, 0x1c, 0x0, 0x0, 0xc0, 0x0
+
+#ifdef CUEBAND_PATCH_FONT  // 0xf83e, wave-square
+    ,
+    /* U+F83E "" */
+    0x7, 0xfc, 0x0, 0x3, 0xfe, 0x0, 0x1, 0xc7,
+    0x0, 0x0, 0xe3, 0x80, 0x0, 0x71, 0xc0, 0x0,
+    0x38, 0xe0, 0x0, 0x1c, 0x70, 0x0, 0xe, 0x38,
+    0x0, 0xff, 0x1c, 0x7f, 0xff, 0x8e, 0x3f, 0xc0,
+    0x7, 0x1c, 0x0, 0x3, 0x8e, 0x0, 0x1, 0xc7,
+    0x0, 0x0, 0xe3, 0x80, 0x0, 0x71, 0xc0, 0x0,
+    0x3f, 0xe0, 0x0, 0x1f, 0xf0, 0x0
+#endif
 };
 
 
@@ -1245,6 +1259,9 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 4106, .adv_w = 360, .box_w = 22, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
     {.bitmap_index = 4161, .adv_w = 360, .box_w = 22, .box_h = 19, .ofs_x = 0, .ofs_y = -2},
     {.bitmap_index = 4214, .adv_w = 320, .box_w = 20, .box_h = 15, .ofs_x = 0, .ofs_y = 0}
+#ifdef CUEBAND_PATCH_FONT
+    , {.bitmap_index = sizeof(glyph_bitmap) - 54, .adv_w = 400, .box_w = 25, .box_h = 17, .ofs_x = 0, .ofs_y = -1}
+#endif
 };
 
 /*---------------------
@@ -1257,6 +1274,9 @@ static const uint16_t unicode_list_2[] = {
     0x128, 0x184, 0x1e5, 0x1fb, 0x200, 0x21d, 0x23f, 0x240,
     0x241, 0x242, 0x243, 0x251, 0x292, 0x293, 0x2f1, 0x3dc,
     0x3fc, 0x45c, 0x54a, 0x55f, 0x568, 0x59e, 0x59f, 0x6a8
+#ifdef CUEBAND_PATCH_FONT
+    , (CUEBAND_PATCH_FONT - 61441) // .range_start
+#endif
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
@@ -1271,8 +1291,18 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
         .unicode_list = NULL, .glyph_id_ofs_list = NULL, .list_length = 0, .type = LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY
     },
     {
-        .range_start = 61441, .range_length = 1705, .glyph_id_start = 160,
-        .unicode_list = unicode_list_2, .glyph_id_ofs_list = NULL, .list_length = 40, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .range_start = 61441, .range_length = 
+#ifdef CUEBAND_PATCH_FONT
+        1 + CUEBAND_PATCH_FONT - 61441  // .range_start
+#else
+        1705
+#endif
+        , .glyph_id_start = 160,
+        .unicode_list = unicode_list_2, .glyph_id_ofs_list = NULL, .list_length = 40
+#ifdef CUEBAND_PATCH_FONT
+        + 1
+#endif
+        , .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 

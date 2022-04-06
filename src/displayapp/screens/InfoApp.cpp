@@ -77,7 +77,8 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   lv_img_set_src(barcode_obj, &image_barcode);
   //lv_img_set_antialias(barcode_obj, false);
   //lv_img_set_zoom(barcode_obj, 1*256);   // 256=normal, 512=double
-  lv_obj_align(barcode_obj, NULL, LV_ALIGN_CENTER, 0, (4 * 32) + 8);
+  lv_obj_set_size(barcode_obj, image_barcode.header.w, BARCODE_IMAGE_DISPLAY_HEIGHT);
+  lv_obj_align(barcode_obj, NULL, LV_ALIGN_CENTER, 0, -26);
 
 #endif
 
@@ -99,15 +100,28 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   // Clear image data
   memset(data_qr, 0, sizeof(data_qr));
 
-  // Set image palette entries
-  data_qr[0] = 0x00; data_qr[1] = 0x00; data_qr[2] = 0x00; data_qr[3] = 0xff; // Color of index 0
-  data_qr[4] = 0xff; data_qr[5] = 0xff; data_qr[6] = 0xff; data_qr[7] = 0xff; // Color of index 1
+  #ifndef QR_TRUE_COLOR
+    // Set image palette entries
+    data_qr[0] = 0x00; data_qr[1] = 0x00; data_qr[2] = 0x00; data_qr[3] = 0xff; // Color of index 0
+    data_qr[4] = 0xff; data_qr[5] = 0xff; data_qr[6] = 0xff; data_qr[7] = 0xff; // Color of index 1
+  #endif
 
   // Set image pixels from QR code
   if (result) {
-    for (int y = 0; y < QR_IMAGE_DIMENSION; y++) {
-      for (int x = 0; x < QR_IMAGE_DIMENSION; x++) {
-        int module = QrTinyModuleGet(qrBuffer, formatInfo, x - QRTINY_QUIET_STANDARD, y - QRTINY_QUIET_STANDARD);
+    for (int y = 0; y < QR_IMAGE_MAGNIFY * QR_IMAGE_TRUE_DIMENSION; y++) {
+      for (int x = 0; x < QR_IMAGE_MAGNIFY * QR_IMAGE_TRUE_DIMENSION; x++) {
+        int module = QrTinyModuleGet(qrBuffer, formatInfo, (x / QR_IMAGE_MAGNIFY) - QR_QUIET, (y / QR_IMAGE_MAGNIFY) - QR_QUIET);
+#ifdef QR_IMAGE_INVERT
+        module = !module;
+#endif
+#ifdef QR_TRUE_COLOR
+        int ofs = (y * QR_IMAGE_DIMENSION + x) * QR_PIXEL_BYTES;
+        if (module) { // 1=dark (swapped if inverted)
+          data_qr[ofs + 0] = 0x00; data_qr[ofs + 1] = 0x00;
+        } else {      // 0=light (swapped if inverted)
+          data_qr[ofs + 0] = 0xff; data_qr[ofs + 1] = 0xff;
+        }
+#else
         int ofs = QR_IMAGE_PALETTE + ((y * QR_IMAGE_DIMENSION) >> 3) + (x >> 3);
         int mask = 1 << (7 - (x & 0x07));
         if (module) {
@@ -115,6 +129,7 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
         } else {
           data_qr[ofs] |= mask;   // 0=light (swapped if inverted)
         }
+#endif
       }
     }
   }
@@ -124,15 +139,29 @@ InfoApp::InfoApp(Pinetime::Applications::DisplayApp* app,
   image_qr.header.w = QR_IMAGE_DIMENSION;
   image_qr.header.h = QR_IMAGE_DIMENSION;
   image_qr.data_size = QR_IMAGE_SIZE;
-  image_qr.header.cf = LV_IMG_CF_INDEXED_1BIT;
+  #ifdef QR_TRUE_COLOR
+    image_qr.header.cf = LV_IMG_CF_TRUE_COLOR;
+  #else
+    image_qr.header.cf = LV_IMG_CF_INDEXED_1BIT;
+  #endif
   image_qr.data = data_qr;
 
   // Create image object
   qr_obj = lv_img_create(lv_scr_act(), NULL);
   lv_img_set_src(qr_obj, &image_qr);
+#ifdef QR_IMAGE_ZOOM
   lv_img_set_antialias(qr_obj, false);
-  lv_img_set_zoom(qr_obj, 4*256);   // 256=normal, 512=double
-  lv_obj_align(qr_obj, NULL, LV_ALIGN_CENTER, 0, 0);
+	lv_img_set_auto_size(qr_obj, true);
+	lv_img_set_zoom(qr_obj, QR_IMAGE_ZOOM * 256);   // 256=normal, 512=double
+  //lv_obj_set_size(qr_obj, QR_IMAGE_ZOOM * QR_IMAGE_DIMENSION, QR_IMAGE_ZOOM * QR_IMAGE_DIMENSION);
+#endif
+  lv_obj_align(qr_obj, NULL, LV_ALIGN_CENTER, 0, 
+    58
+#if (QR_QUIET < QRTINY_QUIET_STANDARD)    // Offset any missing quiet area
+    // + ((QRTINY_QUIET_STANDARD - QR_QUIET) * QR_IMAGE_MAGNIFY * QR_IMAGE_ZOOM) / 2  // centered
+#endif
+    );
+
 #endif
 
 #endif
@@ -176,7 +205,8 @@ void InfoApp::Update() {
 #ifdef CUEBAND_INFO_APP_ID
   if (screen == thisScreen++) {
     int battery = systemTask.GetBatteryController().PercentRemaining();
-    sprintf(debugText, "%s [%d%%]\n%s", CUEBAND_INFO_SYSTEM + 1, battery, longAddress);
+    bool powered = systemTask.GetBatteryController().IsPowerPresent();
+    sprintf(debugText, "%s\nBatt: %d%%%s\n%s", CUEBAND_INFO_SYSTEM + 1, battery, powered ? "+" : "-", longAddress);
 #ifdef CUEBAND_INFO_APP_BARCODE
     lv_obj_set_hidden(barcode_obj, false);
 #endif

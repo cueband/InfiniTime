@@ -145,7 +145,7 @@ static void BarcodeWriteBits(barcode_t *barcode, uint16_t pattern, int width)
 {
     for (int i = width - 1; i >= 0; i--)
     {
-        int byteOffset = (int)barcode->offset / 8;
+        size_t byteOffset = (int)barcode->offset / 8;
 //printf("%d %d/%d %s\n", i, byteOffset, barcode->bufferSize, barcode->error ? "ERROR" : "OK");
         if (byteOffset < barcode->bufferSize)
         {
@@ -262,14 +262,14 @@ void BarcodeAppend(barcode_t *barcode, const char *text, barcode_code_t fixedCod
 {
     for (const char *p = text; *p != '\0'; p++)
     {
-        char c0 = p[0];
-        char c1 = p[1];
-        char c2 = c1 != 0 ? p[2] : 0;
-        char c3 = c2 != 0 ? p[3] : 0;
+        unsigned char c0 = p[0];
+        unsigned char c1 = p[1];
+        unsigned char c2 = c1 != 0 ? p[2] : 0;
+        unsigned char c3 = c2 != 0 ? p[3] : 0;
         
         barcode_code_t requiredCode = BARCODE_CODE_NONE;
-        if (c0 < 0) { barcode->error = true; continue; }
-        if (c0 >= 0 && c0 < 32) requiredCode = BARCODE_CODE_A;
+        if (c0 >= 0x80) { barcode->error = true; continue; }
+        if (c0 < 32) requiredCode = BARCODE_CODE_A;
         if (c0 >= '\'' && c0 <= 0x7f) requiredCode = BARCODE_CODE_B;
 
         if (fixedCode != BARCODE_CODE_NONE) requiredCode = fixedCode;
