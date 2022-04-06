@@ -9,8 +9,22 @@
     #endif
 #else
 
+// Local build configuration overrides
+#if defined(__has_include)
+  #if __has_include("cueband.local.h")
+    #include "cueband.local.h"    // #define CUEBAND_LOCAL_KEY "secret"
+  #else
+    #if defined(CUEBAND_CONFIGURATION_WARNINGS)
+      #warning "cueband.local.h not found, using default cueband configuration"
+    #endif
+  #endif
+#else
+  #if defined(CUEBAND_CONFIGURATION_WARNINGS)
+    #warning "__has_include not supported, using default cueband configuration"
+  #endif
+#endif
 
-#define CUEBAND_LOG
+//#define CUEBAND_LOG
 
 // Preprocessor fun
 #define CUEBAND_STRINGIZE(S) #S
@@ -34,10 +48,14 @@
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
-#define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
+#ifdef CUEBAND_LOCAL_DEVICE_NAME
+  #define CUEBAND_DEVICE_NAME CUEBAND_LOCAL_DEVICE_NAME
+#else
+  #define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
+#endif
 #define CUEBAND_SERIAL_ADDRESS
 
-#define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted (required)
+#define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted
 //#define CUEBAND_TRUSTED_DFU             // Only allow DFU over trusted connection (risky?)
 
 
@@ -190,7 +208,7 @@
 #endif
 
 
-// Don't bother reading activity and temperature as they're not (currently) used
+// Don't bother reading activity and temperature if they're not used
 #ifdef CUEBAND_BUFFER_ENABLED
     #define CUEBAND_DONT_READ_UNUSED_ACCELEROMETER_VALUES
 #endif
