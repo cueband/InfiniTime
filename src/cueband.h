@@ -9,20 +9,6 @@
     #endif
 #else
 
-// Local build configuration overrides
-#if defined(__has_include)
-  #if __has_include("cueband.local.h")
-    #include "cueband.local.h"    // #define CUEBAND_LOCAL_KEY "secret"
-  #else
-    #if defined(CUEBAND_CONFIGURATION_WARNINGS)
-      #warning "cueband.local.h not found, using default cueband configuration"
-    #endif
-  #endif
-#else
-  #if defined(CUEBAND_CONFIGURATION_WARNINGS)
-    #warning "__has_include not supported, using default cueband configuration"
-  #endif
-#endif
 
 //#define CUEBAND_LOG
 
@@ -48,16 +34,11 @@
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
-#ifdef CUEBAND_LOCAL_DEVICE_NAME
-  #define CUEBAND_DEVICE_NAME CUEBAND_LOCAL_DEVICE_NAME
-#else
-  #define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
-#endif
+#define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
 #define CUEBAND_SERIAL_ADDRESS
 
-#define CUEBAND_TRUSTED_CONNECTION      // Remember if a connection is trusted
-//#define CUEBAND_TRUSTED_DFU             // Only allow DFU over trusted connection (risky?)
-
+#define CUEBAND_TRUSTED_CONNECTION      // Determine if a connection is trusted (required)
+//#define CUEBAND_USE_TRUSTED_CONNECTION  // Default switch for specific services to require trusted connections
 
 // Simple UART service
 // See: src/components/ble/UartService.cpp
@@ -80,35 +61,24 @@
 // Stream the resampled data
 //#define CUEBAND_STREAM_RESAMPLED
 
-
 // App screens
 // See: src/displayapp/Apps.h
 // See: src/displayapp/screens/ApplicationList.cpp
 // See: src/displayapp/DisplayApp.cpp
 
-// See: displayapp/screens/CueBandApp.h
-// See: displayapp/screens/CueBandApp.cpp
-#define CUEBAND_APP_ENABLED
-#define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
-
 // See: displayapp/screens/InfoApp.h
 // See: displayapp/screens/InfoApp.cpp
 #define CUEBAND_INFO_APP_ENABLED
 #define CUEBAND_INFO_APP_SYMBOL "\xEF\x84\xA9" // info // "?" // "I"
+#define CUEBAND_INFO_APP_ID     // FW Version, QR Code and MAC address
+
+#define CUEBAND_AXES 3          // Must be 3
 
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
 
 // Cue prompts
 #define CUEBAND_CUE_ENABLED
-
-#if defined(CUEBAND_APP_ENABLED) && defined(CUEBAND_CUE_ENABLED)
-    #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
-    #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
-    #define CUEBAND_WATCHFACE_CUE_STATUS
-#endif
-
-#define CUEBAND_AXES 3          // Must be 3
 
 #define CUEBAND_DEFAULT_SCREEN_TIMEOUT 30000    // 15000 // Ideally matching one of the options in SettingDisplay.cpp
 
@@ -130,6 +100,50 @@
 
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
+//#define CUEBAND_SAVE_MEMORY
+#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS         // Don't show any non-cueband apps in the launcher
+
+
+// Local build configuration overrides above switches
+#if defined(__has_include)
+  #if __has_include("cueband.local.h")
+    #include "cueband.local.h"    // #define CUEBAND_LOCAL_KEY "secret"
+  #else
+    #if defined(CUEBAND_CONFIGURATION_WARNINGS)
+      #warning "cueband.local.h not found, using default cueband configuration"
+    #endif
+  #endif
+#else
+  #if defined(CUEBAND_CONFIGURATION_WARNINGS)
+    #warning "__has_include not supported, using default cueband configuration"
+  #endif
+#endif
+
+
+
+#if defined(CUEBAND_TRUSTED_CONNECTION) && defined(CUEBAND_USE_TRUSTED_CONNECTION)
+  #define CUEBAND_TRUSTED_DFU           // Only allow DFU over trusted connection (risky?)
+  #define CUEBAND_TRUSTED_UART          // Only allow most UART commands over a trusted connection
+  #define CUEBAND_TRUSTED_ACTIVITY      // Only allow Activity Service commands over a trusted connection
+  #define CUEBAND_TRUSTED_CUE           // Only allow Cue Service commands over a trusted connection
+
+  #define CUEBAND_TRUSTED_IMMEDIATE_ALERT     // Only allow immediate alert over a trusted connection
+  #define CUEBAND_TRUSTED_ALERT_NOTIFICATION  // Only allow alert notification over a trusted connection
+#endif
+
+#ifdef CUEBAND_CUE_ENABLED
+  // See: displayapp/screens/CueBandApp.h
+  // See: displayapp/screens/CueBandApp.cpp
+  #define CUEBAND_APP_ENABLED
+#endif
+
+#if defined(CUEBAND_APP_ENABLED)
+    #define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
+    #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
+    #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
+    #define CUEBAND_WATCHFACE_CUE_STATUS
+    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from original analog watch face (to make room for cue status)
+#endif
 
 #ifdef CUEBAND_CUSTOMIZATION
 
@@ -144,23 +158,30 @@
 
     // See: src/displayapp/screens/ApplicationList.cpp
     #define CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS   // Only keep essential watch apps in the launcher (stopwatch, timer, alarm)
-    #define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS         // Don't show any non-cueband apps in the launcher
-    #define CUEBAND_DISABLE_APP_LAUNCHER                // Don't show the app launcher at all
 
     // See: src/components/ble/NimbleController.cpp
     #define CUEBAND_SERVICE_MUSIC_DISABLED
     #define CUEBAND_SERVICE_WEATHER_DISABLED
     #define CUEBAND_SERVICE_NAV_DISABLED
     #define CUEBAND_SERVICE_HR_DISABLED
+    #define CUEBAND_SERVICE_MOTION_DISABLED
+    #define CUEBAND_SERVICE_FS_DISABLED
 
-    // Remove analog clock background (do not use!), saves 14 kB, untested
-    //#define CUEBAND_ANALOG_WATCHFACE_NO_IMAGE
-    // Use 1-bit-per-pixel version of the analog clock background (do not use!), saves ~7 kB, untested
-    #define CUEBAND_ANALOG_WATCHFACE_1BPP_IMAGE
-    #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from original analog watch face (to make room for cue status)
-
+    // Disable discovery for service clients (alert notification client and time client)
+    #define CUEBAND_SERVICE_CLIENTS_DISABLED
 #endif
 
+#ifdef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
+    // See: src/displayapp/screens/ApplicationList.cpp
+    #define CUEBAND_DISABLE_APP_LAUNCHER                // Don't show the app launcher at all
+#endif
+
+#ifdef CUEBAND_SAVE_MEMORY
+    // Remove analog clock background (do not use!), saves 14 kB, untested
+    //#define CUEBAND_ANALOG_WATCHFACE_NO_IMAGE
+    // Use 1-bit-per-pixel version of the analog clock background (do not use!), saves ~7 kB
+    #define CUEBAND_ANALOG_WATCHFACE_1BPP_IMAGE
+#endif
 
 #if defined(CUEBAND_STREAM_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
 
@@ -315,7 +336,16 @@ void cblog(const char *str);
     #warning "CUEBAND_DEBUG_INIT_TIME defined - invalid times will be set to build time (DO NOT RELEASE THIS BUILD)"
 #endif
 #if !defined(CUEBAND_TRUSTED_DFU)
-    #warning "CUEBAND_TRUSTED_DFU not defined -- this build does not protect the DFU"
+    #warning "CUEBAND_TRUSTED_DFU not defined -- this build does not require trusted connections for DFU"
+#endif
+#if defined(CUEBAND_SERVICE_UART_ENABLED) && !defined(CUEBAND_TRUSTED_UART)
+    #warning "CUEBAND_TRUSTED_UART not defined -- this build does not require trusted connections for UART"
+#endif
+#if defined(CUEBAND_ACTIVITY_ENABLED) && !defined(CUEBAND_TRUSTED_ACTIVITY)
+    #warning "CUEBAND_TRUSTED_ACTIVITY not defined -- this build does not require trusted connections for Activity Service"
+#endif
+#if defined(CUEBAND_CUE_ENABLED) && !defined(CUEBAND_TRUSTED_CUE)
+    #warning "CUEBAND_TRUSTED_CUE not defined -- this build does not require trusted connections for Cue Service"
 #endif
 #if !defined(CUEBAND_FIFO_ENABLED)
     #warning "CUEBAND_FIFO_ENABLED not defined - won't use sensor FIFO"

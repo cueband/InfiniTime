@@ -261,8 +261,12 @@ void NimbleController::Init() {
 #ifndef CUEBAND_SERVICE_HR_DISABLED
   heartRateService.Init();
 #endif
+#ifndef CUEBAND_SERVICE_MOTION_DISABLED
   motionService.Init();
+#endif
+#ifndef CUEBAND_SERVICE_FS_DISABLED
   fsService.Init();
+#endif
 
 #ifdef CUEBAND_SERVICE_UART_ENABLED
   uartService.Init();
@@ -657,7 +661,9 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
 
 void NimbleController::StartDiscovery() {
   if (connectionHandle != BLE_HS_CONN_HANDLE_NONE) {
+#ifndef CUEBAND_SERVICE_CLIENTS_DISABLED
     serviceDiscovery.StartDiscovery(connectionHandle);
+#endif
   }
 }
 

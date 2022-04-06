@@ -65,6 +65,7 @@ static size_t parseNumbers(const char *input, int *values, size_t max) {
     return count;
 }
 
+#ifdef CUEBAND_ACTIVITY_ENABLED
 // (Compatibility for AxLE) Simple function to write capitalised hex to a buffer from binary
 // adds no spaces, adds a terminating null, returns chars written
 // Endianess specified, for little endian, read starts at last ptr pos backwards
@@ -91,6 +92,7 @@ static uint16_t WriteBinaryToHex(char* dest, void* source, uint16_t len, uint8_t
 	*dest = '\0';
 	return ret;
 }
+#endif
 
 /*
 // (Compatibility for AxLE) Simple function to read an ascii string of hex chars from a buffer 
@@ -131,6 +133,7 @@ static uint16_t ReadHexToBinary(uint8_t* dest, const char* source, uint16_t maxL
 }
 */
 
+#ifdef CUEBAND_ACTIVITY_ENABLED
 // Encode a binary input as an ASCII Base64-encoded (RFC 3548) stream with NULL ending
 // Output buffer must have capacity for (((length + 2) / 3) * 4) + 1 bytes
 // Three bytes are represented by four characters
@@ -180,6 +183,7 @@ static size_t EncodeBase64(char *output, const void *input, size_t length)
     output[count] = '\0';
     return count;
 }
+#endif
 
 
 
@@ -381,7 +385,17 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
             activityController.Event(ACTIVITY_EVENT_BLUETOOTH_COMMS);
 #endif
 
-            if (data[0] == '#') {  // Device ID query
+            bool unauthorized = false;
+
+#ifdef CUEBAND_TRUSTED_UART
+            if (!bleController.IsTrusted()) unauthorized = true;
+            // Allow-listed commands
+            if (data[0] == '#' || data[0] == 'U' || data[0] == 'B')unauthorized = false;
+#endif
+
+            if (unauthorized) {           // Connection is unautorized
+				sprintf(resp, "!\r\n");
+            } else if (data[0] == '#') {  // Device ID query
                 std::array<uint8_t, 6> addr = bleController.Address();        // using BleAddress = std::array<uint8_t, 6>;
                 sprintf(resp, "AP:%u,%s\r\n#:%02x%02x%02x%02x%02x%02x\r\n", CUEBAND_APPLICATION_TYPE, CUEBAND_VERSION, addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
 

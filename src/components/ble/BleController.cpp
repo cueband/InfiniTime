@@ -4,12 +4,12 @@
 using namespace Pinetime::Controllers;
 
 #if defined(CUEBAND_TRUSTED_CONNECTION)
-  #if defined(CUEBAND_LOCAL_KEY)
-    static const char *cueband_key = CUEBAND_LOCAL_KEY;
-  #else
-    #warning "CUEBAND_LOCAL_KEY not specified in cueband.local.h -- using empty key"
-    static const char *cueband_key = "";
-  #endif
+
+#if defined(CUEBAND_LOCAL_KEY)
+  static const char *cueband_key = CUEBAND_LOCAL_KEY;
+#else
+  #warning "CUEBAND_LOCAL_KEY not specified in cueband.local.h -- using empty key"
+  static const char *cueband_key = "";
 #endif
 
 #include <string.h>

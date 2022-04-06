@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "components/ble/ImmediateAlertService.h"
 #include <cstring>
 #include "components/ble/NotificationManager.h"
@@ -57,6 +59,9 @@ void ImmediateAlertService::Init() {
 }
 
 int ImmediateAlertService::OnAlertLevelChanged(uint16_t connectionHandle, uint16_t attributeHandle, ble_gatt_access_ctxt* context) {
+#ifdef CUEBAND_TRUSTED_IMMEDIATE_ALERT
+  if (!systemTask.GetBleController().IsTrusted()) return 0;
+#endif
   if (attributeHandle == alertLevelHandle) {
     if (context->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
       auto alertLevel = static_cast<Levels>(context->om->om_data[0]);

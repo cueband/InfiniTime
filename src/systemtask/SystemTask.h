@@ -31,6 +31,9 @@
 #ifdef CUEBAND_CUE_ENABLED
 #include "components/cue/CueController.h"
 #endif
+#if defined(CUEBAND_INFO_APP_ENABLED)
+#include "components/battery/BatteryController.h"
+#endif
 
 #ifdef PINETIME_IS_RECOVERY
   #include "displayapp/DisplayAppRecovery.h"
@@ -123,6 +126,12 @@ namespace Pinetime {
       Pinetime::Controllers::CueController& GetCueController() {
             return cueController;
       }
+#endif
+#if defined(CUEBAND_USE_TRUSTED_CONNECTION) || defined(CUEBAND_INFO_APP_ENABLED)
+      Pinetime::Controllers::Ble& GetBleController() { return bleController; }
+#endif
+#if defined(CUEBAND_INFO_APP_ENABLED)
+      Pinetime::Controllers::Battery& GetBatteryController() { return batteryController; }
 #endif
 
 #ifdef CUEBAND_MOTOR_PATTERNS

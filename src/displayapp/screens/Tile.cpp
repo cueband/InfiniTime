@@ -106,7 +106,7 @@ Tile::Tile(uint8_t screenID,
     if (applications[i].application == Apps::None) {
       lv_btnmatrix_set_btn_ctrl(btnm1, i, LV_BTNMATRIX_CTRL_DISABLED);
     }
-#ifdef CUEBAND_SYMBOLS
+#ifdef CUEBAND_APP_SYMBOL
     // TODO: This icon is not in the default font -- cannot set font for a button matrix???
     if (!strcmp(CUEBAND_APP_SYMBOL, applications[i].icon)) {
       ; //lv_btnmatrix_set_style_local_text_font(btnm1, i, &cueband_20);

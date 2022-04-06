@@ -133,6 +133,7 @@ namespace Pinetime {
       static const size_t sendCapacity = 512 + 32;
       volatile size_t blockLength = 0;
       volatile size_t blockOffset = 0;
+      uint8_t *blockBuffer = nullptr;
       volatile bool packetTransmitting = false;
       uint16_t tx_conn_handle = BLE_HS_CONN_HANDLE_NONE;
       unsigned int transmitErrorCount = 0;
@@ -142,7 +143,6 @@ namespace Pinetime {
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
       uint32_t readLogicalBlockIndex = 0xffffffff;
-      uint8_t *blockBuffer = nullptr;
 #endif
 #ifdef CUEBAND_STREAM_ENABLED
       void StopStreaming();
