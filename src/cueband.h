@@ -107,7 +107,7 @@
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
 //#define CUEBAND_SAVE_MEMORY
-#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS         // Don't show any non-cueband apps in the launcher
+//#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS         // Don't show any non-cueband apps in the launcher
 
 
 // Local build configuration overrides above switches
