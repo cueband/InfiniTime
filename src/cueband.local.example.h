@@ -1,5 +1,8 @@
 // Local testing build configuration without varying the global config
 
+// While debugging, use the build time to initialize the clock whenever the device time is invalid
+//#define CUEBAND_DEBUG_INIT_TIME
+
 // Custom device name to distinguish the local build
 #define CUEBAND_LOCAL_DEVICE_NAME "InfiniTime-######"  // "InfiniTime"
 
@@ -16,11 +19,11 @@
     #undef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
 #endif
 
-// Test invalid time (not just resetting it to build time)
-#ifdef CUEBAND_DEBUG_INIT_TIME
-    #undef CUEBAND_DEBUG_INIT_TIME
+// Test: Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
+#ifndef CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
+    #define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
 #endif
 
-// Test the compilation of (close to) upstream firmware
+// Test: Compilation of (close to) upstream firmware
 //#undef CUEBAND_ACTIVITY_ENABLED    // Disable activity monitoring service etc.
 //#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.

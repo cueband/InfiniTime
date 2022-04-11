@@ -55,9 +55,6 @@
 // Streaming includes raw HR signal
 #define CUEBAND_BUFFER_RAW_HR
 
-// While debugging, use the build time to initialize the clock if the time is invalid
-#define CUEBAND_DEBUG_INIT_TIME
-
 // Stream the resampled data
 //#define CUEBAND_STREAM_RESAMPLED
 
@@ -106,8 +103,10 @@
 
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
-//#define CUEBAND_SAVE_MEMORY
-//#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS         // Don't show any non-cueband apps in the launcher
+//#define CUEBAND_SAVE_MEMORY                           // Actions to reduce program memory
+//#define CUEBAND_DEBUG_INIT_TIME                       // While debugging, use the build time to initialize the clock if the time is invalid
+//#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
+//#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 
 
 // Local build configuration overrides above switches
@@ -343,6 +342,9 @@ void cblog(const char *str);
 
 // Warnings for non-standard build
 #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
+#if defined(CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE)
+    #warning "CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE defined - makes it trickier to accidentally wipe the firmware by holding the button while worn (risky)"
+#endif
 #if defined(CUEBAND_DEBUG_INIT_TIME)
     #warning "CUEBAND_DEBUG_INIT_TIME defined - invalid times will be set to build time (DO NOT RELEASE THIS BUILD)"
 #endif

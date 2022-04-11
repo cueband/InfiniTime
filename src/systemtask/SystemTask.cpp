@@ -564,9 +564,9 @@ void SystemTask::Work() {
     dateTimeController.UpdateTime(systick_counter);
     NoInit_BackUpTime = dateTimeController.CurrentDateTime();
 
-    // 1 Hz events
-#if (defined(CUEBAND_CUE_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED) || defined(CUEBAND_TRUSTED_CONNECTION))
+    // [cueband] 1 Hz events
     uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
+#if (defined(CUEBAND_CUE_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED) || defined(CUEBAND_TRUSTED_CONNECTION))
 #ifdef CUEBAND_CUE_ENABLED
     uint32_t uptime = dateTimeController.Uptime().count();
     if (now != cueLastSecond) {
@@ -651,6 +651,63 @@ void SystemTask::Work() {
     if (!nrf_gpio_pin_read(PinMap::Button)) {
       watchdog.Kick();
     }
+#ifdef CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
+    {  // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
+      // The original logic above is unchanged: always reset the watchdog timer while the button is released.
+      // ...the additional time to clear it will be conditional on several things to maximize the chances of getting it into recovery when really needed, 
+
+      // Initial button states
+      const uint32_t button_long_threshold = 3;   // 3 seconds is a "long press"
+      const uint32_t button_long_recent = 10;     // 10 seconds is a "recent long press"
+      static uint32_t button_last_now = 0;
+      static uint32_t button_time = 0;
+      static bool button_seen_pressed = false;
+      static bool button_seen_released = false;
+      static bool button_currently_pressed = false;
+      static uint32_t button_current_press_start_time = 0;
+      static uint32_t button_previous_long_press_ended = 0;
+
+      // Update logic
+      // Current button state
+      bool button_pressed = nrf_gpio_pin_read(PinMap::Button);
+      // Time has changed
+      bool button_is_new_second = false;          // only kick when time advances
+      if (now != button_last_now) {
+        button_time++;
+        button_last_now = now;
+        button_is_new_second = true;
+      }
+      // Button transition: released->pressed
+      if (!button_currently_pressed && button_pressed) { 
+        button_seen_pressed = true; 
+        button_current_press_start_time = button_time;
+      }
+      // Button transition: pressed->released
+      if (button_currently_pressed && !button_pressed) {
+        button_seen_released = true;
+        if (button_time - button_current_press_start_time > button_long_threshold) {
+          button_previous_long_press_ended = button_time;
+        }
+      }
+      // Current press state
+      button_currently_pressed = button_pressed;
+
+      // Conditional on ALL of:
+      if ( button_pressed                                       // the button is currently pressed
+        && button_seen_pressed                                  // the button has been seen transitioning released->pressed
+        && button_seen_released                                 // the button has been seen transitioning pressed->released
+        && button_time > 30                                     // at least 30 changes in time (typically seconds) have occurred since the watch restarted
+        && !batteryController.IsPowerPresent()                  // the device is not connected to power
+        && button_time - button_current_press_start_time > button_long_threshold  // the button has been pressed "a long time"
+        && button_time - button_previous_long_press_ended > button_long_recent    // the button was not long-pressed recently (the last time it was pressed "a long time" was longer ago than 10 seconds before the start of this press)
+        && button_is_new_second                                 // time has just advanced
+      ) {
+        // When not connected to power and not just restarted, to reset or get into recovery, you will need to: do a long-press, stop, and then hold for a long time
+        watchdog.Kick();
+      }
+    }
+#endif
+
   }
 #pragma clang diagnostic pop
 }
