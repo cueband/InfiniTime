@@ -758,6 +758,14 @@ if (!read) {
                         sprintf(resp, "?!\r\n");
                     }
                 }
+                else if (data[1] == 'R') {      // Trust reconnect
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+                    bleController.SetTrusted(true);
+                    sprintf(resp, "XR:1\r\n");
+#else
+                    sprintf(resp, "?Disabled\r\n");
+#endif
+                }
                 else if (data[1] == '!') {  // Remote reset (risky?)
 #ifdef CUEBAND_ALLOW_REMOTE_RESET
                     sprintf(resp, "X!:Reset\r\n"); // never sent

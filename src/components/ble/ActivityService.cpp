@@ -308,6 +308,16 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 }
             }
 
+            // Trust next connection (within 120 seconds), e.g. a separate DFU connection
+            {
+                const char *cmdReconnect = "Reconnect!";
+                if (trusted && notifSize == strlen(cmdReconnect) && memcmp(data, cmdReconnect, strlen(cmdReconnect)) == 0) {
+#if defined(CUEBAND_TRUSTED_CONNECTION)
+                    bleController.SetTrusted(true);
+#endif
+                }
+            }
+
             // Vibration
             {
                 uint32_t value = 0xffffffff;

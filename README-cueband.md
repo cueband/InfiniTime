@@ -303,6 +303,7 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Write `uint8_t[]`             | `"Erase!"`: resets the activity log.             |
 |                               | `"Validate!"`: remotely validates the firmware (risky)  |
 |                               | `"Reset!"`: remotely resets the device (risky?)  |
+|                               | `"Reconnect!"`: trust the next connection if made within 120 seconds, e.g. for a separate DFU connection  |
 |                               | `"V@####"`: immediately triggers vibration, where '#' represents the 4-bytes of the uint32_t value.  |
 |                               | `"V=..."`: immediately triggers vibration, where '...' represents one or more ASCII characters ('0'-'9') to be interpreted as a decimal value.  |
 |                               | `"!####"`: trusted connection challenge response, where '#' represents the 4-bytes of the uint32_t value.  |
@@ -607,6 +608,9 @@ A response may be prefixed with:
 
 * `X!` - Remotely reset device (risky?)
   > (resets device)
+
+* `XR` - Trust a reconnection within 120 seconds
+  > `XR:1`
 
 * `XV?` - Query firmware validation
   > `XV:<firmware_validated>`
