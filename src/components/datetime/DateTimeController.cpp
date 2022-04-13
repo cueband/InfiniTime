@@ -66,6 +66,9 @@ void DateTime::UpdateTime(uint32_t systickCounter) {
 
   currentDateTime += std::chrono::seconds(correctedDelta);
   uptime += std::chrono::seconds(correctedDelta);
+#ifdef CUEBAND_UPTIME_1024                 // Track system uptime in units of 1024
+  uptime1024 += systickDelta;
+#endif
 
   auto dp = date::floor<date::days>(currentDateTime);
   auto time = date::make_time(currentDateTime - dp);

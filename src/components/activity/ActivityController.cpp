@@ -25,7 +25,17 @@ static struct {
 } activity_debug_info;
 #endif
 
-ActivityController::ActivityController(Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs) : settingsController {settingsController}, fs {fs} {
+ActivityController::ActivityController(Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+            , Pinetime::Controllers::DateTime& dateTimeController
+            , Pinetime::Controllers::MotorController& motorController
+#endif
+) : settingsController {settingsController}, fs {fs} 
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+            , dateTimeController { dateTimeController }
+            , motorController { motorController }
+#endif
+{
 
   resampler_init(&this->resampler, CUEBAND_BUFFER_EFFECTIVE_RATE, ACTIVITY_RATE, 0, CUEBAND_AXES);
 
@@ -99,6 +109,35 @@ void ActivityController::AddSamples(MotionController &motionController) {
   if (totalSamples != lastTotalSamples) {
     lastTotalSamples = totalSamples;
 
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+    uptime1024_t now = dateTimeController.Uptime1024();
+    unsigned int sampleTicks = lastCount * 1024 / CUEBAND_BUFFER_EFFECTIVE_RATE;
+    uptime1024_t firstSampleTime = (now < sampleTicks) ? 0 : (now - sampleTicks);
+    uptime1024_t lastMovement = motorController.GetLastMovement();
+    uptime1024_t overlap = (firstSampleTime < lastMovement) ? (lastMovement - firstSampleTime) : 0;
+
+    // If some of this buffer overlaps the movement, discard the start of the buffer (up to all of it)
+    if (overlap > 0 && overlap < (60 * CUEBAND_BUFFER_EFFECTIVE_RATE * 1024)) {    // Do not believe a large amount of overlap
+      unsigned int skip = ((unsigned int)overlap * CUEBAND_BUFFER_EFFECTIVE_RATE / 1024);
+      if (skip > lastCount) skip = lastCount;
+
+#if (CUEBAND_DEBUG_TRACK_MOTOR_TIMES == 2 || CUEBAND_DEBUG_TRACK_MOTOR_TIMES == 3 || CUEBAND_DEBUG_TRACK_MOTOR_TIMES == 4)
+      // (Optionally) clear streamed data and do not actually skip the data
+      for (unsigned int i = 0; i < skip; i++) {
+#if (CUEBAND_DEBUG_TRACK_MOTOR_TIMES == 3 || CUEBAND_DEBUG_TRACK_MOTOR_TIMES == 4)
+        if ((i & 7) >= 7) continue;   // ...in a pattern to visualize overlap
+#endif
+        accelValues[CUEBAND_AXES * i + 0] = 0;
+        accelValues[CUEBAND_AXES * i + 1] = 0;
+        accelValues[CUEBAND_AXES * i + 2] = 0;
+      }
+#else
+      accelValues += skip * CUEBAND_AXES;
+      lastCount -= skip;
+#endif
+    }
+#endif
+
 #ifdef CUEBAND_ACTIVITY_STATS
     for (unsigned int i = 0; i < lastCount; i++) {
 
@@ -148,6 +187,12 @@ void ActivityController::AddSamples(MotionController &motionController) {
 #endif
 
 #if (CUEBAND_BUFFER_EFFECTIVE_RATE == ACTIVITY_RATE)
+    #if defined(CUEBAND_STREAM_RESAMPLED)
+      unsigned int count = (lastCount > ACTIVITY_RESAMPLE_BUFFER_SIZE) ? ACTIVITY_RESAMPLE_BUFFER_SIZE : lastCount;
+      memcpy(this->outputBuffer, accelValues, count * CUEBAND_AXES * sizeof(accelValues[0]));
+      this->lastCount = count;
+      this->totalSamples += count;
+    #endif
     for (unsigned int i = 0; i < lastCount; i++) {
       AddSingleSample(accelValues[CUEBAND_AXES * i + 0], accelValues[CUEBAND_AXES * i + 1], accelValues[CUEBAND_AXES * i + 2]);
     }

@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "components/motor/MotorController.h"
 #include <hal/nrf_gpio.h>
 #include "systemtask/SystemTask.h"
@@ -28,6 +30,9 @@ void MotorController::RunForDuration(uint8_t motorDuration) {
   BeginPattern(nullptr);
 #endif
   nrf_gpio_pin_clear(PinMap::Motor);
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+  TrackActive(motorDuration);
+#endif
   app_timer_start(shortVibTimer, APP_TIMER_TICKS(motorDuration), nullptr);
 }
 
@@ -112,11 +117,26 @@ void MotorController::AdvancePattern() {
   
   if ((currentIndex & 1) == 0) {
     nrf_gpio_pin_clear(PinMap::Motor);  // On
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+    TrackActive(duration);
+#endif
   } else {
     nrf_gpio_pin_set(PinMap::Motor);    // Off
   }
   currentIndex++;
   app_timer_start(shortVibTimer, APP_TIMER_TICKS(duration), this);
 }
+
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+void MotorController::TrackActive(unsigned int timeMs) {
+  uptime1024_t now = dateTimeController.Uptime1024();
+  uptime1024_t end = now + ((timeMs + CUEBAND_TRACK_MOTOR_TIMES) * 1024 / 1000);
+  if (end > this->lastMovement) {
+    this->lastMovement = end;
+  }
+  // Check sensible range (in case of corruption -- overflow should be impossible with 64-bit)
+  //if (now + (60 * 1024) < this->lastMovement) { this->lastMovement = now; }
+}
+#endif
 
 #endif

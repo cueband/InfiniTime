@@ -114,9 +114,14 @@ Pinetime::Applications::HeartRateTask heartRateApp(heartRateSensor, heartRateCon
 
 Pinetime::Controllers::FS fs {spiNorFlash};
 Pinetime::Controllers::Settings settingsController {fs};
+#ifndef CUEBAND_TRACK_MOTOR_TIMES
 Pinetime::Controllers::MotorController motorController {};
+#endif
 
 Pinetime::Controllers::DateTime dateTimeController {settingsController};
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+Pinetime::Controllers::MotorController motorController {dateTimeController};
+#endif
 Pinetime::Drivers::Watchdog watchdog;
 Pinetime::Drivers::WatchdogView watchdogView(watchdog);
 Pinetime::Controllers::NotificationManager notificationManager;
@@ -128,7 +133,12 @@ Pinetime::Controllers::ButtonHandler buttonHandler;
 Pinetime::Controllers::BrightnessController brightnessController {};
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
-Pinetime::Controllers::ActivityController activityController {settingsController, fs};
+Pinetime::Controllers::ActivityController activityController {settingsController, fs
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+  , dateTimeController
+  , motorController
+#endif
+};
 #endif
 #ifdef CUEBAND_CUE_ENABLED
 Pinetime::Controllers::CueController cueController {settingsController, fs, activityController, motorController, batteryController};

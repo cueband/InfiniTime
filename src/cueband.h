@@ -101,6 +101,10 @@
 #define CUEBAND_DETECT_WEAR_TIME (10 * 60)  // (when activity is enabled) detect the watch is unlikely to be worn after 10 minutes of no movement on at least two of the axes
 //#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
 
+#define CUEBAND_UPTIME_1024                 // Track system uptime in units of 1024
+#define CUEBAND_TRACK_MOTOR_TIMES (35*1024/10)  // Determine when the motor was active until (e.g. so that any affected accelerometer samples can be ignored), this is the settle time (+ jitter, etc) to add in milliseconds
+//#define CUEBAND_DEBUG_TRACK_MOTOR_TIMES 1   // Stream output to UART: 1=remove, 2=leave and zero-out, 3=leave and zero-out in a pattern
+
 #define CUEBAND_SYMBOLS
 
 #define CUEBAND_MOTOR_PATTERNS  // Allow vibration motor patterns
@@ -244,7 +248,6 @@
 
 #endif
 
-
 // Don't bother reading activity and temperature if they're not used
 #ifdef CUEBAND_BUFFER_ENABLED
     #define CUEBAND_DONT_READ_UNUSED_ACCELEROMETER_VALUES
@@ -330,6 +333,9 @@ void cblog(const char *str);
 
 
 // Config compatibility checks
+#if defined(CUEBAND_TRACK_MOTOR_TIMES) && !defined(CUEBAND_UPTIME_1024)
+    #error "CUEBAND_TRACK_MOTOR_TIMES requires CUEBAND_UPTIME_1024"
+#endif
 #if defined(CUEBAND_FIFO_ENABLED) && !defined(CUEBAND_BUFFER_ENABLED)
     #error "CUEBAND_FIFO_ENABLED requires CUEBAND_BUFFER_ENABLED"
 #endif
@@ -349,8 +355,34 @@ void cblog(const char *str);
     #error "At most one of CUEBAND_POLLED_ENABLED / CUEBAND_FIFO_ENABLED may be defined"
 #endif
 
+// Debug CUEBAND_TRACK_MOTOR_TIMES
+#ifdef CUEBAND_DEBUG_TRACK_MOTOR_TIMES
+    #ifdef CUEBAND_CONFIGURATION_WARNINGS
+        #warning "This build has CUEBAND_DEBUG_TRACK_MOTOR_TIMES and must not be used for a release"
+    #endif
+    #ifndef CUEBAND_STREAM_ENABLED
+        #error "CUEBAND_DEBUG_TRACK_MOTOR_TIMES requires CUEBAND_STREAM_ENABLED"
+    #endif
+    #ifndef CUEBAND_STREAM_RESAMPLED
+        #define CUEBAND_STREAM_RESAMPLED
+        #ifdef CUEBAND_CONFIGURATION_WARNINGS
+            #warning "Setting CUEBAND_STREAM_RESAMPLED as required for CUEBAND_DEBUG_TRACK_MOTOR_TIMES"
+        #endif
+    #endif
+    #if (ACTIVITY_RATE != CUEBAND_BUFFER_EFFECTIVE_RATE)
+        #ifdef CUEBAND_CONFIGURATION_WARNINGS
+            #warning "Altering ACTIVITY_RATE to match CUEBAND_BUFFER_EFFECTIVE_RATE as required for CUEBAND_DEBUG_TRACK_MOTOR_TIMES"
+        #endif
+        #undef ACTIVITY_RATE
+        #define ACTIVITY_RATE CUEBAND_BUFFER_EFFECTIVE_RATE
+    #endif
+#endif
+
 // Warnings for non-standard build
 #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
+#if ((CUEBAND_BUFFER_EFFECTIVE_RATE == ACTIVITY_RATE) && defined(CUEBAND_STREAM_RESAMPLED) && !defined(CUEBAND_DEBUG_TRACK_MOTOR_TIMES))
+    #warning "CUEBAND_STREAM_RESAMPLED defined, but CUEBAND_BUFFER_EFFECTIVE_RATE == ACTIVITY_RATE, this will be inefficient"
+#endif
 #if defined(CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE)
     #warning "CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE defined - makes it trickier to accidentally wipe the firmware by holding the button while worn (risky)"
 #endif

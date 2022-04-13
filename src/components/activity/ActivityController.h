@@ -7,6 +7,10 @@
 
 #include "components/settings/Settings.h"
 #include "components/fs/FS.h"
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+      #include "components/datetime/DateTimeController.h"
+      #include "components/motor/MotorController.h"
+#endif
 
 #if defined(CUEBAND_BUFFER_ENABLED)
 #include "components/motion/MotionController.h"
@@ -65,7 +69,12 @@ namespace Pinetime {
   namespace Controllers {
     class ActivityController {
     public:
-      ActivityController(Pinetime::Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs);
+      ActivityController(Pinetime::Controllers::Settings& settingsController, Pinetime::Controllers::FS& fs
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+            , Pinetime::Controllers::DateTime& dateTimeController
+            , Pinetime::Controllers::MotorController& motorController
+#endif
+      );
 
 #if defined(CUEBAND_BUFFER_ENABLED)
       // Add multiple samples at the original source rate
@@ -127,6 +136,10 @@ namespace Pinetime {
     private:
       Pinetime::Controllers::Settings& settingsController;
       Pinetime::Controllers::FS& fs;
+#ifdef CUEBAND_TRACK_MOTOR_TIMES
+      Pinetime::Controllers::DateTime& dateTimeController;
+      Pinetime::Controllers::MotorController& motorController;
+#endif
 
       std::array<uint8_t, 6> deviceAddress;
 

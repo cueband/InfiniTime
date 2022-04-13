@@ -7,6 +7,10 @@
 #include <string>
 #include "components/settings/Settings.h"
 
+#ifdef CUEBAND_UPTIME_1024                 // Track system uptime in units of 1024
+typedef uint64_t uptime1024_t;
+#endif
+
 namespace Pinetime {
   namespace System {
     class SystemTask;
@@ -73,6 +77,12 @@ namespace Pinetime {
       std::chrono::seconds Uptime() const {
         return uptime;
       }
+#ifdef CUEBAND_UPTIME_1024                 // Track system uptime in units of 1024
+      uptime1024_t uptime1024 = 0;
+      uptime1024_t Uptime1024() const {
+        return uptime1024;
+      }
+#endif
 #ifdef CUEBAND_DETECT_UNSET_TIME
       bool IsUnset() const {
           uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(CurrentDateTime().time_since_epoch()).count();
