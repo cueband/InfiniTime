@@ -108,8 +108,8 @@ void ActivityController::AddSamples(MotionController &motionController) {
         if (this->statsIndex >= 0) {
 #ifdef CUEBAND_DETECT_FACE_DOWN
           // min/max of x < 0.4, y < 0.4, z > 0.9
-          bool isFaceDown =    this->statsMin[0] <= CUEBAND_SCALE_MILLI_G(400) && this->statsMax[0] >= CUEBAND_SCALE_MILLI_G(400)   // x <= 0.4 g
-                            && this->statsMin[1] <= CUEBAND_SCALE_MILLI_G(400) && this->statsMax[1] >= CUEBAND_SCALE_MILLI_G(400)   // y <= 0.4 g
+          bool isFaceDown =    this->statsMin[0] <= CUEBAND_SCALE_MILLI_G(400) && this->statsMax[0] <= CUEBAND_SCALE_MILLI_G(400)   // x <= 0.4 g
+                            && this->statsMin[1] <= CUEBAND_SCALE_MILLI_G(400) && this->statsMax[1] <= CUEBAND_SCALE_MILLI_G(400)   // y <= 0.4 g
                             && this->statsMin[2] >= CUEBAND_SCALE_MILLI_G(900) && this->statsMax[2] >= CUEBAND_SCALE_MILLI_G(900)   // z >= 0.9 g
                             ;
           if (isFaceDown) {
