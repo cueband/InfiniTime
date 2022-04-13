@@ -32,7 +32,7 @@
 #define ACTIVITY_EVENT_CUE_OPENED          0x1000 // Cue: user opened app
 #define ACTIVITY_EVENT_CUE_MANUAL          0x2000 // Cue: temporary manual cueing in use
 #define ACTIVITY_EVENT_CUE_SNOOZE          0x4000 // Cue: temporary manual snooze in use
-#define ACTIVITY_EVENT_RESERVED            0x8000 // (Reserved)
+#define ACTIVITY_EVENT_FACE_DOWN           0x8000 // Activity: Watch was detected as face-down during the epoch 
 
 #define ACTIVITY_HEADER_SIZE 30
 #define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 480 (512 - 30 bytes header - 2 bytes checksum)
@@ -105,6 +105,21 @@ namespace Pinetime {
       // To allow streaming of resampled data
       void GetBufferData(int16_t **accelValues, unsigned int *lastCount, unsigned int *totalSamples);
 #endif
+#ifdef CUEBAND_ACTIVITY_STATS
+      int statsIndex = -1;
+      int statsMin[CUEBAND_AXES] = {0};
+      int statsMax[CUEBAND_AXES] = {0};
+#endif
+#ifdef CUEBAND_DETECT_FACE_DOWN
+      bool IsFaceDown();
+      unsigned int faceDownTime = 0;
+#endif
+#ifdef CUEBAND_DETECT_WEAR_TIME
+      bool IsUnmovingActivity();
+      unsigned int unmoving[CUEBAND_AXES] = {0};
+#endif
+      // Device interaction -- clear wear/face-down detections
+      void DeviceInteraction();
 
       uint32_t temp_transmit_count_all = 0;   // TODO: Remove this
       uint32_t temp_transmit_count = 0;   // TODO: Remove this

@@ -97,9 +97,13 @@
 
 #define CUEBAND_DETECT_UNSET_TIME 1577836800  // Before 2020-01-01 00:00:00
 
+#define CUEBAND_DETECT_FACE_DOWN 15         // (when activity is enabled) detect when the watch is face-down without being interacted with for 15 seconds
+#define CUEBAND_DETECT_WEAR_TIME (10 * 60)  // (when activity is enabled) detect the watch is unlikely to be worn after 10 minutes of no movement on at least two of the axes
+#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
+
 #define CUEBAND_SYMBOLS
 
-#define CUEBAND_MOTOR_PATTERNS
+#define CUEBAND_MOTOR_PATTERNS  // Allow vibration motor patterns
 
 // Various customizations for the UI and existing PineTime services
 #define CUEBAND_CUSTOMIZATION
@@ -207,6 +211,8 @@
     #define CUEBAND_BUFFER_12BIT_SCALE (2048/CUEBAND_BUFFER_SAMPLE_RANGE)    // at +/- 8g, 256 (12-bit) raw units = 1 'g'
     #define CUEBAND_BUFFER_16BIT_SCALE (CUEBAND_BUFFER_12BIT_SCALE << 4)     // at +/- 8g, 4096
 
+    #define CUEBAND_SCALE_MILLI_G(_v) ((int)((long)(_v) * CUEBAND_BUFFER_16BIT_SCALE / 1000))
+
     // Original firmware expects the MotionController to return values scaled at +/- 2g -- see Bma421::Init()
     #define CUEBAND_ORIGINAL_RANGE 2                                // +/- 2g
     #define CUEBAND_ORIGINAL_SCALE (2048/CUEBAND_ORIGINAL_RANGE)    // at +/- 2g, 1024 (12-bit) raw units = 1 'g'
@@ -250,6 +256,9 @@
     #define CUEBAND_DONT_SLEEP_NOR_FLASH
 #endif
 
+#if defined(CUEBAND_DETECT_WEAR_TIME) || defined(CUEBAND_DETECT_FACE_DOWN)
+    #define CUEBAND_ACTIVITY_STATS       // compute per-second stats (min/max) on the activity
+#endif
 
 // If none of these are defined, the build should be identical to stock InfiniTime firmware
 #if defined(CUEBAND_SERVICE_UART_ENABLED) || defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED) || defined(CUEBAND_CUE_ENABLED)

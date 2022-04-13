@@ -14,6 +14,8 @@
 
 #define PROMPT_MAX_CONTROLS 64
 
+namespace Pinetime::Controllers { class Battery; }  // #include "components/battery/BatteryController.h"
+
 namespace Pinetime {
   namespace Controllers {
 
@@ -21,7 +23,7 @@ namespace Pinetime {
 
     class CueController {
     public:
-      CueController(Controllers::Settings& settingsController, Controllers::FS& fs, Controllers::ActivityController& activityController, Controllers::MotorController& motorController);
+      CueController(Controllers::Settings& settingsController, Controllers::FS& fs, Controllers::ActivityController& activityController, Controllers::MotorController& motorController, Controllers::Battery& batteryController);
 
       void Init();
       void TimeChanged(uint32_t timestamp, uint32_t uptime);
@@ -79,6 +81,8 @@ namespace Pinetime {
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }
 
+      bool SilencedAsUnworn();
+
       const char *Description(bool detailed = false, const char **symbol = nullptr);
       void DebugText(char *debugText);
 
@@ -111,6 +115,7 @@ namespace Pinetime {
       Controllers::FS& fs;
       Controllers::ActivityController& activityController;
       Controllers::MotorController& motorController;
+      Controllers::Battery& batteryController;
 
       const static uint32_t UPTIME_NONE = (uint32_t)-1;
 

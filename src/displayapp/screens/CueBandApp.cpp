@@ -55,6 +55,10 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
 #endif
    {
 
+#ifdef CUEBAND_CUE_ENABLED
+  systemTask.ReportAppActivated();
+#endif
+
   // Padding etc.
   static constexpr uint8_t innerDistance = 10;
   static constexpr uint8_t barHeight = 20 + innerDistance;

@@ -390,7 +390,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 #ifdef CUEBAND_TRUSTED_UART
             if (!bleController.IsTrusted()) unauthorized = true;
             // Allow-listed commands
-            if (data[0] == '#' || data[0] == 'U' || data[0] == 'B')unauthorized = false;
+            if (strchr("#UBz", data[0]) != NULL) unauthorized = false;
 #endif
 
             if (unauthorized) {           // Connection is unautorized
@@ -777,6 +777,27 @@ if (!read) {
                 else {
                     sprintf(resp, "?!\r\n");
                 }
+
+            } else if (data[0] == 'z') { // Debug: Query inactive state
+                bool faceDown = false;
+                unsigned int faceDownTime = 0;
+#if defined(CUEBAND_ACTIVITY_ENABLED) && defined(CUEBAND_DETECT_FACE_DOWN)
+                faceDown = activityController.IsFaceDown();
+                faceDownTime = activityController.faceDownTime;
+                if (faceDownTime > 99) faceDownTime = 99;
+#endif
+
+                bool notWorn = false;
+                unsigned int unmovingX = 0;
+                unsigned int unmovingY = 0;
+                unsigned int unmovingZ = 0;
+#if defined(CUEBAND_ACTIVITY_ENABLED) && defined(CUEBAND_DETECT_WEAR_TIME)
+                notWorn = activityController.IsFaceDown();
+                unmovingX = activityController.unmoving[0]; if (unmovingX > 999) unmovingX = 999;
+                unmovingY = activityController.unmoving[1]; if (unmovingY > 999) unmovingY = 999;
+                unmovingZ = activityController.unmoving[2]; if (unmovingZ > 999) unmovingZ = 999;
+#endif            
+                sprintf(resp, "Z:%s%i %s%i/%i/%i\r\n", faceDown ? "D" : "U", faceDownTime, notWorn ? "N" : "W", unmovingX, unmovingY, unmovingZ);
 
             } else { // Unhandled
                 sprintf(resp, "?\r\n");

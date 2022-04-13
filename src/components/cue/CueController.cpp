@@ -4,6 +4,7 @@
 
 #include "CueController.h"
 #include "displayapp/screens/Symbols.h"
+#include "components/battery/BatteryController.h"
 
 using namespace Pinetime::Controllers;
 
@@ -15,13 +16,15 @@ using namespace Pinetime::Controllers;
 CueController::CueController(Controllers::Settings& settingsController, 
                              Controllers::FS& fs,
                              Controllers::ActivityController& activityController,
-                             Controllers::MotorController& motorController
+                             Controllers::MotorController& motorController,
+                             Controllers::Battery& batteryController
                             )
                             :
                             settingsController {settingsController},
                             fs {fs},
                             activityController {activityController},
-                            motorController {motorController}
+                            motorController {motorController},
+                            batteryController {batteryController}
                             {
     store.SetData(Pinetime::Controllers::ControlPointStore::VERSION_NONE, controlPoints, scratch, sizeof(controlPoints) / sizeof(controlPoints[0]));
     store.Reset();  // Clear all control points, version, and scratch.
@@ -53,6 +56,18 @@ void CueController::Vibrate(unsigned int style) {
     // Prompt
     motorController.RunForDuration(motorPulseWidth);   // milliseconds
 #endif
+}
+
+bool CueController::SilencedAsUnworn() {
+    bool silenced = false;
+#ifdef CUEBAND_DETECT_FACE_DOWN
+    if (activityController.IsFaceDown()) silenced = true;
+#endif
+    if (batteryController.IsPowerPresent()) silenced = true;
+#ifdef CUEBAND_DETECT_WEAR_TIME
+    if (activityController.IsUnmovingActivity()) silenced = true;
+#endif
+    return silenced;
 }
 
 // Called at 1Hz
@@ -100,6 +115,13 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
             snoozed = true;
         }
     }
+
+    // If not prompting when considered unworn...
+#ifdef CUEBAND_SILENT_WHEN_UNWORN
+    if (SilencedAsUnworn()) {
+        snoozed = true;
+    }
+#endif
 
     // Overridden or scheduled interval
     if (effectiveInterval > 0) {
@@ -552,7 +574,11 @@ const char *CueController::Description(bool detailed, const char **symbol) {
         } else if (override_remaining > 0) {
             if (interval > 0) {
                 // Temporary cueing
-                p += sprintf(p, "Manual (%s)", niceTime(override_remaining));
+                if (SilencedAsUnworn()) {
+                    p += sprintf(p, "Unworn Man.(%s)", niceTime(duration));
+                } else {
+                    p += sprintf(p, "Manual (%s)", niceTime(override_remaining));
+                }
                 icon = Applications::Screens::Symbols::cuebandImpromptu;
                 if (detailed) {
                     p += sprintf(p, "\n[interval %is]", (int)interval);
@@ -568,7 +594,11 @@ const char *CueController::Description(bool detailed, const char **symbol) {
             //icon = Applications::Screens::Symbols::cuebandDisabled;
         } else if (current_control_point < 0xffff) {
             // Scheduled cueing in progress
-            p += sprintf(p, "Cue (%s)", niceTime(duration));
+            if (SilencedAsUnworn()) {
+                p += sprintf(p, "Unworn Cue (%s)", niceTime(duration));
+            } else {
+                p += sprintf(p, "Cue (%s)", niceTime(duration));
+            }
             if (detailed) {
                 p += sprintf(p, "\n[interval %is]", (int)interval);
             }

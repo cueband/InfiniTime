@@ -126,6 +126,10 @@ namespace Pinetime {
       Pinetime::Controllers::CueController& GetCueController() {
             return cueController;
       }
+      bool appActivated = false;
+      void ReportAppActivated() {
+            appActivated = true;
+      }
 #endif
 #if defined(CUEBAND_USE_TRUSTED_CONNECTION) || defined(CUEBAND_INFO_APP_ENABLED)
       Pinetime::Controllers::Ble& GetBleController() { return bleController; }

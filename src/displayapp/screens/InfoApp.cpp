@@ -181,6 +181,9 @@ int InfoApp::ScreenCount() {
   screenCount++;  // id (address etc)
 #endif
   screenCount++;  // info
+#ifdef CUEBAND_CUE_ENABLED
+  screenCount++;  // cue details
+#endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
   screenCount++;  // activity debug - basic
   #ifdef CUEBAND_DEBUG_ACTIVITY

@@ -419,7 +419,7 @@ Each sample is of the form `activity_sample`:
 The `events` flags are bitwise flags and defined as follows:
 
 > ```c
-> const uint16_t ACTIVITY_EVENT_POWER_CONNECTED     = 0x0001;  // @b0  Connected to power for at least part of the epoch
+> const uint16_t ACTIVITY_EVENT_POWER_CONNECTED     = 0x0001;  // @b0  Connected to power for at least part of the epoch (not worn)
 > const uint16_t ACTIVITY_EVENT_POWER_CHANGED       = 0x0002;  // @b1  Power connection status changed during the epoch
 > const uint16_t ACTIVITY_EVENT_BLUETOOTH_CONNECTED = 0x0004;  // @b2  Connected to Bluetooth for at least part the epoch
 > const uint16_t ACTIVITY_EVENT_BLUETOOTH_CHANGED   = 0x0008;  // @b3  Bluetooth connection status changed during the epoch
@@ -427,14 +427,14 @@ The `events` flags are bitwise flags and defined as follows:
 > const uint16_t ACTIVITY_EVENT_WATCH_AWAKE         = 0x0020;  // @b5  Watch was awoken at least once during the epoch
 > const uint16_t ACTIVITY_EVENT_WATCH_INTERACTION   = 0x0040;  // @b6  Watch screen interaction (button or touch)
 > const uint16_t ACTIVITY_EVENT_RESTART             = 0x0080;  // @b7  First epoch after device restart (or event logging restarted?)
-> const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn
-> const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer considered asleep
+> const uint16_t ACTIVITY_EVENT_NOT_WORN            = 0x0100;  // @b8  (TBD?) Activity: Device considered not worn from inactivity
+> const uint16_t ACTIVITY_EVENT_ASLEEP              = 0x0200;  // @b9  (TBD?) Activity: Wearer may be asleep
 > const uint16_t ACTIVITY_EVENT_CUE_DISABLED        = 0x0400;  // @b10 Cue: Scheduled cueing disabled
 > const uint16_t ACTIVITY_EVENT_CUE_CONFIGURATION   = 0x0800;  // @b11 Cue: new configuration written
-> const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 (TBD?) Cue: user opened app
+> const uint16_t ACTIVITY_EVENT_CUE_OPENED          = 0x1000;  // @b12 Cue: user opened watch cue app
 > const uint16_t ACTIVITY_EVENT_CUE_MANUAL          = 0x2000;  // @b13 Cue: temporary manual cueing in use
 > const uint16_t ACTIVITY_EVENT_CUE_SNOOZE          = 0x4000;  // @b14 Cue: temporary manual snooze in use
-> const uint16_t ACTIVITY_EVENT_RESERVED            = 0x8000;  // @b15 (Reserved)
+> const uint16_t ACTIVITY_EVENT_FACE_DOWN           = 0x8000;  // @b15 Activity: Watch was detected as face-down during the epoch (potentially not worn / manually snoozed?)
 > ```
 
 

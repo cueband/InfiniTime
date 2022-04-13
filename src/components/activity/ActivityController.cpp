@@ -60,6 +60,33 @@ void ActivityController::GetBufferData(int16_t **accelValues, unsigned int *last
 }
 #endif
 
+#ifdef CUEBAND_DETECT_FACE_DOWN
+bool ActivityController::IsFaceDown() {
+  return faceDownTime >= CUEBAND_DETECT_FACE_DOWN;
+}
+#endif
+#ifdef CUEBAND_DETECT_WEAR_TIME
+bool ActivityController::IsUnmovingActivity() {
+  int axesUnmoving = 0;
+  for (int chan = 0; chan < CUEBAND_AXES; chan++) {
+    if (this->unmoving[chan] >= CUEBAND_DETECT_WEAR_TIME) axesUnmoving++;
+  }
+  return axesUnmoving >= 2;   // at least two of the axes
+}
+#endif
+
+// Device interaction -- clear wear/face-down detections
+void ActivityController::DeviceInteraction() {
+#ifdef CUEBAND_DETECT_FACE_DOWN
+  this->faceDownTime = 0;
+#endif
+#ifdef CUEBAND_DETECT_WEAR_TIME
+  for (int chan = 0; chan < CUEBAND_AXES; chan++) {
+    this->unmoving[chan] = 0;
+  }
+#endif
+  return;
+}
 
 #if defined(CUEBAND_BUFFER_ENABLED)
 // Add multiple samples at the original source rate
@@ -68,10 +95,58 @@ void ActivityController::AddSamples(MotionController &motionController) {
   unsigned int lastCount = 0;
   unsigned int totalSamples = 0;
   motionController.GetBufferData(&accelValues, &lastCount, &totalSamples);
-
   // Only add samples if they're new
   if (totalSamples != lastTotalSamples) {
     lastTotalSamples = totalSamples;
+
+#ifdef CUEBAND_ACTIVITY_STATS
+    for (unsigned int i = 0; i < lastCount; i++) {
+
+      // At 1 Hz
+      if (this->statsIndex < 0 || this->statsIndex >= CUEBAND_BUFFER_EFFECTIVE_RATE) {
+        // If we have data (not just the initial state)
+        if (this->statsIndex >= 0) {
+#ifdef CUEBAND_DETECT_FACE_DOWN
+          // min/max of x < 0.4, y < 0.4, z > 0.9
+          bool isFaceDown =    this->statsMin[0] <= CUEBAND_SCALE_MILLI_G(400) && this->statsMax[0] >= CUEBAND_SCALE_MILLI_G(400)   // x <= 0.4 g
+                            && this->statsMin[1] <= CUEBAND_SCALE_MILLI_G(400) && this->statsMax[1] >= CUEBAND_SCALE_MILLI_G(400)   // y <= 0.4 g
+                            && this->statsMin[2] >= CUEBAND_SCALE_MILLI_G(900) && this->statsMax[2] >= CUEBAND_SCALE_MILLI_G(900)   // z >= 0.9 g
+                            ;
+          if (isFaceDown) {
+            this->faceDownTime++;
+          } else {
+            this->faceDownTime = 0;
+          }
+#endif
+#ifdef CUEBAND_DETECT_WEAR_TIME
+          // range <= 0.05 g for at least 2 out of the 3 axes
+          for (int chan = 0; chan < CUEBAND_AXES; chan++) {
+            bool unmoving = (this->statsMax[chan] - this->statsMin[chan]) <= CUEBAND_SCALE_MILLI_G(50);
+            if (unmoving) {
+              this->unmoving[chan]++;
+            } else {
+              this->unmoving[chan] = 0;
+            }
+          }
+#endif
+          ;
+        }
+        // Reset stats
+        this->statsIndex = 0;
+      }
+
+      // Add current stats
+      for (int chan = 0; chan < CUEBAND_AXES; chan++) {
+        int value = accelValues[CUEBAND_AXES * i + chan];
+        if (this->statsIndex == 0 || value < this->statsMin[chan]) this->statsMin[chan] = value;
+        if (this->statsIndex == 0 || value > this->statsMax[chan]) this->statsMax[chan] = value;
+      }
+      
+      this->statsIndex++;
+    }
+    
+#endif
+
 #if (CUEBAND_BUFFER_EFFECTIVE_RATE == ACTIVITY_RATE)
     for (unsigned int i = 0; i < lastCount; i++) {
       AddSingleSample(accelValues[CUEBAND_AXES * i + 0], accelValues[CUEBAND_AXES * i + 1], accelValues[CUEBAND_AXES * i + 2]);

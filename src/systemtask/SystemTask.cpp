@@ -600,10 +600,27 @@ void SystemTask::Work() {
         if (!isSleeping && wasSleeping) events |= ACTIVITY_EVENT_WATCH_AWAKE;
         if (interactionCount != lastInteractionCount) {
           events |= ACTIVITY_EVENT_WATCH_INTERACTION;
+          activityController.DeviceInteraction();
         }
         if (!latterEpoch) {
           events |= ACTIVITY_EVENT_RESTART;
         }
+#ifdef CUEBAND_CUE_ENABLED
+        if (appActivated) {
+          appActivated = false;
+          events |= ACTIVITY_EVENT_CUE_OPENED;
+        }
+#endif
+#ifdef CUEBAND_DETECT_FACE_DOWN
+        if (activityController.IsFaceDown()) {
+          events |= ACTIVITY_EVENT_FACE_DOWN;
+        }
+#endif
+#ifdef CUEBAND_DETECT_WEAR_TIME
+        if (activityController.IsUnmovingActivity()) {
+          events |= ACTIVITY_EVENT_NOT_WORN;
+        }
+#endif
 
         // Add any current events
         if (events != 0x0000) {
