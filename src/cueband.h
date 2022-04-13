@@ -99,7 +99,7 @@
 
 #define CUEBAND_DETECT_FACE_DOWN 15         // (when activity is enabled) detect when the watch is face-down without being interacted with for 15 seconds
 #define CUEBAND_DETECT_WEAR_TIME (10 * 60)  // (when activity is enabled) detect the watch is unlikely to be worn after 10 minutes of no movement on at least two of the axes
-#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
+//#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
 
 #define CUEBAND_SYMBOLS
 

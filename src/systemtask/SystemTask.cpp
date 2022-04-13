@@ -675,7 +675,7 @@ void SystemTask::Work() {
 
       // Initial button states
       const uint32_t button_long_threshold = 3;   // 3 seconds is a "long press"
-      const uint32_t button_long_recent = 10;     // 10 seconds is a "recent long press"
+      const uint32_t button_long_recent = 5;      // 5 seconds is a "recent long press" (from finish of previous to start of current)
       static uint32_t button_last_now = 0;
       static uint32_t button_time = 0;
       static bool button_seen_pressed = false;
@@ -716,7 +716,7 @@ void SystemTask::Work() {
         && button_time > 30                                     // at least 30 changes in time (typically seconds) have occurred since the watch restarted
         && !batteryController.IsPowerPresent()                  // the device is not connected to power
         && button_time - button_current_press_start_time > button_long_threshold  // the button has been pressed "a long time"
-        && button_time - button_previous_long_press_ended > button_long_recent    // the button was not long-pressed recently (the last time it was pressed "a long time" was longer ago than 10 seconds before the start of this press)
+        && button_current_press_start_time - button_previous_long_press_ended > button_long_recent    // the button was not long-pressed recently (the last time it was pressed "a long time" was longer ago than 10 seconds before the start of this press)
         && button_is_new_second                                 // time has just advanced
       ) {
         // When not connected to power and not just restarted, to reset or get into recovery, you will need to: do a long-press, stop, and then hold for a long time
