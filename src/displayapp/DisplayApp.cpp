@@ -328,7 +328,11 @@ touchHandler.CancelTap();
         break;
       case Messages::ButtonLongerPressed:
         // Create reboot app and open it instead
+#ifdef CUEBAND_LONGER_PRESS_INFO
+        LoadApp(Apps::Info, DisplayApp::FullRefreshDirections::Up);
+#else
         LoadApp(Apps::SysInfo, DisplayApp::FullRefreshDirections::Up);
+#endif
         break;
       case Messages::ButtonDoubleClicked:
         if (currentApp != Apps::Notifications && currentApp != Apps::NotificationsPreview) {

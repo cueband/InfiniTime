@@ -574,9 +574,12 @@ const char *CueController::Description(bool detailed, const char **symbol) {
         } else if (override_remaining > 0) {
             if (interval > 0) {
                 // Temporary cueing
+#ifdef CUEBAND_SILENT_WHEN_UNWORN
                 if (SilencedAsUnworn()) {
                     p += sprintf(p, "Unworn Man.(%s)", niceTime(duration));
-                } else {
+                } else
+#endif 
+                {
                     p += sprintf(p, "Manual (%s)", niceTime(override_remaining));
                 }
                 icon = Applications::Screens::Symbols::cuebandImpromptu;
@@ -594,9 +597,12 @@ const char *CueController::Description(bool detailed, const char **symbol) {
             //icon = Applications::Screens::Symbols::cuebandDisabled;
         } else if (current_control_point < 0xffff) {
             // Scheduled cueing in progress
+#ifdef CUEBAND_SILENT_WHEN_UNWORN
             if (SilencedAsUnworn()) {
                 p += sprintf(p, "Unworn Cue (%s)", niceTime(duration));
-            } else {
+            } else
+#endif 
+            {
                 p += sprintf(p, "Cue (%s)", niceTime(duration));
             }
             if (detailed) {

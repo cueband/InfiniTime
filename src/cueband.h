@@ -116,7 +116,7 @@
 //#define CUEBAND_DEBUG_INIT_TIME                       // While debugging, use the build time to initialize the clock if the time is invalid
 //#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
-
+#define CUEBAND_LONGER_PRESS_INFO
 
 // Local build configuration overrides above switches
 #if defined(__has_include)

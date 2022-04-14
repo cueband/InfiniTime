@@ -236,10 +236,14 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
   if (object == backgroundLabel && event == LV_EVENT_CLICKED) {
     if (screen == 0) { screen = 1; }
     else {
+#if 1
+      screen = 0;
+#else
       changes = false;
       // HACK: Hackily indirectly trigger the close because directly closing triggers the global click to relaunch -- investigate
       //Close()
       lastTime = 0xffffffff; timeout = 999;
+#endif
     }
   } else if (object == btnLeft && event == LV_EVENT_CLICKED) {
 
