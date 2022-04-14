@@ -93,6 +93,8 @@ namespace Pinetime {
 #ifdef CUEBAND_TRUSTED_CONNECTION
       Pinetime::Controllers::Ble& GetBleController() { return bleController; }
 #endif
+      // [cueband] HACK: No!
+      Pinetime::System::SystemTask* GetSystemTask() { return systemTask; }
 
     private:
       Pinetime::Drivers::St7789& lcd;

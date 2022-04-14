@@ -143,6 +143,9 @@ namespace Pinetime {
             return motorController;
       }
 #endif
+#ifdef CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
+      volatile bool resetPreventAccidentalRecovery = true;
+#endif
 
     private:
       TaskHandle_t taskHandle;

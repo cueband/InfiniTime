@@ -676,6 +676,7 @@ void SystemTask::Work() {
       // Initial button states
       const uint32_t button_long_threshold = 3;   // 3 seconds is a "long press"
       const uint32_t button_long_recent = 5;      // 5 seconds is a "recent long press" (from finish of previous to start of current)
+
       static uint32_t button_last_now = 0;
       static uint32_t button_time = 0;
       static bool button_seen_pressed = false;
@@ -683,6 +684,18 @@ void SystemTask::Work() {
       static bool button_currently_pressed = false;
       static uint32_t button_current_press_start_time = 0;
       static uint32_t button_previous_long_press_ended = 0;
+
+      // If resetting the state (triggered by going into the Firmware page)
+      if (resetPreventAccidentalRecovery) {
+        resetPreventAccidentalRecovery = false;
+        button_last_now = 0;
+        button_time = 0;
+        button_seen_pressed = false;
+        button_seen_released = false;
+        button_currently_pressed = false;
+        button_current_press_start_time = 0;
+        button_previous_long_press_ended = 0;
+      }
 
       // Update logic
       // Current button state

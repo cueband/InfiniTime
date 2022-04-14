@@ -36,6 +36,11 @@ FirmwareValidation::FirmwareValidation(Pinetime::Applications::DisplayApp* app, 
   // Trust the current connection, or connection soon after now, when opening the validator
   app->GetBleController().SetTrusted(true);
 #endif
+#ifdef CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
+  if (app->GetSystemTask() != nullptr) {
+    app->GetSystemTask()->resetPreventAccidentalRecovery = true;
+  }
+#endif
 
   labelIsValidated = lv_label_create(lv_scr_act(), nullptr);
   lv_obj_align(labelIsValidated, labelVersion, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
