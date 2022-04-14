@@ -118,6 +118,7 @@
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
+
 // Local build configuration overrides above switches
 #if defined(__has_include)
   #if __has_include("cueband.local.h")
