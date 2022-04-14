@@ -99,6 +99,7 @@
 
 #define CUEBAND_DETECT_FACE_DOWN 15         // (when activity is enabled) detect when the watch is face-down without being interacted with for 15 seconds
 #define CUEBAND_DETECT_WEAR_TIME (10 * 60)  // (when activity is enabled) detect the watch is unlikely to be worn after 10 minutes of no movement on at least two of the axes
+#define CUEBAND_NO_SCHEDULED_PROMPTS_WHEN_UNSET_TIME    // When time is unset, do not use scheduled prompts (but do use impromptu ones)
 //#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
 
 #define CUEBAND_UPTIME_1024                 // Track system uptime in units of 1024
@@ -353,6 +354,12 @@ void cblog(const char *str);
 #endif
 #if defined(CUEBAND_POLLED_ENABLED) && defined(CUEBAND_FIFO_ENABLED)
     #error "At most one of CUEBAND_POLLED_ENABLED / CUEBAND_FIFO_ENABLED may be defined"
+#endif
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && !defined(CUEBAND_DETECT_UNSET_TIME)
+    #error "CUEBAND_CUSTOMIZATION_NO_INVALID_TIME requires CUEBAND_DETECT_UNSET_TIME"
+#endif
+#if defined(CUEBAND_NO_SCHEDULED_PROMPTS_WHEN_UNSET_TIME) && !defined(CUEBAND_DETECT_UNSET_TIME)
+    #error "CUEBAND_NO_SCHEDULED_PROMPTS_WHEN_UNSET_TIME requires CUEBAND_DETECT_UNSET_TIME"
 #endif
 
 // Debug CUEBAND_TRACK_MOTOR_TIMES

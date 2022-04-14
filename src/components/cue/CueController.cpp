@@ -86,7 +86,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     unsigned int cueInterval = currentControlPoint.GetInterval();
     if (currentControlPoint.IsNonPrompting()) cueInterval = 0;
 
-#ifdef CUEBAND_DETECT_UNSET_TIME
+#ifdef CUEBAND_NO_SCHEDULED_PROMPTS_WHEN_UNSET_TIME
     // Ignore prompt schedule if current time is not set
     if (currentTime < CUEBAND_DETECT_UNSET_TIME) {
         cueInterval = 0;
