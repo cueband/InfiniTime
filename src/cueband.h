@@ -30,7 +30,7 @@
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
 #define CUEBAND_VERSION_NUMBER 2        // 1-byte public firmware release number (stored in block format)
-#define CUEBAND_REVISION_NUMBER 12      // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 13      // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
