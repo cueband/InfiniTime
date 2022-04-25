@@ -407,7 +407,7 @@ Each sample is of the form `activity_sample`:
 > ```c
 > struct {
 >     uint16_t events;                    // @0 Event flags (see below)
->     uint16_t prompts_steps;             // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
+>     uint16_t prompts_steps;             // @2 `PPUUZZSS SSSSSSSS` Lower 10-bits: step count; next 2-bits: snooze-muted prompt count (0-3, saturates); next 2-bits: unworn-muted prompt count (0-3, saturates); top 2-bits: prompt count (0-3, saturates).
 >     uint16_t mean_filtered_svmmo;       // @4 Mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
 >     uint16_t mean_svmmo;                // @6 Mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
 > } // @8

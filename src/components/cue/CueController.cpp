@@ -73,6 +73,7 @@ bool CueController::SilencedAsUnworn() {
 // Called at 1Hz
 void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     bool snoozed = false;
+    bool unworn = false;
 
     descriptionValid = false;
 
@@ -120,6 +121,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
 #ifdef CUEBAND_SILENT_WHEN_UNWORN
     if (SilencedAsUnworn()) {
         snoozed = true;
+        unworn = true;
     }
 #endif
 
@@ -133,10 +135,10 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
                 Vibrate(effectivePromptStyle);
 
                 // Notify activityController of prompt
-                activityController.PromptGiven(false);
+                activityController.PromptGiven(false, false);
             } else {
                 // Snoozed prompt
-                activityController.PromptGiven(true);
+                activityController.PromptGiven(true, unworn);
             }
 
             // Record last prompt/snoozed-prompt

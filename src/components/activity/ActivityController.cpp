@@ -275,7 +275,8 @@ void ActivityController::StartEpoch() {
   epochEvents = 0x0000;
   epochSteps = 0;
   epochPromptCount = 0;
-  epochMutedPromptCount = 0;
+  epochSnoozeMutedPromptCount = 0;
+  epochUnwornMutedPromptCount = 0;
 }
 
 bool ActivityController::WriteEpoch() {
@@ -283,15 +284,17 @@ bool ActivityController::WriteEpoch() {
   {
     uint8_t *data = activeBlock + ACTIVITY_HEADER_SIZE + (countEpochs * ACTIVITY_SAMPLE_SIZE);
 
+    // `PPUUZZSS SSSSSSSS`
     uint16_t steps = 0;
-    steps |= (epochPromptCount > 7 ? 7 : epochPromptCount) << 13;
-    steps |= (epochMutedPromptCount > 7 ? 7 : epochMutedPromptCount) << 10;
+    steps |= (epochPromptCount > 3 ? 3 : epochPromptCount) << 14;
+    steps |= (epochUnwornMutedPromptCount > 3 ? 3 : epochUnwornMutedPromptCount) << 12;
+    steps |= (epochSnoozeMutedPromptCount > 3 ? 3 : epochSnoozeMutedPromptCount) << 10;
     steps |= (epochSteps > 1023) ? 1023 : epochSteps;
 
     // @0 Event flags
     data[0] = (uint8_t)epochEvents; data[1] = (uint8_t)(epochEvents >> 8);
 
-    // @2 Lower 10-bits: step count; next 3-bits: muted prompts count (0-7 saturates); top 3-bits: prompt count (0-7 saturates).
+    // @2 Lower 10-bits: step count; next 2-bits: snooze-muted prompt count (0-3, saturates); next 2-bits: unworn-muted prompt count (0-3, saturates); top 2-bits: prompt count (0-3, saturates).
     data[2] = (uint8_t)steps; data[3] = (uint8_t)(steps >> 8);
 
     // Calculate the mean SVM & SVMMO values
@@ -833,9 +836,13 @@ void ActivityController::PromptConfigurationChanged(uint32_t promptConfiguration
   this->promptConfigurationId = promptConfigurationId;
 }
 
-void ActivityController::PromptGiven(bool muted) {
+void ActivityController::PromptGiven(bool muted, bool unworn) {
   if (muted) {
-    epochMutedPromptCount++;
+    if (unworn) {
+      epochUnwornMutedPromptCount++;
+    } else {
+      epochSnoozeMutedPromptCount++;
+    }
   } else {
     epochPromptCount++;
   }

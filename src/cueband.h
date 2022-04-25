@@ -29,7 +29,7 @@
 */
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
-#define CUEBAND_REVISION_NUMBER 13      // Revision number (appears in user-visible version string, but not in block format)
+#define CUEBAND_REVISION_NUMBER 14      // Revision number (appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION_NUMBER CUEBAND_REVISION_NUMBER  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
@@ -97,10 +97,10 @@
 
 #define CUEBAND_DETECT_UNSET_TIME 1577836800  // Before 2020-01-01 00:00:00
 
-#define CUEBAND_DETECT_FACE_DOWN 15         // (when activity is enabled) detect when the watch is face-down without being interacted with for 15 seconds
-#define CUEBAND_DETECT_WEAR_TIME (10 * 60)  // (when activity is enabled) detect the watch is unlikely to be worn after 10 minutes of no movement on at least two of the axes
+//#define CUEBAND_DETECT_FACE_DOWN 15         // (when activity is enabled) detect when the watch is face-down without being interacted with for 15 seconds
+//#define CUEBAND_DETECT_WEAR_TIME (10 * 60)  // (when activity is enabled) detect the watch is unlikely to be worn after 10 minutes of no movement on at least two of the axes
 #define CUEBAND_NO_SCHEDULED_PROMPTS_WHEN_UNSET_TIME    // When time is unset, do not use scheduled prompts (but do use impromptu ones)
-//#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
+#define CUEBAND_SILENT_WHEN_UNWORN          // Do not prompt when unworn
 
 #define CUEBAND_UPTIME_1024                 // Track system uptime in units of 1024
 #define CUEBAND_TRACK_MOTOR_TIMES (35*1024/10)  // Determine when the motor was active until (e.g. so that any affected accelerometer samples can be ignored), this is the settle time (+ jitter, etc) to add in milliseconds

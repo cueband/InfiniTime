@@ -106,7 +106,7 @@ namespace Pinetime {
       bool IsSampling();
       void Event(int16_t eventType);
       void PromptConfigurationChanged(uint32_t promptConfigurationId);
-      void PromptGiven(bool muted);
+      void PromptGiven(bool muted, bool unworn);
       void AddSteps(uint32_t steps);
       void SensorValues(int8_t battery, int8_t temperature); // (0xff, 0x80);
 
@@ -193,7 +193,8 @@ namespace Pinetime {
       uint16_t epochEvents = 0x0000;
       uint32_t epochSteps = 0;
       uint32_t epochPromptCount = 0;
-      uint32_t epochMutedPromptCount = 0;
+      uint32_t epochSnoozeMutedPromptCount = 0;
+      uint32_t epochUnwornMutedPromptCount = 0;
 
       // Reading (file stays open until written to, or FinishedReading() called)
       int readingFile = -1;
