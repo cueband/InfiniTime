@@ -79,16 +79,19 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
 
   // Time
   label_time = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text_fmt(label_time, "");
+#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
+  if (dateTimeController.IsUnset()) {
+    lv_label_set_text_fmt(label_time, "");
+  } else
+#endif
+  lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
   lv_label_set_align(label_time, LV_LABEL_ALIGN_CENTER);
-  lv_obj_align(label_time, lv_scr_act(), LV_ALIGN_IN_TOP_LEFT, 0, 0);
+  lv_obj_align(label_time, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
 
   // Battery
   batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  //lv_obj_set_style_local_text_color(batteryIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+  lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
   lv_obj_align(batteryIcon, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
-  lv_label_set_text(batteryIcon, Symbols::batteryFull);
-  lv_obj_set_auto_realign(batteryIcon, true);
 
   // Cueing information icon
   lInfoIcon = lv_label_create(lv_scr_act(), nullptr);
@@ -156,7 +159,7 @@ void CueBandApp::Update() {
       lv_label_set_text_fmt(label_time, "");
     } else
 #endif
-    lv_label_set_text_fmt(label_time, "%02i:%02i", dateTimeController.Hours(), dateTimeController.Minutes());
+    lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
     lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
 
     static char text[80];
