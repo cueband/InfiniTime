@@ -98,6 +98,15 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
   lv_obj_align(stepValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 0);
 #endif
 
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  cue_status = lv_label_create(lv_scr_act(), nullptr);
+  //lv_label_set_text_static(cue_status, "");
+  lv_label_set_text_fmt(cue_status, "");
+  //lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
+  lv_obj_align(cue_status, backgroundLabel, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
+  lv_obj_set_style_local_text_color(cue_status, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x999999));
+#endif
+
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   Refresh();
 }
@@ -223,6 +232,14 @@ void WatchFaceTerminal::Refresh() {
   motionSensorOk = motionController.IsSensorOk();
   if (stepCount.IsUpdated() || motionSensorOk.IsUpdated()) {
     lv_label_set_text_fmt(stepValue, "[STEP]#ee3377 %lu steps#", stepCount.Get());
+  }
+#endif
+
+#ifdef CUEBAND_WATCHFACE_CUE_STATUS
+  if (app->GetCueController().IsShowStatus()) {
+    const char *description = app->GetCueController().Description();
+    lv_label_set_text_fmt(cue_status, "%s", description);
+    lv_obj_align(cue_status, backgroundLabel, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
   }
 #endif
 }
