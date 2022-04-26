@@ -76,7 +76,9 @@ static void lv_update_task(struct _lv_task_t* task) {
   user_data->Update();
 }
 
-CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
+CueBandApp::CueBandApp(
+             CueBandScreen screen,
+             Pinetime::Applications::DisplayApp* app,
              System::SystemTask& systemTask,
              Pinetime::Controllers::Battery& batteryController,
              Controllers::DateTime& dateTimeController,
@@ -94,9 +96,12 @@ CueBandApp::CueBandApp(Pinetime::Applications::DisplayApp* app,
     , cueController {cueController}
 #endif
    {
+  this->screen = screen;
 
 #ifdef CUEBAND_CUE_ENABLED
-  systemTask.ReportAppActivated();
+  if (this->screen == CUEBAND_SCREEN_OVERVIEW) {
+    systemTask.ReportAppActivated();
+  }
 #endif
 
   // Padding etc.
@@ -364,9 +369,38 @@ void CueBandApp::Update() {
 }
 
 void CueBandApp::ChangeScreen(CueBandScreen screen, bool forward) {
+#ifdef CUEBAND_APP_RELOAD_SCREENS         // Reload app to change screen
+  Applications::Apps nextApp = Apps::None;
+  switch (screen) {
+    case CUEBAND_SCREEN_OVERVIEW:
+    {
+      nextApp = Apps::CueBand;
+      break;
+    }
+    case CUEBAND_SCREEN_SNOOZE:
+    {
+      nextApp = Apps::CueBandSnooze;
+      break;
+    }
+    case CUEBAND_SCREEN_MANUAL:
+    {
+      nextApp = Apps::CueBandManual;
+      break;
+    }
+    case CUEBAND_SCREEN_PREFERENCES:
+    {
+      nextApp = Apps::CueBandPreferences;
+      break;
+    }
+  }
+  if (nextApp != Apps::None) {
+    app->StartApp(nextApp, forward ? DisplayApp::FullRefreshDirections::LeftAnim : DisplayApp::FullRefreshDirections::RightAnim);  // Right / Left / RightAnim / LeftAnim
+  }
+#else         // Change screen but stay in app -- no screen transition
   this->screen = screen;
-  app->SetFullRefresh(forward ? DisplayApp::FullRefreshDirections::Right : DisplayApp::FullRefreshDirections::Left);  // RightAnim / LeftAnim
+  //app->SetFullRefresh(forward ? DisplayApp::FullRefreshDirections::LeftAnim : DisplayApp::FullRefreshDirections::RightAnim);  // Right / Left / RightAnim / LeftAnim
   //Update();
+#endif
 }
 
 bool CueBandApp::OnButtonPushed() {

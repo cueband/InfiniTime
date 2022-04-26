@@ -44,6 +44,11 @@ namespace Pinetime {
       Error
 #ifdef CUEBAND_APP_ENABLED
       , CueBand
+#ifdef CUEBAND_APP_RELOAD_SCREENS
+      , CueBandSnooze
+      , CueBandManual
+      , CueBandPreferences
+#endif      
 #endif
 #ifdef CUEBAND_INFO_APP_ENABLED
       , Info

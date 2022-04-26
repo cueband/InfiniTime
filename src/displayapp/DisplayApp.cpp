@@ -539,17 +539,42 @@ case Apps::Weather: break;
 
 #ifdef CUEBAND_APP_ENABLED
     case Apps::CueBand:
-      currentScreen = std::make_unique<Screens::CueBandApp>(
-        this, *systemTask, batteryController, dateTimeController, settingsController
-        #ifdef CUEBAND_CUE_ENABLED
-          , cueController
-        #endif
-      );
-#ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
-      ReturnApp(Apps::Clock, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
-#else
-      ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+#ifdef CUEBAND_APP_RELOAD_SCREENS
+    case Apps::CueBandSnooze:
+    case Apps::CueBandManual:
+    case Apps::CueBandPreferences:
 #endif
+      {
+
+        // Apps::CueBand
+        Screens::CueBandScreen cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_OVERVIEW;
+#ifdef CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
+        ReturnApp(Apps::Clock, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+#else
+        ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+#endif
+
+#ifdef CUEBAND_APP_RELOAD_SCREENS
+        if (app == Apps::CueBandSnooze) {
+          cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_SNOOZE;
+          ReturnApp(Apps::CueBand, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+        } else if (app == Apps::CueBandManual) {
+          cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_MANUAL;
+          ReturnApp(Apps::CueBand, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+        } else if (app == Apps::CueBandPreferences) {
+          cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_PREFERENCES;
+          ReturnApp(Apps::CueBandManual, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+        }
+#endif
+
+        currentScreen = std::make_unique<Screens::CueBandApp>(
+          cbScreen, this, *systemTask, batteryController, dateTimeController, settingsController
+          #ifdef CUEBAND_CUE_ENABLED
+            , cueController
+          #endif
+        );
+
+      }
       break;
 #endif
 

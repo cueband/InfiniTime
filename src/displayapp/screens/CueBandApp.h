@@ -31,6 +31,7 @@ namespace Pinetime {
       class CueBandApp : public Screen {
         public:
           CueBandApp(
+            CueBandScreen screen,
             DisplayApp* app, 
             System::SystemTask& systemTask, 
             Pinetime::Controllers::Battery& batteryController,

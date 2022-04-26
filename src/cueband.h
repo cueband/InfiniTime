@@ -108,6 +108,8 @@
 
 #define CUEBAND_SYMBOLS
 
+#define CUEBAND_APP_RELOAD_SCREENS            // Cueband app reloads for each screen (so that the transitions work correctly)
+
 #define CUEBAND_MOTOR_PATTERNS  // Allow vibration motor patterns
 
 // Various customizations for the UI and existing PineTime services

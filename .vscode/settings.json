@@ -68,7 +68,8 @@
         "cueband.h": "c",
         "hal_timer.h": "c",
         "qcbor_common.h": "c",
-        "lvgl.h": "c"
+        "lvgl.h": "c",
+        "cfenv": "cpp"
     },
     "cmake.configureOnOpen": true
 }
