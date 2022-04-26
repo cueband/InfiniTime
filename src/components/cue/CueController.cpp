@@ -578,7 +578,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
                 // Temporary cueing
 #ifdef CUEBAND_SILENT_WHEN_UNWORN
                 if (SilencedAsUnworn()) {
-                    p += sprintf(p, "Unworn Man.(%s)", niceTime(duration));
+                    p += sprintf(p, "Unworn Man.(%s)", niceTime(override_remaining));
                 } else
 #endif 
                 {

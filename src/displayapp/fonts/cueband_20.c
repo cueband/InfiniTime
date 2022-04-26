@@ -1,3 +1,6 @@
+#include "cueband.h"
+#ifdef CUEBAND_SYMBOLS
+
 /*******************************************************************************
  * Size: 20 px
  * Bpp: 1
@@ -36,6 +39,17 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0xfc, 0xff, 0xff, 0x3f, 0xff, 0xcf, 0xff, 0xf3,
     0xff, 0xfc, 0xff, 0xff, 0x3f, 0xff, 0xcf, 0xff,
     0xf3, 0xff, 0xfc, 0xff, 0x7e, 0x1f, 0x80,
+
+    /* U+F067 "" */
+    0x1, 0xe0, 0x0, 0x78, 0x0, 0x1e, 0x0, 0x7,
+    0x80, 0x1, 0xe0, 0x0, 0x78, 0x0, 0x1e, 0x3,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf0, 0x1e,
+    0x0, 0x7, 0x80, 0x1, 0xe0, 0x0, 0x78, 0x0,
+    0x1e, 0x0, 0x7, 0x80, 0x1, 0xe0, 0x0,
+
+    /* U+F068 "" */
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff,
 
     /* U+F073 "" */
     0x4, 0x8, 0x3, 0x87, 0x0, 0xe1, 0xc1, 0xff,
@@ -111,14 +125,16 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 0, .adv_w = 0, .box_w = 0, .box_h = 0, .ofs_x = 0, .ofs_y = 0} /* id = 0 reserved */,
     {.bitmap_index = 0, .adv_w = 280, .box_w = 18, .box_h = 21, .ofs_x = 0, .ofs_y = -3},
     {.bitmap_index = 48, .adv_w = 280, .box_w = 18, .box_h = 17, .ofs_x = 0, .ofs_y = -1},
-    {.bitmap_index = 87, .adv_w = 280, .box_w = 18, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 132, .adv_w = 400, .box_w = 26, .box_h = 14, .ofs_x = -1, .ofs_y = 0},
-    {.bitmap_index = 178, .adv_w = 320, .box_w = 21, .box_h = 17, .ofs_x = -1, .ofs_y = -1},
-    {.bitmap_index = 223, .adv_w = 280, .box_w = 18, .box_h = 21, .ofs_x = 0, .ofs_y = -3},
-    {.bitmap_index = 271, .adv_w = 280, .box_w = 18, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 316, .adv_w = 280, .box_w = 16, .box_h = 19, .ofs_x = 1, .ofs_y = -2},
-    {.bitmap_index = 354, .adv_w = 320, .box_w = 20, .box_h = 17, .ofs_x = 0, .ofs_y = -1},
-    {.bitmap_index = 397, .adv_w = 400, .box_w = 25, .box_h = 17, .ofs_x = 0, .ofs_y = -1}
+    {.bitmap_index = 87, .adv_w = 280, .box_w = 18, .box_h = 17, .ofs_x = 0, .ofs_y = -1},
+    {.bitmap_index = 126, .adv_w = 280, .box_w = 18, .box_h = 4, .ofs_x = 0, .ofs_y = 5},
+    {.bitmap_index = 135, .adv_w = 280, .box_w = 18, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
+    {.bitmap_index = 180, .adv_w = 400, .box_w = 26, .box_h = 14, .ofs_x = -1, .ofs_y = 0},
+    {.bitmap_index = 226, .adv_w = 320, .box_w = 21, .box_h = 17, .ofs_x = -1, .ofs_y = -1},
+    {.bitmap_index = 271, .adv_w = 280, .box_w = 18, .box_h = 21, .ofs_x = 0, .ofs_y = -3},
+    {.bitmap_index = 319, .adv_w = 280, .box_w = 18, .box_h = 20, .ofs_x = 0, .ofs_y = -2},
+    {.bitmap_index = 364, .adv_w = 280, .box_w = 16, .box_h = 19, .ofs_x = 1, .ofs_y = -2},
+    {.bitmap_index = 402, .adv_w = 320, .box_w = 20, .box_h = 17, .ofs_x = 0, .ofs_y = -1},
+    {.bitmap_index = 445, .adv_w = 400, .box_w = 25, .box_h = 17, .ofs_x = 0, .ofs_y = -1}
 };
 
 /*---------------------
@@ -126,8 +142,8 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
  *--------------------*/
 
 static const uint16_t unicode_list_0[] = {
-    0x0, 0x1, 0x28, 0x2e, 0x116, 0x227, 0x229, 0x2a7,
-    0x3c5, 0x7f3
+    0x0, 0x1, 0x1c, 0x1d, 0x28, 0x2e, 0x116, 0x227,
+    0x229, 0x2a7, 0x3c5, 0x7f3
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
@@ -135,7 +151,7 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
 {
     {
         .range_start = 61515, .range_length = 2036, .glyph_id_start = 1,
-        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 10, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 12, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 
@@ -195,3 +211,4 @@ lv_font_t cueband_20 = {
 
 #endif /*#if CUEBAND_20*/
 
+#endif

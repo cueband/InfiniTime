@@ -71,6 +71,8 @@ namespace Pinetime {
         static constexpr const char* cuebandCycle     = "\xEF\x81\xB9";                  // 0xf079, retweet
         static constexpr const char* cuebandInterval  = "\xEF\x8B\xB2";                  // 0xf2f2, stopwatch
         static constexpr const char* cuebandIntensity = "\xEF\x85\xA1";                  // 0xf161, sort-amount-up
+        static constexpr const char* cuebandMinus     = "\xEF\x81\xA8";                  // 0xf068, minus
+        static constexpr const char* cuebandPlus      = "\xEF\x81\xA7";                  // 0xf067, plus
 #endif
 
       }
