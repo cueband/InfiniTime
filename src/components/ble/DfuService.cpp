@@ -165,6 +165,19 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
 
     case States::Data: {
       nbPacketReceived++;
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+      // Only do anything differently to upstream if the packet is larger than the original code expects
+      if (om->om_len > 20) {
+
+        // TODO: Repeatedly call dfuImage.Append(data, om->len); 
+        // ...with segments that make the bufferWriteIndex a multiple of 20
+        // ...or makes (bufferWriteIndex + newData == bufferSize)
+        // ...or makes (totalWriteIndex + bufferWriteIndex + newData == totalSize)
+#error "Not fully implemented!"
+
+      }
+      else  // ...chain to original code below...
+#endif
       dfuImage.Append(om->om_data, om->om_len);
       bytesReceived += om->om_len;
       bleController.FirmwareUpdateCurrentBytes(bytesReceived);

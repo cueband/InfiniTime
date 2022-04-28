@@ -121,6 +121,9 @@
 #define CUEBAND_LONGER_PRESS_INFO
 
 
+//#define CUEBAND_FIX_DFU_LARGE_PACKETS                   // In development (risky?)
+
+
 // Local build configuration overrides above switches
 #if defined(__has_include)
   #if __has_include("cueband.local.h")
@@ -200,9 +203,9 @@
 
 #ifdef CUEBAND_SAVE_MEMORY
     // Remove analog clock background (do not use!), saves 14 kB, untested
-    //#define CUEBAND_ANALOG_WATCHFACE_NO_IMAGE
+    #define CUEBAND_ANALOG_WATCHFACE_NO_IMAGE
     // Use 1-bit-per-pixel version of the analog clock background (do not use!), saves ~7 kB
-    #define CUEBAND_ANALOG_WATCHFACE_1BPP_IMAGE
+    //#define CUEBAND_ANALOG_WATCHFACE_1BPP_IMAGE
 #endif
 
 #if defined(CUEBAND_STREAM_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED)
@@ -390,6 +393,12 @@ void cblog(const char *str);
 
 // Warnings for non-standard build
 #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+    #warning "CUEBAND_FIX_DFU_LARGE_PACKETS is experimental"
+#endif
+#ifdef CUEBAND_SAVE_MEMORY
+    #warning "This is a CUEBAND_SAVE_MEMORY build and should not be released"
+#endif
 #if ((CUEBAND_BUFFER_EFFECTIVE_RATE == ACTIVITY_RATE) && defined(CUEBAND_STREAM_RESAMPLED) && !defined(CUEBAND_DEBUG_TRACK_MOTOR_TIMES))
     #warning "CUEBAND_STREAM_RESAMPLED defined, but CUEBAND_BUFFER_EFFECTIVE_RATE == ACTIVITY_RATE, this will be inefficient"
 #endif
