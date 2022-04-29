@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #pragma once
 
 #include <cstdint>
@@ -53,6 +55,9 @@ namespace Pinetime {
         void Init(size_t chunkSize, size_t totalSize, uint16_t expectedCrc);
         void Erase();
         void Append(uint8_t* data, size_t size);
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+        void AppendLarge(uint8_t* data, size_t size);
+#endif
         bool Validate();
         bool IsComplete();
 
@@ -147,6 +152,10 @@ namespace Pinetime {
       uint32_t bootloaderSize = 0;
       uint32_t applicationSize = 0;
       uint16_t expectedCrc = 0;
+
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+      bool largePackets = false;    // Only use the new DFU code if large packets are sent (otherwise, use the original upstream code)
+#endif
 
       int SendDfuRevision(os_mbuf* om) const;
       int WritePacketHandler(uint16_t connectionHandle, os_mbuf* om);

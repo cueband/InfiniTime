@@ -67,7 +67,13 @@ DfuService::DfuService(Pinetime::System::SystemTask& systemTask,
        .characteristics = characteristicDefinition},
       {0},
     } {
-  timeoutTimer = xTimerCreate("notificationTimer", 10000, pdFALSE, this, TimeoutTimerCallback);
+  timeoutTimer = xTimerCreate("notificationTimer", 
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+    pdMS_TO_TICKS(20 * 1000),   // Just allowing a little longer while debugging...
+#else
+    10000, 
+#endif
+  pdFALSE, this, TimeoutTimerCallback);
 }
 
 void DfuService::Init() {
@@ -166,15 +172,13 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
     case States::Data: {
       nbPacketReceived++;
 #ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
-      // Only do anything differently to upstream if the packet is larger than the original code expects
-      if (om->om_len > 20) {
-
-        // TODO: Repeatedly call dfuImage.Append(data, om->len); 
-        // ...with segments that make the bufferWriteIndex a multiple of 20
-        // ...or makes (bufferWriteIndex + newData == bufferSize)
-        // ...or makes (totalWriteIndex + bufferWriteIndex + newData == totalSize)
-#error "Not fully implemented!"
-
+      // Reset state for new transfers
+      if (nbPacketReceived <= 1) largePackets = false;
+      // If a larger packet is sent, latch in to using the new code for the entire transfer.
+      if (om->om_len > 20) largePackets = true;
+      // Use the new code when receiving larger packets
+      if (largePackets) {
+        dfuImage.AppendLarge(om->om_data, om->om_len);
       }
       else  // ...chain to original code below...
 #endif
@@ -375,6 +379,35 @@ void DfuService::DfuImage::Init(size_t chunkSize, size_t totalSize, uint16_t exp
   this->expectedCrc = expectedCrc;
   this->ready = true;
 }
+
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+// Notes on the upstream code in Append():
+// * only works if the last packet in each buffer exactly fills it (it reaches the bufferSize) -- this might typically be the case in DFU applications when chunkSize=20, but can result in a buffer overrun otherwise.
+// * the magic number is only written if the image is not a multiple of the bufferSize (because it is within the "write partial buffer" condition).
+// * the chunkSize value is not used and should not be needed.
+// ...this code chains to the original code and maintains the first condition, even when larger packets are sent.
+void DfuService::DfuImage::AppendLarge(uint8_t* data, size_t size) {
+  if (!ready) return;
+  size_t ofs = 0;
+  // Repeatedly process chunks of the incoming data
+  while (ofs < size) {
+    // The destination will always have non-zero capacity
+    ASSERT(bufferWriteIndex >= bufferSize);
+    size_t capacity = bufferSize - bufferWriteIndex;
+
+    // Take the remaining incoming bytes, only up to filling the buffer's capacity
+    size_t len = size - ofs;
+    if (len > capacity) len = capacity;
+
+    // Progress is possible on every iteration
+    ASSERT(len > 0);
+
+    // Call the original upstream code to append, up to the buffer's capacity
+    Append(data + ofs, len);
+    ofs += len;
+  }
+}
+#endif
 
 void DfuService::DfuImage::Append(uint8_t* data, size_t size) {
   if (!ready)
