@@ -174,7 +174,7 @@ namespace Pinetime {
       uint32_t epochInterval = CUEBAND_ACTIVITY_EPOCH_INTERVAL; // 60;
 
       // Block-level data
-      uint8_t activeBlock[ACTIVITY_BLOCK_SIZE] __attribute__((aligned));
+      uint8_t activeBlock[ACTIVITY_BLOCK_SIZE] __attribute__((aligned(8)));
       int8_t lastBattery = 0xff;
       int8_t lastTemperature = 0x80;
       uint32_t promptConfigurationId = (uint32_t)-1;

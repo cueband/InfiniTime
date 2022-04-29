@@ -40,6 +40,12 @@
 #define CUEBAND_TRUSTED_CONNECTION      // Determine if a connection is trusted (required)
 //#define CUEBAND_USE_TRUSTED_CONNECTION  // Default switch for specific services to require trusted connections
 
+// Global scratch buffer (only safe if use is not overlapped) to save some RAM (an not require dynamic allocation)
+#define CUEBAND_GLOBAL_SCRATCH_BUFFER 256
+#ifdef CUEBAND_GLOBAL_SCRATCH_BUFFER
+extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] __attribute__((aligned(8)));
+#endif
+
 // Simple UART service
 // See: src/components/ble/UartService.cpp
 // See: src/components/ble/UartService.h

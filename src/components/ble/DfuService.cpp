@@ -28,6 +28,8 @@ static size_t debugBufferWriteIndex = 0;
 static int debugMagicWritten = 0;
 static int debugFirstPacketSize = -1;
 static int debugLastPacketSize = -1;
+static int debugFirstPacketLength = -1;
+static int debugLastPacketLength = -1;
 #endif
 
 int DfuServiceCallback(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
@@ -217,7 +219,22 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
       if (om->om_len > 20) largePackets = true;
       // Use the new code when receiving larger packets
       if (largePackets) {
-        dfuImage.AppendLarge(om->om_data, om->om_len);
+
+#ifdef CUEBAND_GLOBAL_SCRATCH_BUFFER
+        uint8_t *recvData = (uint8_t *)cuebandGlobalScratchBuffer;
+#else
+        static uint8_t recvData[253];
+#endif
+
+        size_t length = OS_MBUF_PKTLEN(om);
+#ifdef CUEBAND_DEBUG_DFU
+      if (nbPacketReceived <= 1) {
+        debugFirstPacketLength = length;
+      }
+      debugLastPacketLength = length;
+#endif
+        os_mbuf_copydata(om, 0, length, recvData);
+        dfuImage.AppendLarge(recvData, length);
       }
       else  // ...chain to original code below...
 #endif
@@ -574,7 +591,6 @@ bool DfuService::DfuImage::IsComplete() {
 void DfuService::DebugText(char *debugText) {
   char *p = debugText;
   p += sprintf(p, "DFU Debug\n");
-  p += sprintf(p, "\n");
   p += sprintf(p, "D:%d N:%d M:%d V:%c\n", (int)debugLastState, (int)debugLastPacketsToNotify, (int)debugMagicWritten, debugValidateOutcome);
   p += sprintf(p, "AppSz:%d\n", (int)debugLastApplicationSize);
   p += sprintf(p, "RcvPk:%d\n", (int)debugLastPacketReceived);
@@ -582,6 +598,7 @@ void DfuService::DebugText(char *debugText) {
   p += sprintf(p, "WrIdx:%d\n", (int)debugTotalWriteIndex);
   p += sprintf(p, "BfIdx:%d\n", (int)debugBufferWriteIndex);
   p += sprintf(p, "CRC:c=%04x e=%04x\n", debugLastCalculatedCrc, debugLastExpectedCrc);
-  p += sprintf(p, "FP:%d LP:%d L?:%s\n", debugFirstPacketSize, debugLastPacketSize, largePackets ? "Y" : "N");
+  p += sprintf(p, "FS:%d LS:%d L?:%s\n", debugFirstPacketSize, debugLastPacketSize, largePackets ? "Y" : "N");
+  p += sprintf(p, "FL:%d LL:%d\n", debugFirstPacketLength, debugLastPacketLength);
 }
 #endif

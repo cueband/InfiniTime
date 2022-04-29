@@ -205,7 +205,11 @@ extern "C" uint32_t os_cputime_get32(void);
 void InfoApp::Update() {
   int thisScreen = 0;
 
+#ifdef CUEBAND_GLOBAL_SCRATCH_BUFFER
+  char *debugText = (char *)cuebandGlobalScratchBuffer;
+#else
   static char debugText[200];
+#endif
   sprintf(debugText, "%s", "");
 
 #ifdef CUEBAND_INFO_APP_ID

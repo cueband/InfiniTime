@@ -1,6 +1,10 @@
 #define CUEBAND_CONFIGURATION_WARNINGS
 #include "cueband.h"
 
+#ifdef CUEBAND_GLOBAL_SCRATCH_BUFFER // HACK: Dubious // 256
+unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] __attribute__((aligned(8)));
+#endif
+
 // nrf
 #include <hal/nrf_rtc.h>
 #include <hal/nrf_wdt.h>
