@@ -14,6 +14,22 @@ constexpr ble_uuid128_t DfuService::controlPointCharacteristicUuid;
 constexpr ble_uuid128_t DfuService::revisionCharacteristicUuid;
 constexpr ble_uuid128_t DfuService::packetCharacteristicUuid;
 
+#ifdef CUEBAND_DEBUG_DFU
+static int debugLastState = -1;
+static uint8_t debugLastPacketsToNotify = 0;
+static uint32_t debugLastPacketReceived = 0;
+static uint32_t debugLastBytesReceived = 0;
+static uint32_t debugLastApplicationSize = 0;
+static uint16_t debugLastExpectedCrc = 0;
+static uint16_t debugLastCalculatedCrc = 0;
+static char debugValidateOutcome = '-';
+static size_t debugTotalWriteIndex = 0;
+static size_t debugBufferWriteIndex = 0;
+static int debugMagicWritten = 0;
+static int debugFirstPacketSize = -1;
+static int debugLastPacketSize = -1;
+#endif
+
 int DfuServiceCallback(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
   auto dfuService = static_cast<DfuService*>(arg);
   return dfuService->OnServiceData(conn_handle, attr_handle, ctxt);
@@ -130,6 +146,12 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
       softdeviceSize = om->om_data[0] + (om->om_data[1] << 8) + (om->om_data[2] << 16) + (om->om_data[3] << 24);
       bootloaderSize = om->om_data[4] + (om->om_data[5] << 8) + (om->om_data[6] << 16) + (om->om_data[7] << 24);
       applicationSize = om->om_data[8] + (om->om_data[9] << 8) + (om->om_data[10] << 16) + (om->om_data[11] << 24);
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastApplicationSize = applicationSize;
+#endif
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastExpectedCrc = expectedCrc;
+#endif
       bleController.FirmwareUpdateTotalBytes(applicationSize);
       NRF_LOG_INFO(
         "[DFU] -> Start data received : SD size : %d, BT size : %d, app size : %d", softdeviceSize, bootloaderSize, applicationSize);
@@ -144,6 +166,9 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
       uint8_t data[] {16, 1, 1};
       notificationManager.Send(connectionHandle, controlPointCharacteristicHandle, data, 3);
       state = States::Init;
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastState = (int)state;
+#endif
     }
       return 0;
     case States::Init: {
@@ -156,6 +181,9 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
         sd[i] = om->om_data[10 + (i * 2)] + (om->om_data[10 + (i * 2) + 1] << 8);
       }
       expectedCrc = om->om_data[10 + (softdeviceArrayLength * 2)] + (om->om_data[10 + (softdeviceArrayLength * 2) + 1] << 8);
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastExpectedCrc = expectedCrc;
+#endif
 
       NRF_LOG_INFO(
         "[DFU] -> Init data received : deviceType = %d, deviceRevision = %d, applicationVersion = %d, nb SD = %d, First SD = %d, CRC = %u",
@@ -171,9 +199,20 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
 
     case States::Data: {
       nbPacketReceived++;
+#ifdef CUEBAND_DEBUG_DFU
+  debugLastPacketReceived = nbPacketReceived;
+#endif
 #ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
       // Reset state for new transfers
-      if (nbPacketReceived <= 1) largePackets = false;
+      if (nbPacketReceived <= 1) {
+        largePackets = false;
+#ifdef CUEBAND_DEBUG_DFU
+        debugFirstPacketSize = om->om_len;
+#endif
+      }
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastPacketSize = om->om_len;
+#endif
       // If a larger packet is sent, latch in to using the new code for the entire transfer.
       if (om->om_len > 20) largePackets = true;
       // Use the new code when receiving larger packets
@@ -184,6 +223,9 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
 #endif
       dfuImage.Append(om->om_data, om->om_len);
       bytesReceived += om->om_len;
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastBytesReceived = bytesReceived;
+#endif
       bleController.FirmwareUpdateCurrentBytes(bytesReceived);
 
       if ((nbPacketReceived % nbPacketsToNotify) == 0 && bytesReceived != applicationSize) {
@@ -202,6 +244,9 @@ int DfuService::WritePacketHandler(uint16_t connectionHandle, os_mbuf* om) {
         NRF_LOG_INFO("[DFU] -> Send packet notification : all bytes received!");
         notificationManager.Send(connectionHandle, controlPointCharacteristicHandle, data, 3);
         state = States::Validate;
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastState = (int)state;
+#endif
       }
     }
       return 0;
@@ -230,6 +275,9 @@ int DfuService::ControlPointHandler(uint16_t connectionHandle, os_mbuf* om) {
       if (imageType == ImageTypes::Application) {
         NRF_LOG_INFO("[DFU] -> Start DFU, mode = Application");
         state = States::Start;
+#ifdef CUEBAND_DEBUG_DFU
+        debugLastState = (int)state;
+#endif
         bleController.StartFirmwareUpdate();
         bleController.State(Pinetime::Controllers::Ble::FirmwareUpdateStates::Running);
         bleController.FirmwareUpdateTotalBytes(0xffffffffu);
@@ -260,6 +308,9 @@ int DfuService::ControlPointHandler(uint16_t connectionHandle, os_mbuf* om) {
       return 0;
     case Opcodes::PacketReceiptNotificationRequest:
       nbPacketsToNotify = om->om_data[1];
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastPacketsToNotify = nbPacketsToNotify;
+#endif
       NRF_LOG_INFO("[DFU] -> Receive Packet Notification Request, nb packet = %d", nbPacketsToNotify);
       return 0;
     case Opcodes::ReceiveFirmwareImage:
@@ -271,6 +322,9 @@ int DfuService::ControlPointHandler(uint16_t connectionHandle, os_mbuf* om) {
       dfuImage.Init(20, applicationSize, expectedCrc);
       NRF_LOG_INFO("[DFU] -> Starting receive firmware");
       state = States::Data;
+#ifdef CUEBAND_DEBUG_DFU
+      debugLastState = (int)state;
+#endif
       return 0;
     case Opcodes::ValidateFirmware: {
       if (state != States::Validate) {
@@ -282,8 +336,14 @@ int DfuService::ControlPointHandler(uint16_t connectionHandle, os_mbuf* om) {
 
       if (dfuImage.Validate()) {
         state = States::Validated;
+#ifdef CUEBAND_DEBUG_DFU
+        debugLastState = (int)state;
+#endif
         bleController.State(Pinetime::Controllers::Ble::FirmwareUpdateStates::Validated);
         NRF_LOG_INFO("Image OK");
+#ifdef CUEBAND_DEBUG_DFU
+debugValidateOutcome = 'O';
+#endif
 
         uint8_t data[3] {static_cast<uint8_t>(Opcodes::Response),
                          static_cast<uint8_t>(Opcodes::ValidateFirmware),
@@ -292,6 +352,9 @@ int DfuService::ControlPointHandler(uint16_t connectionHandle, os_mbuf* om) {
       } else {
         NRF_LOG_INFO("Image Error : bad CRC");
 
+#ifdef CUEBAND_DEBUG_DFU
+debugValidateOutcome = 'C';
+#endif
         uint8_t data[3] {static_cast<uint8_t>(Opcodes::Response),
                          static_cast<uint8_t>(Opcodes::ValidateFirmware),
                          static_cast<uint8_t>(ErrorCodes::CrcError)};
@@ -317,6 +380,9 @@ int DfuService::ControlPointHandler(uint16_t connectionHandle, os_mbuf* om) {
 }
 
 void DfuService::OnTimeout() {
+#ifdef CUEBAND_DEBUG_DFU
+debugValidateOutcome = 'T';
+#endif
   bleController.State(Pinetime::Controllers::Ble::FirmwareUpdateStates::Error);
   Reset();
 }
@@ -429,6 +495,11 @@ void DfuService::DfuImage::Append(uint8_t* data, size_t size) {
     if (totalSize < maxSize)
       WriteMagicNumber();
   }
+
+#ifdef CUEBAND_DEBUG_DFU
+  debugTotalWriteIndex = totalWriteIndex;
+  debugBufferWriteIndex = bufferWriteIndex;
+#endif
 }
 
 void DfuService::DfuImage::WriteMagicNumber() {
@@ -442,6 +513,10 @@ void DfuService::DfuImage::WriteMagicNumber() {
 
   uint32_t offset = writeOffset + (maxSize - (4 * sizeof(uint32_t)));
   spiNorFlash.Write(offset, reinterpret_cast<const uint8_t*>(magic), 4 * sizeof(uint32_t));
+
+#ifdef CUEBAND_DEBUG_DFU
+  debugMagicWritten++;
+#endif
 }
 
 void DfuService::DfuImage::Erase() {
@@ -468,6 +543,10 @@ bool DfuService::DfuImage::Validate() {
     currentOffset += readSize;
   }
 
+#ifdef CUEBAND_DEBUG_DFU
+  debugLastCalculatedCrc = crc;
+#endif
+
   return (crc == expectedCrc);
 }
 
@@ -490,3 +569,19 @@ bool DfuService::DfuImage::IsComplete() {
     return false;
   return totalWriteIndex == totalSize;
 }
+
+#ifdef CUEBAND_DEBUG_DFU
+void DfuService::DebugText(char *debugText) {
+  char *p = debugText;
+  p += sprintf(p, "DFU Debug\n");
+  p += sprintf(p, "\n");
+  p += sprintf(p, "D:%d N:%d M:%d V:%c\n", (int)debugLastState, (int)debugLastPacketsToNotify, (int)debugMagicWritten, debugValidateOutcome);
+  p += sprintf(p, "AppSz:%d\n", (int)debugLastApplicationSize);
+  p += sprintf(p, "RcvPk:%d\n", (int)debugLastPacketReceived);
+  p += sprintf(p, "RcvB.:%d\n", (int)debugLastBytesReceived);
+  p += sprintf(p, "WrIdx:%d\n", (int)debugTotalWriteIndex);
+  p += sprintf(p, "BfIdx:%d\n", (int)debugBufferWriteIndex);
+  p += sprintf(p, "CRC:c=%04x e=%04x\n", debugLastCalculatedCrc, debugLastExpectedCrc);
+  p += sprintf(p, "FP:%d LP:%d L?:%s\n", debugFirstPacketSize, debugLastPacketSize, largePackets ? "Y" : "N");
+}
+#endif

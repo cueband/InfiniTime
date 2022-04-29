@@ -120,9 +120,7 @@
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
-
 //#define CUEBAND_FIX_DFU_LARGE_PACKETS                   // In development (risky?)
-
 
 // Local build configuration overrides above switches
 #if defined(__has_include)
@@ -142,7 +140,10 @@
   #endif
 #endif
 
-
+// Debug DFU large packets
+#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
+    #define CUEBAND_DEBUG_DFU
+#endif
 
 #if defined(CUEBAND_TRUSTED_CONNECTION) && defined(CUEBAND_USE_TRUSTED_CONNECTION)
   #define CUEBAND_TRUSTED_DFU           // Only allow DFU over trusted connection (risky?)

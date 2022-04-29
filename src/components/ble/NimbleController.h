@@ -120,6 +120,9 @@ namespace Pinetime {
 #if defined(CUEBAND_TRUSTED_CONNECTION)
       Pinetime::Controllers::Ble& GetBleController() { return bleController; }
 #endif
+#if defined(CUEBAND_FIX_DFU_LARGE_PACKETS)
+      Pinetime::Controllers::DfuService& GetDfuService() { return dfuService; }
+#endif
 
     private:
       void PersistBond(struct ble_gap_conn_desc& desc);

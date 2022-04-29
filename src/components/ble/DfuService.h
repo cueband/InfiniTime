@@ -31,6 +31,10 @@ namespace Pinetime {
       void OnTimeout();
       void Reset();
 
+#ifdef CUEBAND_DEBUG_DFU
+      void DebugText(char *debugText);
+#endif
+
       class NotificationManager {
       public:
         NotificationManager();

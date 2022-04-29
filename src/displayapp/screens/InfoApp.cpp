@@ -193,6 +193,9 @@ int InfoApp::ScreenCount() {
 #ifdef CUEBAND_DEBUG_ADV
   screenCount++;  // advertising debug
 #endif
+#ifdef CUEBAND_DEBUG_DFU
+  screenCount++;  // DFU with large packets
+#endif
   return screenCount;
 }
 
@@ -284,6 +287,12 @@ void InfoApp::Update() {
 #ifdef CUEBAND_DEBUG_ADV
   if (screen == thisScreen++) {
     systemTask.nimble().DebugText(debugText);
+  }
+#endif
+
+#ifdef CUEBAND_DEBUG_DFU
+  if (screen == thisScreen++) {
+    systemTask.nimble().GetDfuService().DebugText(debugText);
   }
 #endif
 
