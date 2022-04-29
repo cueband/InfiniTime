@@ -126,7 +126,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
-//#define CUEBAND_FIX_DFU_LARGE_PACKETS                   // In development (risky?)
+#define CUEBAND_FIX_DFU_LARGE_PACKETS                   // Could do with more testing (but uses original code for smaller MTU anyway)
 
 // Local build configuration overrides above switches
 #if defined(__has_include)
@@ -400,9 +400,6 @@ void cblog(const char *str);
 
 // Warnings for non-standard build
 #if defined(CUEBAND_CONFIGURATION_WARNINGS) // Only warn during compilation of main.cpp
-#ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
-    #warning "CUEBAND_FIX_DFU_LARGE_PACKETS is experimental"
-#endif
 #ifdef CUEBAND_SAVE_MEMORY
     #warning "This is a CUEBAND_SAVE_MEMORY build and should not be released"
 #endif
