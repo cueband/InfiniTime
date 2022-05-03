@@ -65,14 +65,20 @@ namespace Pinetime {
         static constexpr const char* cuebandIsCueing  = "\xEF\x89\xB4";                  // 0xf274, calendar-check
         static constexpr const char* cuebandNotCueing = "\xEF\x89\xB2";                  // 0xf272, calendar-minus
         static constexpr const char* cuebandScheduled = "\xEF\x81\xB3";                  // 0xf073, calendar-alt
-        static constexpr const char* cuebandSilence   = "\xEF\x81\x8C";                  // 0xf04c, pause
+        static constexpr const char* cuebandSilence   = "\xEF\x9A\xA9";                  // 0xf6a9, volume-mute
         static constexpr const char* cuebandImpromptu = "\xEF\x81\x8B";                  // 0xf04b, play
+        static constexpr const char* cuebandPreferences ="\xEF\x80\x93";                 // 0xf013, cog
         static constexpr const char* cuebandCancel    = "\xEF\x90\x90";                  // 0xf410, window-close
-        static constexpr const char* cuebandCycle     = "\xEF\x81\xB9";                  // 0xf079, retweet
         static constexpr const char* cuebandInterval  = "\xEF\x8B\xB2";                  // 0xf2f2, stopwatch
-        static constexpr const char* cuebandIntensity = "\xEF\x85\xA1";                  // 0xf161, sort-amount-up
+        static constexpr const char* cuebandIntensity = "\xEF\xA0\xBE";                  // 0xf83e, wave-square (duplicate)
         static constexpr const char* cuebandMinus     = "\xEF\x81\xA8";                  // 0xf068, minus
         static constexpr const char* cuebandPlus      = "\xEF\x81\xA7";                  // 0xf067, plus
+        static constexpr const char* cuebandPrevious  = "\xEF\x81\xA0";                  // 0xf060, arrow-left
+        static constexpr const char* cuebandNext      = "\xEF\x81\xA1";                  // 0xf061, arrow-right
+
+        static constexpr const char* cuebandCycle     = "\xEF\x81\xB9";                  // 0xf079, retweet (unused)
+        static constexpr const char* cuebandCycleUp   = "\xEF\x85\xA1";                  // 0xf161, sort-amount-up (unused)
+        static constexpr const char* cuebandPause     = "\xEF\x81\x8C";                  // 0xf04c, pause (unused)
 #endif
 
       }

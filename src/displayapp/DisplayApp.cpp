@@ -543,6 +543,8 @@ case Apps::Weather: break;
     case Apps::CueBandSnooze:
     case Apps::CueBandManual:
     case Apps::CueBandPreferences:
+    case Apps::CueBandInterval:
+    case Apps::CueBandStyle:
 #endif
       {
 
@@ -564,6 +566,12 @@ case Apps::Weather: break;
         } else if (app == Apps::CueBandPreferences) {
           cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_PREFERENCES;
           ReturnApp(Apps::CueBandManual, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+        } else if (app == Apps::CueBandInterval) {
+          cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_INTERVAL;
+          ReturnApp(Apps::CueBandPreferences, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
+        } else if (app == Apps::CueBandStyle) {
+          cbScreen = Screens::CueBandScreen::CUEBAND_SCREEN_STYLE;
+          ReturnApp(Apps::CueBandPreferences, FullRefreshDirections::RightAnim, TouchEvents::SwipeRight);
         }
 #endif
 

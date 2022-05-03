@@ -276,7 +276,13 @@ std::unique_ptr<Screen> SystemInfo::CreateScreen5() {
                            "Public License v3\n"
                            "#444444 Source code#\n"
                            "#FFFF00 https://github.com/#\n"
-                           "#FFFF00 InfiniTimeOrg/#\n"
+                           "#FFFF00 "
+#ifdef CUEBAND_GITHUB_ORG
+                           CUEBAND_GITHUB_ORG
+#else
+                           "InfiniTimeOrg"
+#endif
+                           "/#\n"
                            "#FFFF00 InfiniTime#");
   lv_label_set_align(label, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label, lv_scr_act(), LV_ALIGN_CENTER, 0, 0);

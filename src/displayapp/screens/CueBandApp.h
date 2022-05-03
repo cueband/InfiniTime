@@ -26,6 +26,8 @@ namespace Pinetime {
         CUEBAND_SCREEN_SNOOZE,
         CUEBAND_SCREEN_MANUAL,
         CUEBAND_SCREEN_PREFERENCES,
+        CUEBAND_SCREEN_INTERVAL,
+        CUEBAND_SCREEN_STYLE,
       };
 
       class CueBandApp : public Screen {

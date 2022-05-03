@@ -14,11 +14,6 @@
     #undef CUEBAND_USE_TRUSTED_CONNECTION
 #endif
 
-// Show basic apps (stopwatch, timer, alarm)
-#ifdef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-    #undef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-#endif
-
 // Test: Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #ifndef CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
     #define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE
@@ -27,3 +22,6 @@
 // Test: Compilation of (close to) upstream firmware
 //#undef CUEBAND_ACTIVITY_ENABLED    // Disable activity monitoring service etc.
 //#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.
+
+// Test: custom info org on local builds
+#define CUEBAND_GITHUB_ORG "InfiniTimeOrg"

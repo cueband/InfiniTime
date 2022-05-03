@@ -48,6 +48,8 @@ namespace Pinetime {
       , CueBandSnooze
       , CueBandManual
       , CueBandPreferences
+      , CueBandInterval
+      , CueBandStyle
 #endif      
 #endif
 #ifdef CUEBAND_INFO_APP_ENABLED

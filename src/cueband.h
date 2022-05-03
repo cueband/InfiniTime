@@ -146,6 +146,11 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
   #endif
 #endif
 
+// Custom org in info
+#ifndef CUEBAND_GITHUB_ORG
+    #define CUEBAND_GITHUB_ORG "cueband" // "InfiniTimeOrg"
+#endif
+
 // Debug DFU large packets
 #ifdef CUEBAND_FIX_DFU_LARGE_PACKETS
     #define CUEBAND_DEBUG_DFU
@@ -175,6 +180,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
     #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
     #define CUEBAND_WATCHFACE_CUE_STATUS
     #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from original analog watch face (to make room for cue status)
+    #define CUEBAND_APP_QUICK_SETTINGS  // Launch from quick settings
 #endif
 
 #ifdef CUEBAND_CUSTOMIZATION

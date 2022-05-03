@@ -586,11 +586,11 @@ const char *CueController::Description(bool detailed, const char **symbol) {
                 }
                 icon = Applications::Screens::Symbols::cuebandImpromptu;
                 if (detailed) {
-                    p += sprintf(p, "\n[interval %is]", (int)interval);
+                    p += sprintf(p, "\n[interval %i%s]", (int)(interval < 100 ? interval : (interval / 60)), interval < 100 ? "s" : "m");
                 }
             } else {
                 // Temporary snooze
-                p += sprintf(p, "Snooze (%s)", niceTime(override_remaining));
+                p += sprintf(p, "Mute (%s)", niceTime(override_remaining));
                 icon = Applications::Screens::Symbols::cuebandSilence;
             }
         } else if (!IsEnabled()) {
@@ -608,7 +608,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
                 p += sprintf(p, "Cue (%s)", niceTime(duration));
             }
             if (detailed) {
-                p += sprintf(p, "\n[interval %is]", (int)interval);
+                p += sprintf(p, "\n[interval %i%s]", (int)(interval < 100 ? interval : (interval / 60)), interval < 100 ? "s" : "m");
             }
             icon = Applications::Screens::Symbols::cuebandIsCueing;
         } else if (duration <= (7 * 24 * 60 * 60)) {

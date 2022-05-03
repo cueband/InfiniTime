@@ -31,12 +31,14 @@ static const char *const promptDescription[] = {
 };
 
 
+/*
 static uint32_t cycleDuration(const uint32_t *durations, uint32_t current, uint32_t margin = 30) {
   for (const uint32_t *duration = durations; *duration != 0; duration++) {
     if (current + margin < *duration) return *duration;
   }
   return durations[0];
 }
+*/
 
 static uint32_t nextDuration(const uint32_t *durations, uint32_t current, uint32_t margin = 30) {
   uint32_t last = durations[0];
@@ -140,6 +142,7 @@ CueBandApp::CueBandApp(
 
   // Cueing information icon
   lInfoIcon = lv_label_create(lv_scr_act(), nullptr);
+  lv_obj_set_style_local_text_color(lInfoIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_ORANGE);
   lv_obj_set_style_local_text_font(lInfoIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_20);
   lv_label_set_text(lInfoIcon, "");
   lv_obj_align(lInfoIcon, nullptr, LV_ALIGN_IN_TOP_LEFT, buttonXOffset, barHeight);
@@ -197,8 +200,8 @@ CueBandApp::CueBandApp(
   lv_obj_set_size(btnPreferences, buttonWidth / 2 - 10, buttonHeight / 2);
   lv_obj_align(btnPreferences, nullptr, LV_ALIGN_IN_TOP_RIGHT, - buttonXOffset, 2 * buttonXOffset);
   btnPreferences_lbl = lv_label_create(btnPreferences, nullptr);
-  lv_obj_set_style_local_text_font(btnPreferences_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_sys_48);    // different font
-  lv_label_set_text_static(btnPreferences_lbl, Symbols::settings);
+  lv_obj_set_style_local_text_font(btnPreferences_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
+  lv_label_set_text_static(btnPreferences_lbl, Symbols::cuebandPreferences);
   lv_obj_set_hidden(btnPreferences, true);
   lv_obj_set_hidden(btnPreferences_lbl, true);
 
@@ -248,8 +251,8 @@ void CueBandApp::Update() {
       case CUEBAND_SCREEN_OVERVIEW:
       {
         p += sprintf(text, "%s", cueController.Description(true, &symbol));
-        //lv_label_set_text_static(units, "#444444 Snooze    Manual#");
-        lv_label_set_text_static(units, "Snooze    Manual");
+        //lv_label_set_text_static(units, "#444444  Mute     Manual#");
+        lv_label_set_text_static(units, " Mute     Manual");
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, 0, UNITS_Y_OFFSET);
         break;
       }
@@ -257,11 +260,11 @@ void CueBandApp::Update() {
       {
         symbol = Symbols::cuebandSilence;
         if (cueController.IsSnoozed()) {
-          p += sprintf(text, "Snoozing for:");
+          p += sprintf(text, "Muted for:");
           sprintf(durationText, "%d", (int)((override_remaining + 30) / 60));
         } else {
           //                 "XXXXXXXXXXXXXXXXX"
-          p += sprintf(text, "Not snoozing");
+          p += sprintf(text, "Not muting");
           sprintf(durationText, "--");
         }
         lv_label_set_text_static(units, "min");
@@ -272,7 +275,7 @@ void CueBandApp::Update() {
       {
         symbol = Symbols::cuebandImpromptu;
         if (cueController.IsTemporary()) {
-          p += sprintf(text, "Manual cue:");
+          p += sprintf(text, "Manual cue\nfor:");
           sprintf(durationText, "%d", (int)((override_remaining + 30) / 60));
         } else {
           //                 "XXXXXXXXXXXXXXXXX"
@@ -285,14 +288,40 @@ void CueBandApp::Update() {
       }
       case CUEBAND_SCREEN_PREFERENCES:
       {
-        symbol = Symbols::settings;
+        symbol = Symbols::cuebandPreferences;
         unsigned int lastInterval = 0, promptStyle = 0;
         cueController.GetLastImpromptu(&lastInterval, &promptStyle);
         // Interval Style
         // _15 sec.
-        p += sprintf(text, "Cue Preferences\n\n#444444 Interval Style#\n%3d s.   %s", lastInterval, promptDescription[promptStyle % 16]);
+        p += sprintf(text, "Cue Preferences\n\n#444444 Interval Style#\n%3d %s   %s", lastInterval < 100 ? lastInterval : (lastInterval / 60), lastInterval < 100 ? "s" : "m", promptDescription[promptStyle % 16]);
         lv_label_set_text_static(units, "");
-        lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, 0, UNITS_Y_OFFSET);
+        lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, UNITS_X_OFFSET, UNITS_Y_OFFSET);
+        break;
+      }
+      case CUEBAND_SCREEN_INTERVAL:
+      {
+        symbol = Symbols::cuebandInterval;
+        unsigned int lastInterval = 0, promptStyle = 0;
+        cueController.GetLastImpromptu(&lastInterval, &promptStyle);
+        p += sprintf(text, "Cue Interval:");
+        if (lastInterval < 100) {
+          sprintf(durationText, "%d", (int)lastInterval);
+          lv_label_set_text_static(units, "sec");
+        } else {
+          sprintf(durationText, "%d", (int)(lastInterval / 60));
+          lv_label_set_text_static(units, "min");
+        }
+        lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, UNITS_X_OFFSET, UNITS_Y_OFFSET);
+        break;
+      }
+      case CUEBAND_SCREEN_STYLE:
+      {
+        symbol = Symbols::cuebandIntensity;
+        unsigned int lastInterval = 0, promptStyle = 0;
+        cueController.GetLastImpromptu(&lastInterval, &promptStyle);
+        p += sprintf(text, "Cue Style:\n\n%s", promptDescription[promptStyle % 16]);
+        lv_label_set_text_static(units, "");
+        lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, UNITS_X_OFFSET, UNITS_Y_OFFSET);
         break;
       }
       default:
@@ -326,8 +355,8 @@ void CueBandApp::Update() {
         bool rightEnabled = !valid || !atMaxDuration(snoozeDurations, override_remaining);
         lv_label_set_text_static(btnLeft_lbl, minimum ? Symbols::cuebandCancel : Symbols::cuebandMinus);
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-        lv_label_set_text_static(btnRight_lbl, Symbols::cuebandPlus);
-        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, rightEnabled ? LV_COLOR_RED : LV_COLOR_GRAY);
+        lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandPlus : "");
+        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
         break;
       }
       case CUEBAND_SCREEN_MANUAL:
@@ -338,16 +367,40 @@ void CueBandApp::Update() {
         bool rightEnabled = !valid || !atMaxDuration(impromptuDurations, override_remaining);
         lv_label_set_text_static(btnLeft_lbl, minimum ? Symbols::cuebandCancel : Symbols::cuebandMinus);
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-        lv_label_set_text_static(btnRight_lbl, Symbols::cuebandPlus);
-        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, rightEnabled ? LV_COLOR_GREEN : LV_COLOR_GRAY);
+        lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandPlus : "");
+        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
         showPreferences = true;
         break;
       }
       case CUEBAND_SCREEN_PREFERENCES:
       {
-        lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandCycle);   // cuebandInterval
+        lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandInterval);   // cuebandInterval
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-        lv_label_set_text_static(btnRight_lbl, Symbols::cuebandCycle);  // cuebandIntensity
+        lv_label_set_text_static(btnRight_lbl, Symbols::cuebandIntensity);  // cuebandIntensity
+        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        break;
+      }
+      case CUEBAND_SCREEN_INTERVAL:
+      {
+        unsigned int interval = 0;
+        cueController.GetLastImpromptu(&interval, nullptr);
+        bool leftEnabled = !atMinDuration(promptIntervals, interval);
+        bool rightEnabled = !atMaxDuration(promptIntervals, interval);
+        lv_label_set_text_static(btnLeft_lbl, leftEnabled ? Symbols::cuebandMinus : "");
+        lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandPlus : "");
+        lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        break;
+      }
+      case CUEBAND_SCREEN_STYLE:
+      {
+        unsigned int promptStyle = 0;
+        cueController.GetLastImpromptu(nullptr, &promptStyle);
+        bool leftEnabled = !atMinDuration(promptStyles, promptStyle);
+        bool rightEnabled = !atMaxDuration(promptStyles, promptStyle, 0);
+        lv_label_set_text_static(btnLeft_lbl, leftEnabled ? Symbols::cuebandPrevious : "");
+        lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandNext : "");
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
         break;
       }
@@ -392,6 +445,16 @@ void CueBandApp::ChangeScreen(CueBandScreen screen, bool forward) {
       nextApp = Apps::CueBandPreferences;
       break;
     }
+    case CUEBAND_SCREEN_INTERVAL:
+    {
+      nextApp = Apps::CueBandInterval;
+      break;
+    }
+    case CUEBAND_SCREEN_STYLE:
+    {
+      nextApp = Apps::CueBandStyle;
+      break;
+    }
   }
   if (nextApp != Apps::None) {
     app->StartApp(nextApp, forward ? DisplayApp::FullRefreshDirections::LeftAnim : DisplayApp::FullRefreshDirections::RightAnim);  // Right / Left / RightAnim / LeftAnim
@@ -422,6 +485,16 @@ bool CueBandApp::OnButtonPushed() {
     case CUEBAND_SCREEN_PREFERENCES:
     {
       ChangeScreen(CUEBAND_SCREEN_MANUAL, false);
+      return true;
+    }
+    case CUEBAND_SCREEN_INTERVAL:
+    {
+      ChangeScreen(CUEBAND_SCREEN_PREFERENCES, false);
+      return true;
+    }
+    case CUEBAND_SCREEN_STYLE:
+    {
+      ChangeScreen(CUEBAND_SCREEN_PREFERENCES, false);
       return true;
     }
   }
@@ -476,11 +549,31 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
       }
       case CUEBAND_SCREEN_PREFERENCES:
       {
-        // Cycle interval preference
+        ChangeScreen(CUEBAND_SCREEN_INTERVAL, true);
+        break;
+      }
+      case CUEBAND_SCREEN_INTERVAL:
+      {
         unsigned int interval = 0;
         cueController.GetLastImpromptu(&interval, nullptr);
-        interval = cycleDuration(promptIntervals, interval, 0);
-        cueController.SetInterval(interval, -1);
+        //if (!atMinDuration(promptIntervals, interval))
+        interval = prevDuration(promptIntervals, interval);
+        if (interval > 0) {
+          cueController.SetInterval(interval, -1);
+        }
+        break;
+      }
+      case CUEBAND_SCREEN_STYLE:
+      {
+        unsigned int promptStyle = 0;
+        cueController.GetLastImpromptu(nullptr, &promptStyle);
+        promptStyle = prevDuration(promptStyles, promptStyle);
+        if (promptStyle > 0) {
+          cueController.SetPromptStyle(promptStyle);
+  #ifdef CUEBAND_MOTOR_PATTERNS
+          systemTask.GetMotorController().RunIndex(promptStyle);
+  #endif
+        }
         break;
       }
     }
@@ -508,15 +601,31 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
       }
       case CUEBAND_SCREEN_PREFERENCES:
       {
-        // Increase manual impromptu cue intensity
+        ChangeScreen(CUEBAND_SCREEN_STYLE, true);
+        break;
+      }
+      case CUEBAND_SCREEN_INTERVAL:
+      {
+        unsigned int interval = 0;
+        cueController.GetLastImpromptu(&interval, nullptr);
+        //if (!atMaxDuration(promptIntervals, interval, 0))
+        interval = nextDuration(promptIntervals, interval, 0);
+        if (interval > 0) {
+          cueController.SetInterval(interval, -1);
+        }
+        break;
+      }
+      case CUEBAND_SCREEN_STYLE:
+      {
         unsigned int promptStyle = 0;
         cueController.GetLastImpromptu(nullptr, &promptStyle);
-        //promptStyle = (promptStyle + 1) % 16;
-        promptStyle = cycleDuration(promptStyles, promptStyle, 0);
-        cueController.SetPromptStyle(promptStyle);
+        promptStyle = nextDuration(promptStyles, promptStyle, 0);
+        if (promptStyle > 0) {
+          cueController.SetPromptStyle(promptStyle);
   #ifdef CUEBAND_MOTOR_PATTERNS
-        systemTask.GetMotorController().RunIndex(promptStyle);
+          systemTask.GetMotorController().RunIndex(promptStyle);
   #endif
+        }
         break;
       }
     }
