@@ -466,6 +466,7 @@ void CueBandApp::ChangeScreen(CueBandScreen screen, bool forward) {
 #endif
 }
 
+// Physical button pressed to go back
 bool CueBandApp::OnButtonPushed() {
   switch (screen) {
     case CUEBAND_SCREEN_OVERVIEW:
@@ -524,7 +525,23 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
     switch (screen) {
       case CUEBAND_SCREEN_OVERVIEW:
       {
-        ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
+        // If manual prompting, stop
+        if (cueController.IsTemporary()) {
+          // Return to schedule
+          cueController.SetInterval(0, (unsigned int)-1);
+        } else {
+          uint16_t current_control_point;
+          uint32_t override_remaining;
+          uint32_t duration;
+          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
+          // Otherwise: if scheduled prompting is active...
+          if (cueController.IsEnabled() && override_remaining <= 0 && current_control_point < 0xffff) {
+            // ...snooze for remaining cueing duration
+            cueController.SetInterval(0, duration);
+          }
+          // Open snooze screen.
+          ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
+        }
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:
@@ -584,7 +601,23 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
     switch (screen) {
       case CUEBAND_SCREEN_OVERVIEW:
       {
-        ChangeScreen(CUEBAND_SCREEN_MANUAL, true);
+        // If snoozing, stop
+        if (cueController.IsSnoozed()) {
+          // Return to schedule
+          cueController.SetInterval(0, (unsigned int)-1);
+        } else {
+          uint16_t current_control_point;
+          uint32_t override_remaining;
+          uint32_t duration;
+          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
+          // Otherwise: if not manual prompting or scheduled prompting...
+          if (!cueController.IsTemporary() && !(cueController.IsEnabled() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
+            // ...begin manual prompting for default duration
+            cueController.SetInterval((unsigned int)-1, Pinetime::Controllers::CueController::DEFAULT_DURATION);
+          }
+          // Open manual screen
+          ChangeScreen(CUEBAND_SCREEN_MANUAL, true);
+        }
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:

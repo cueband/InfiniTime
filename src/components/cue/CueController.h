@@ -35,6 +35,7 @@ namespace Pinetime {
       const static unsigned int MAXIMUM_RUNTIME_OFF = 0;
       const static unsigned int DEFAULT_PROMPT_STYLE = 3;
       const static unsigned int DEFAULT_INTERVAL = 60;
+      const static unsigned int DEFAULT_DURATION = (10 * 60);
 
       // Options
       const static options_t OPTIONS_CUE_SETTING   = (1 << 0); // Feature: Allow user to disable/enable cueing in the settings menu.
