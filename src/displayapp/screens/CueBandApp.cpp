@@ -100,7 +100,6 @@ CueBandApp::CueBandApp(
    {
   this->screen = screen;
 
-  bool isManualAllowed = false;
 #ifdef CUEBAND_CUE_ENABLED
   if (this->screen == CUEBAND_SCREEN_OVERVIEW) {
     systemTask.ReportAppActivated();
@@ -184,10 +183,8 @@ CueBandApp::CueBandApp(
   btnLeft_lbl = lv_label_create(btnLeft, nullptr);
   lv_obj_set_style_local_text_font(btnLeft_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
   lv_label_set_text_static(btnLeft_lbl, "");
-  if (!isManualAllowed) {
-    lv_obj_set_hidden(btnLeft, true);
-    lv_obj_set_hidden(btnLeft_lbl, true);
-  }
+  lv_obj_set_hidden(btnLeft, !isManualAllowed);
+  lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed);
 
   btnRight = lv_btn_create(lv_scr_act(), nullptr);
   btnRight->user_data = this;
@@ -198,10 +195,8 @@ CueBandApp::CueBandApp(
   btnRight_lbl = lv_label_create(btnRight, nullptr);
   lv_obj_set_style_local_text_font(btnRight_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
   lv_label_set_text_static(btnRight_lbl, "");
-  if (!isManualAllowed) {
-    lv_obj_set_hidden(btnRight, true);
-    lv_obj_set_hidden(btnRight_lbl, true);
-  }
+  lv_obj_set_hidden(btnRight, !isManualAllowed);
+  lv_obj_set_hidden(btnRight_lbl, !isManualAllowed);
 
   btnPreferences = lv_btn_create(lv_scr_act(), nullptr);
   btnPreferences->user_data = this;
@@ -353,8 +348,12 @@ void CueBandApp::Update() {
       {
         lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandSilence);
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, cueController.IsSnoozed() ? LV_COLOR_RED : LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, !isManualAllowed);
+        lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed);
         lv_label_set_text_static(btnRight_lbl, Symbols::cuebandImpromptu);
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, cueController.IsTemporary() ? LV_COLOR_GREEN : LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, !isManualAllowed);
+        lv_obj_set_hidden(btnRight_lbl, !isManualAllowed);
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:
@@ -365,8 +364,12 @@ void CueBandApp::Update() {
         bool rightEnabled = !valid || !atMaxDuration(snoozeDurations, override_remaining);
         lv_label_set_text_static(btnLeft_lbl, minimum ? Symbols::cuebandCancel : Symbols::cuebandMinus);
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, !isManualAllowed || !leftEnabled);
+        lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed || !leftEnabled);
         lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandPlus : "");
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, !isManualAllowed || !rightEnabled);
+        lv_obj_set_hidden(btnRight_lbl, !isManualAllowed || !rightEnabled);
         break;
       }
       case CUEBAND_SCREEN_MANUAL:
@@ -377,8 +380,12 @@ void CueBandApp::Update() {
         bool rightEnabled = !valid || !atMaxDuration(impromptuDurations, override_remaining);
         lv_label_set_text_static(btnLeft_lbl, minimum ? Symbols::cuebandCancel : Symbols::cuebandMinus);
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, !isManualAllowed || !leftEnabled);
+        lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed || !leftEnabled);
         lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandPlus : "");
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, !isManualAllowed || !rightEnabled);
+        lv_obj_set_hidden(btnRight_lbl, !isManualAllowed || !rightEnabled);
         showPreferences = true;
         break;
       }
@@ -386,8 +393,12 @@ void CueBandApp::Update() {
       {
         lv_label_set_text_static(btnLeft_lbl, Symbols::cuebandInterval);   // cuebandInterval
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, !isManualAllowed);
+        lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed);
         lv_label_set_text_static(btnRight_lbl, Symbols::cuebandIntensity);  // cuebandIntensity
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, !isManualAllowed);
+        lv_obj_set_hidden(btnRight_lbl, !isManualAllowed);
         break;
       }
       case CUEBAND_SCREEN_INTERVAL:
@@ -398,8 +409,12 @@ void CueBandApp::Update() {
         bool rightEnabled = !atMaxDuration(promptIntervals, interval);
         lv_label_set_text_static(btnLeft_lbl, leftEnabled ? Symbols::cuebandMinus : "");
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, !isManualAllowed || !leftEnabled);
+        lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed || !leftEnabled);
         lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandPlus : "");
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, !isManualAllowed || !rightEnabled);
+        lv_obj_set_hidden(btnRight_lbl, !isManualAllowed || !rightEnabled);
         break;
       }
       case CUEBAND_SCREEN_STYLE:
@@ -410,16 +425,24 @@ void CueBandApp::Update() {
         bool rightEnabled = !atMaxDuration(promptStyles, promptStyle, 0);
         lv_label_set_text_static(btnLeft_lbl, leftEnabled ? Symbols::cuebandPrevious : "");
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, !isManualAllowed || !leftEnabled);
+        lv_obj_set_hidden(btnLeft_lbl, !isManualAllowed || !leftEnabled);
         lv_label_set_text_static(btnRight_lbl, rightEnabled ? Symbols::cuebandNext : "");
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, !isManualAllowed || !rightEnabled);
+        lv_obj_set_hidden(btnRight_lbl, !isManualAllowed || !rightEnabled);
         break;
       }
       default:
       {
         lv_label_set_text_static(btnLeft_lbl, Symbols::none);
         lv_obj_set_style_local_bg_color(btnLeft, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnLeft, true);
+        lv_obj_set_hidden(btnLeft_lbl, true);
         lv_label_set_text_static(btnRight_lbl, Symbols::none);
         lv_obj_set_style_local_bg_color(btnRight, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_hidden(btnRight, true);
+        lv_obj_set_hidden(btnRight_lbl, true);
         break;
       }
     }
@@ -538,20 +561,20 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
         // If manual prompting, stop
         if (cueController.IsTemporary()) {
           // Return to schedule
-          cueController.SetInterval(0, (unsigned int)-1);
-        } else {
-          uint16_t current_control_point;
-          uint32_t override_remaining;
-          uint32_t duration;
-          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
-          // Otherwise: if scheduled prompting is active...
-          if (cueController.IsEnabled() && override_remaining <= 0 && current_control_point < 0xffff) {
-            // ...snooze for remaining cueing duration
-            cueController.SetInterval(0, duration);
-          }
-          // Open snooze screen.
-          ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
+          cueController.SetInterval(0, 0);
         }
+
+        uint16_t current_control_point;
+        uint32_t override_remaining;
+        uint32_t duration;
+        cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
+        // If scheduled prompting is active...
+        if (cueController.IsEnabled() && override_remaining <= 0 && current_control_point < 0xffff) {
+          // ...snooze for remaining cueing duration
+          cueController.SetInterval(0, duration);
+        }
+        // Open snooze screen.
+        ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:
@@ -614,20 +637,20 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
         // If snoozing, stop
         if (cueController.IsSnoozed()) {
           // Return to schedule
-          cueController.SetInterval(0, (unsigned int)-1);
-        } else {
-          uint16_t current_control_point;
-          uint32_t override_remaining;
-          uint32_t duration;
-          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
-          // Otherwise: if not manual prompting or scheduled prompting...
-          if (!cueController.IsTemporary() && !(cueController.IsEnabled() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
-            // ...begin manual prompting for default duration
-            cueController.SetInterval((unsigned int)-1, Pinetime::Controllers::CueController::DEFAULT_DURATION);
-          }
-          // Open manual screen
-          ChangeScreen(CUEBAND_SCREEN_MANUAL, true);
+          cueController.SetInterval(0, 0);
         }
+
+        uint16_t current_control_point;
+        uint32_t override_remaining;
+        uint32_t duration;
+        cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
+        // If not manual prompting or scheduled prompting...
+        if (!cueController.IsTemporary() && !(cueController.IsEnabled() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
+          // ...begin manual prompting for default duration
+          cueController.SetInterval((unsigned int)-1, Pinetime::Controllers::CueController::DEFAULT_DURATION);
+        }
+        // Open manual screen
+        ChangeScreen(CUEBAND_SCREEN_MANUAL, true);
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:

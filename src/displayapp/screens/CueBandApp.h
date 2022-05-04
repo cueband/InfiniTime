@@ -57,6 +57,8 @@ namespace Pinetime {
           CueBandScreen screen = CUEBAND_SCREEN_OVERVIEW;
           void ChangeScreen(CueBandScreen screen, bool forward);
 
+          bool isManualAllowed = false;
+
           Pinetime::System::SystemTask& systemTask;
           Pinetime::Controllers::Battery& batteryController;
           Controllers::DateTime& dateTimeController;
