@@ -105,6 +105,34 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
         effectiveInterval = 0;
     }
 
+    // If not prompting when considered unworn...
+#ifdef CUEBAND_SILENT_WHEN_UNWORN
+    if (SilencedAsUnworn()) {
+        snoozed = true;
+        unworn = true;
+    }
+#endif
+
+    // If we in a valid scheduled cue...
+    if (effectiveInterval > 0) {
+        // ...and not snoozing or manually overridden...
+        if (currentUptime >= overrideEndTime) {
+            // ...and we have passed within a new prompt control point...
+            if (currentCueIndex != this->lastCueIndex) {
+                this->lastCueIndex = currentCueIndex;
+                // Check: if cueInterval/effectivePromptStyle are different, and store as last used values
+                if (cueInterval != this->lastInterval) {
+                    this->lastInterval = cueInterval;
+                    DeferWriteCues();
+                }
+                if (effectivePromptStyle != this->promptStyle) {
+                    this->promptStyle = effectivePromptStyle;
+                    DeferWriteCues();
+                }
+            }
+        }
+    }
+
     // If temporary prompt/snooze...
     if (currentUptime < overrideEndTime) {
         if (interval != 0) {  // if temporary prompting...
@@ -116,14 +144,6 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
             snoozed = true;
         }
     }
-
-    // If not prompting when considered unworn...
-#ifdef CUEBAND_SILENT_WHEN_UNWORN
-    if (SilencedAsUnworn()) {
-        snoozed = true;
-        unworn = true;
-    }
-#endif
 
     // Overridden or scheduled interval
     if (effectiveInterval > 0) {
@@ -168,6 +188,7 @@ void CueController::Init() {
     // Notify activity controller of current version
     activityController.PromptConfigurationChanged(store.GetVersion());
     descriptionValid = false;
+    lastCueIndex = ControlPoint::INDEX_NONE;
 }
 
 void CueController::GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint32_t *override_remaining, uint32_t *intensity, uint32_t *interval, uint32_t *duration) {
@@ -410,13 +431,13 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
         // Reset last interval if its ever invalid
         if (this->lastInterval == 0 && this->lastInterval != DEFAULT_INTERVAL) {
             this->lastInterval = DEFAULT_INTERVAL;
-// TODO:  DeferWriteCues();
+            DeferWriteCues();
         }
 
         // If not keeping default interval, and interval has changed...
         if (interval != (unsigned int)-1 && interval != this->lastInterval) {
             this->lastInterval = interval;
-// TODO:  DeferWriteCues();
+            DeferWriteCues();
         }
 
         // Impromptu interval
@@ -446,6 +467,7 @@ void CueController::Reset(bool everything) {
         lastInterval = DEFAULT_INTERVAL;
         promptStyle = DEFAULT_PROMPT_STYLE;
     }
+    lastCueIndex = ControlPoint::INDEX_NONE;
     // Store
     descriptionValid = false;
     DeferWriteCues();
@@ -466,6 +488,7 @@ void CueController::SetScratchControlPoint(int index, ControlPoint controlPoint)
 void CueController::CommitScratch(uint32_t version) {
     store.CommitScratch(version);
     DeferWriteCues();
+    lastCueIndex = ControlPoint::INDEX_NONE;
     descriptionValid = false;
 }
 

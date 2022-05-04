@@ -54,8 +54,10 @@ namespace Pinetime {
       bool SetInterval(unsigned int interval, unsigned int maximumRuntime);
       void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
         if (promptStyle < 0xffff) {
-          this->promptStyle = promptStyle;
-          this->settingsChanged = 1;
+          if (promptStyle != this->promptStyle) {
+            this->promptStyle = promptStyle;
+            DeferWriteCues();
+          }
         }
       }
 
@@ -135,6 +137,8 @@ namespace Pinetime {
       unsigned int lastInterval = DEFAULT_INTERVAL;         // Last configured prompt interval
       unsigned int promptStyle = DEFAULT_PROMPT_STYLE;      // Last configured prompt style
       unsigned int settingsChanged = 0;                     // Settings change -> save debounce
+      int lastCueIndex = ControlPoint::INDEX_NONE;
+
 
       int readError = -1;                 // (Debug) File read status
       int writeError = -1;                // (Debug) File write status
