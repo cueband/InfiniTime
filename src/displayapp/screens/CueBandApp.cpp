@@ -100,10 +100,12 @@ CueBandApp::CueBandApp(
    {
   this->screen = screen;
 
+  bool isManualAllowed = false;
 #ifdef CUEBAND_CUE_ENABLED
   if (this->screen == CUEBAND_SCREEN_OVERVIEW) {
     systemTask.ReportAppActivated();
   }
+  isManualAllowed = cueController.IsManualAllowed();
 #endif
 
   // Padding etc.
@@ -182,6 +184,10 @@ CueBandApp::CueBandApp(
   btnLeft_lbl = lv_label_create(btnLeft, nullptr);
   lv_obj_set_style_local_text_font(btnLeft_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
   lv_label_set_text_static(btnLeft_lbl, "");
+  if (!isManualAllowed) {
+    lv_obj_set_hidden(btnLeft, true);
+    lv_obj_set_hidden(btnLeft_lbl, true);
+  }
 
   btnRight = lv_btn_create(lv_scr_act(), nullptr);
   btnRight->user_data = this;
@@ -192,6 +198,10 @@ CueBandApp::CueBandApp(
   btnRight_lbl = lv_label_create(btnRight, nullptr);
   lv_obj_set_style_local_text_font(btnRight_lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
   lv_label_set_text_static(btnRight_lbl, "");
+  if (!isManualAllowed) {
+    lv_obj_set_hidden(btnRight, true);
+    lv_obj_set_hidden(btnRight_lbl, true);
+  }
 
   btnPreferences = lv_btn_create(lv_scr_act(), nullptr);
   btnPreferences->user_data = this;

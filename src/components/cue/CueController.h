@@ -38,16 +38,17 @@ namespace Pinetime {
       const static unsigned int DEFAULT_DURATION = (10 * 60);
 
       // Options
-      const static options_t OPTIONS_CUE_SETTING   = (1 << 0); // Feature: Allow user to disable/enable cueing in the settings menu.
-      const static options_t OPTIONS_CUE_ENABLED   = (1 << 1); // Feature: Enable scheduled cueing
-      const static options_t OPTIONS_CUE_STATUS    = (1 << 2); // Feature: Show cueing status on watch face (when cueing enabled)
-      const static options_t OPTIONS_CUE_DETAILS   = (1 << 3); // Feature: Tap on watch face to open cue details (when cueing enabled)
-      const static options_t OPTIONS_CUE_SNOOZE    = (1 << 4); // Feature: Can snooze from cue details
-      const static options_t OPTIONS_CUE_IMPROMPTU = (1 << 5); // Feature: Can start impromptu temporary cueing from cue details
-      const static options_t OPTIONS_CUE_CUSTOM    = (1 << 6); // Feature: Customize vibration level from cue details
+      const static options_t OPTIONS_CUE_SETTING    = (1 << 0); // (TBC) Feature: Allow user to disable/enable cueing in the settings menu.
+      const static options_t OPTIONS_CUE_ENABLED    = (1 << 1); // Feature: Globally enable cueing
+      const static options_t OPTIONS_CUE_STATUS     = (1 << 2); // Feature: Show cueing status on watch face (when cueing enabled)
+      const static options_t OPTIONS_CUE_DETAILS    = (1 << 3); // Feature: Enable the cue app for cue details (when cueing enabled)
+      const static options_t OPTIONS_CUE_MANUAL     = (1 << 4); // Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
+      const static options_t OPTIONS_CUE_RESERVED_5 = (1 << 5); // (reserved)
+      const static options_t OPTIONS_CUE_RESERVED_6 = (1 << 6); // (reserved)
+      const static options_t OPTIONS_CUE_RESERVED_7 = (1 << 6); // (reserved)
 
       const static options_t OPTIONS_STARTING = 0;
-      const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_SETTING | OPTIONS_CUE_ENABLED | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_SNOOZE | OPTIONS_CUE_IMPROMPTU | OPTIONS_CUE_CUSTOM;
+      const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_ENABLED | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_MANUAL;
 
       options_t GetOptionsMaskValue(options_t *base = nullptr, options_t *mask = nullptr, options_t *value = nullptr);
       bool SetOptionsMaskValue(options_t mask, options_t value);
@@ -79,6 +80,10 @@ namespace Pinetime {
       bool IsOpenDetails() { 
         options_t options = GetOptionsMaskValue();
         return ((options & OPTIONS_CUE_ENABLED) != 0) && ((options & OPTIONS_CUE_DETAILS) != 0);
+      }
+      bool IsManualAllowed() {
+        options_t options = GetOptionsMaskValue();
+        return ((options & OPTIONS_CUE_ENABLED) != 0) && ((options & OPTIONS_CUE_DETAILS) != 0) && ((options & OPTIONS_CUE_MANUAL) != 0);
       }
       bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
