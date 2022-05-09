@@ -51,7 +51,8 @@ namespace Pinetime {
       const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_ENABLED | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_MANUAL;
 
       options_t GetOptionsMaskValue(options_t *base = nullptr, options_t *mask = nullptr, options_t *value = nullptr);
-      bool SetOptionsMaskValue(options_t mask, options_t value);
+      bool SetOptionsMaskValue(options_t mask, options_t value);  // Remotely overridden values
+      bool SetOptionsBaseValue(options_t new_base_value);         // Local user-configured values
 
       bool SetInterval(unsigned int interval, unsigned int maximumRuntime);
       void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {

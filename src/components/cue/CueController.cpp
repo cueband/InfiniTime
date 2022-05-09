@@ -278,9 +278,20 @@ bool CueController::SetOptionsMaskValue(options_t mask, options_t value) {
 
     // If changed, save
     if (options_overridden_mask != oldMask || options_overridden_value != oldValue) {
+        descriptionValid = false;
         DeferWriteCues();
     }
 
+    return true;
+}
+
+bool CueController::SetOptionsBaseValue(options_t new_base_value) {
+    if (!initialized) return false;
+    if (this->options_base_value != new_base_value) {
+        this->options_base_value = new_base_value;
+        descriptionValid = false;
+        DeferWriteCues();
+    }
     return true;
 }
 
