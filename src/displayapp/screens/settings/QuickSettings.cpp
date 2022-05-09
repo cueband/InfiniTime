@@ -93,19 +93,19 @@ QuickSettings::QuickSettings(Pinetime::Applications::DisplayApp* app,
   lv_obj_align(btn3, nullptr, LV_ALIGN_IN_BOTTOM_LEFT, buttonXOffset, 0);
 
   btn3_lvl = lv_label_create(btn3, nullptr);
-#ifdef CUEBAND_APP_QUICK_SETTINGS
-  lv_obj_set_style_local_text_font(btn3_lvl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
-  lv_label_set_text_static(btn3_lvl, Symbols::cuebandCue);
-#else
   lv_obj_set_style_local_text_font(btn3_lvl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_sys_48);
-
+#ifdef CUEBAND_APP_QUICK_SETTINGS
+  if (app->GetCueController().IsOpenDetails()) {
+    lv_obj_set_style_local_text_font(btn3_lvl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &cueband_48);
+    lv_label_set_text_static(btn3_lvl, Symbols::cuebandCue);
+  } else  // show notification toggle
+#endif
   if (settingsController.GetNotificationStatus() == Controllers::Settings::Notification::ON) {
     lv_obj_add_state(btn3, LV_STATE_CHECKED);
     lv_label_set_text_static(btn3_lvl, Symbols::notificationsOn);
   } else {
     lv_label_set_text_static(btn3_lvl, Symbols::notificationsOff);
   }
-#endif
 
   btn4 = lv_btn_create(lv_scr_act(), nullptr);
   btn4->user_data = this;
@@ -159,12 +159,14 @@ void QuickSettings::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
   } else if (object == btn3 && event == LV_EVENT_VALUE_CHANGED) {
 
 #ifdef CUEBAND_APP_QUICK_SETTINGS
-    // Cueband: notifications are always on
-    settingsController.SetNotificationStatus(Controllers::Settings::Notification::ON);
-    // Show cueband app
-    running = false;
-    app->StartApp(Apps::CueBand, DisplayApp::FullRefreshDirections::LeftAnim);
-#else
+    if (app->GetCueController().IsOpenDetails()) {
+      // Cueband: notifications are always on
+      settingsController.SetNotificationStatus(Controllers::Settings::Notification::ON);
+      // Show cueband app
+      running = false;
+      app->StartApp(Apps::CueBand, DisplayApp::FullRefreshDirections::LeftAnim);
+    } else  // show notification toggle
+#endif
     if (lv_obj_get_state(btn3, LV_BTN_PART_MAIN) & LV_STATE_CHECKED) {
       settingsController.SetNotificationStatus(Controllers::Settings::Notification::ON);
       motorController.RunForDuration(35);
@@ -173,7 +175,6 @@ void QuickSettings::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
       settingsController.SetNotificationStatus(Controllers::Settings::Notification::OFF);
       lv_label_set_text_static(btn3_lvl, Symbols::notificationsOff);
     }
-#endif
 
   } else if (object == btn4 && event == LV_EVENT_CLICKED) {
     running = false;
