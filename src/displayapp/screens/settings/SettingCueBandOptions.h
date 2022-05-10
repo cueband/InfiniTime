@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <lvgl/lvgl.h>
 #include "components/cue/CueController.h"
+#ifdef CUEBAND_ACTIVITY_ENABLED
+#include "components/activity/ActivityController.h"
+#endif
 #include "displayapp/screens/Screen.h"
 
 #define SETTINGS_CUEBAND_NUM_OPTIONS 2
@@ -18,7 +21,13 @@ namespace Pinetime {
 
       class SettingCueBandOptions : public Screen {
       public:
-        SettingCueBandOptions(DisplayApp* app, Controllers::CueController& cueController);
+        SettingCueBandOptions(
+          DisplayApp* app, 
+          Controllers::CueController& cueController
+#ifdef CUEBAND_ACTIVITY_ENABLED
+          , Controllers::ActivityController& activityController
+#endif
+        );
         ~SettingCueBandOptions() override;
 
         void UpdateSelected(lv_obj_t* object, lv_event_t event);
@@ -30,6 +39,9 @@ namespace Pinetime {
         bool OnTouchEvent(TouchEvents event) override;
 
         Controllers::CueController& cueController;
+#ifdef CUEBAND_ACTIVITY_ENABLED
+        Controllers::ActivityController& activityController;
+#endif
         lv_obj_t* cbOption[SETTINGS_CUEBAND_NUM_OPTIONS];
         
         lv_obj_t* lblNone;
@@ -41,7 +53,7 @@ namespace Pinetime {
         // This variable is used as a mutex to prevent that.
         bool ignoringEvents;
 
-        bool showResetButton = false;
+        int showResetButton = 0;
       };
     }
   }

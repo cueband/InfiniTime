@@ -37,8 +37,23 @@ static const char *labelForIndex[SETTINGS_CUEBAND_NUM_OPTIONS] = {
   //" Manual",
 };
 
-SettingCueBandOptions::SettingCueBandOptions(Pinetime::Applications::DisplayApp* app, Pinetime::Controllers::CueController& cueController)
-  : Screen(app), cueController {cueController} {
+// Thresholds for showResetButton
+static const int showReset = 3;
+static const int showWipe = 6;
+
+SettingCueBandOptions::SettingCueBandOptions(
+  Pinetime::Applications::DisplayApp* app, 
+  Pinetime::Controllers::CueController& cueController
+#ifdef CUEBAND_ACTIVITY_ENABLED
+  , Pinetime::Controllers::ActivityController& activityController
+#endif
+)
+  : Screen(app), 
+  cueController {cueController}
+#ifdef CUEBAND_ACTIVITY_ENABLED
+  , activityController {activityController}
+#endif
+{
   ignoringEvents = false;
   lv_obj_t* container1 = lv_cont_create(lv_scr_act(), nullptr);
 
@@ -85,10 +100,12 @@ SettingCueBandOptions::SettingCueBandOptions(Pinetime::Applications::DisplayApp*
   btnReset = lv_btn_create(lv_scr_act(), nullptr);
   btnReset->user_data = this;
   lv_obj_set_event_cb(btnReset, btnEventHandler);
-  txtReset = lv_label_create(btnReset, nullptr);
-  lv_label_set_text(txtReset, "Reset!");
-  lv_obj_set_height(btnReset, 40);
+  lv_obj_set_style_local_bg_color(btnReset, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x990000));
+  lv_obj_set_size(btnReset, 115, 50);
   lv_obj_align(btnReset, lv_scr_act(), LV_ALIGN_IN_BOTTOM_MID, 0, -10);
+  lv_obj_set_hidden(btnReset, true);
+  txtReset = lv_label_create(btnReset, nullptr);
+  lv_label_set_text_static(txtReset, "------");
 
   // Initial UI state
   Refresh();
@@ -129,7 +146,16 @@ void SettingCueBandOptions::Refresh() {
   lv_obj_set_hidden(lblNone, !(countVisible == 0));
 
   // Long-press to enable reset button
-  lv_obj_set_hidden(btnReset, !showResetButton);
+  if (showResetButton == showWipe) {
+    lv_label_set_text_static(txtReset, "!!Wipe!!");
+    lv_obj_set_hidden(btnReset, false);
+  } else if (showResetButton >= showReset) {
+    lv_label_set_text_static(txtReset, "!Reset!");
+    lv_obj_set_hidden(btnReset, false);
+  } else {
+    lv_label_set_text_static(txtReset, "------");
+    lv_obj_set_hidden(btnReset, true);
+  }
 
   // Do not ignore any future user-triggered LV_EVENT_VALUE_CHANGED events
   ignoringEvents = false;
@@ -175,7 +201,9 @@ void SettingCueBandOptions::UpdateSelected(lv_obj_t* object, lv_event_t event) {
 bool SettingCueBandOptions::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
   switch (event) {
     case Pinetime::Applications::TouchEvents::LongTap:
-      showResetButton = true;
+      // <showReset: None, >=showReset;<showWipe: Reset, =showWipe: Wipe
+      showResetButton++;
+      if (showResetButton > showWipe) showResetButton = 0;
       Refresh();
       return true;
     default:
@@ -184,9 +212,14 @@ bool SettingCueBandOptions::OnTouchEvent(Pinetime::Applications::TouchEvents eve
 }
 
 void SettingCueBandOptions::OnButtonEvent(lv_obj_t* obj, lv_event_t event) {
-  if (event == LV_EVENT_CLICKED && obj == btnReset) {
+  if (event == LV_EVENT_CLICKED && obj == btnReset && showResetButton > showReset) {
     cueController.Reset(true);
-    showResetButton = false;
+    if (showResetButton >= showWipe) {
+#ifdef CUEBAND_ACTIVITY_ENABLED
+      activityController.DestroyData();
+#endif
+    }
+    showResetButton = 0;
     //this->running = false;
     Refresh();
   }

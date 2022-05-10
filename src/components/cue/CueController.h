@@ -48,7 +48,7 @@ namespace Pinetime {
       const static options_t OPTIONS_CUE_RESERVED_7 = (1 << 6); // (reserved)
 
       const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_SETTING | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_MANUAL; // OPTIONS_CUE_ENABLED
-      const static options_t OPTIONS_STARTING = OPTIONS_DEFAULT;
+      const static options_t OPTIONS_STARTING = 0;  // Nothing allowed until started
 
       options_t GetOptionsMaskValue(options_t *base = nullptr, options_t *mask = nullptr, options_t *value = nullptr);
       bool SetOptionsMaskValue(options_t mask, options_t value);  // Remotely overridden values
