@@ -38,7 +38,7 @@ namespace Pinetime {
       const static unsigned int DEFAULT_DURATION = (10 * 60);
 
       // Options
-      const static options_t OPTIONS_CUE_SETTING    = (1 << 0); // (TBC) Feature: Allow user to disable/enable cueing in the settings menu.
+      const static options_t OPTIONS_CUE_SETTING    = (1 << 0); // Feature: Allow user to toggle any non-overridden cueing functionality in the settings menu.
       const static options_t OPTIONS_CUE_ENABLED    = (1 << 1); // Feature: Globally enable cueing
       const static options_t OPTIONS_CUE_STATUS     = (1 << 2); // Feature: Show cueing status on watch face (when cueing enabled)
       const static options_t OPTIONS_CUE_DETAILS    = (1 << 3); // Feature: Enable the cue app for cue details (when cueing enabled)
@@ -47,8 +47,8 @@ namespace Pinetime {
       const static options_t OPTIONS_CUE_RESERVED_6 = (1 << 6); // (reserved)
       const static options_t OPTIONS_CUE_RESERVED_7 = (1 << 6); // (reserved)
 
-      const static options_t OPTIONS_STARTING = 0;
-      const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_ENABLED | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_MANUAL;
+      const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_SETTING | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_MANUAL; // OPTIONS_CUE_ENABLED
+      const static options_t OPTIONS_STARTING = OPTIONS_DEFAULT;
 
       options_t GetOptionsMaskValue(options_t *base = nullptr, options_t *mask = nullptr, options_t *value = nullptr);
       bool SetOptionsMaskValue(options_t mask, options_t value);  // Remotely overridden values
@@ -73,6 +73,7 @@ namespace Pinetime {
       void SetScratchControlPoint(int index, ControlPoint controlPoint);
       void CommitScratch(uint32_t version);
 
+      bool IsSetting() { return (GetOptionsMaskValue() & OPTIONS_CUE_SETTING) != 0; }
       bool IsEnabled() { return (GetOptionsMaskValue() & OPTIONS_CUE_ENABLED) != 0; }
       bool IsShowStatus() { 
         options_t options = GetOptionsMaskValue();

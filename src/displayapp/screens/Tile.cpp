@@ -91,6 +91,14 @@ Tile::Tile(uint8_t screenID,
     }
     btIndex++;
     apps[i] = applications[i].application;
+#if defined(CUEBAND_APP_ENABLED)
+    // Erase cues app icon while cueing is disabled
+    if (applications[i].application == Apps::CueBand && !app->GetCueController().IsEnabled()) {
+      btnmMap[btIndex-1] = " ";
+      apps[i] = Apps::None;
+      applications[i].application = Apps::None;
+    }
+#endif
   }
   btnmMap[btIndex] = "";
 

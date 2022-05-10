@@ -169,11 +169,11 @@ The BLE service can be used to:
 >
 > Each bit of `options_mask` and `options_value` represent features as follows:
 >
-> * `b0` - (TBC) Feature: Allow user to disable/enable cueing functionality in the settings menu.
-> * `b1` - Feature: Globally enable cueing
-> * `b2` - Feature: Show cueing status on watch face (when cueing enabled)
-> * `b3` - Feature: Enable the cue app for cue details (when cueing enabled)
-> * `b4` - Feature: Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
+> * `b0` - Feature: `OPTIONS_CUE_SETTING` - Allow user to toggle any non-overridden cueing functionality in the settings menu.
+> * `b1` - Feature: `OPTIONS_CUE_ENABLED` - Globally enable cueing
+> * `b2` - Feature: `OPTIONS_CUE_STATUS` - Show cueing status on watch face (when cueing enabled)
+> * `b3` - Feature: `OPTIONS_CUE_DETAILS` - Enable the cue app for cue details (when cueing enabled)
+> * `b4` - Feature: `OPTIONS_CUE_MANUAL` - Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
 > * `b5` - (reserved)
 > * `b6` - (reserved)
 > * `b7` - (reserved)

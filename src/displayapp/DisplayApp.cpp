@@ -609,7 +609,7 @@ case Apps::Weather: break;
 
 #ifdef CUEBAND_OPTIONS_APP_ENABLED
     case Apps::SettingCueBandOptions:
-      currentScreen = std::make_unique<Screens::SettingCueBandOptions>(this, settingsController);
+      currentScreen = std::make_unique<Screens::SettingCueBandOptions>(this, cueController);
       ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
       break;
 #endif

@@ -43,13 +43,13 @@ bool ApplicationList::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
 std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   std::array<Screens::Tile::Applications, 6> applications {{
 #if defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-  #ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},
+  #ifdef CUEBAND_INFO_APP_ENABLED
+    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
   #else
     {"", Apps::None},
   #endif
-  #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+  #ifdef CUEBAND_APP_ENABLED
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},
   #else
     {"", Apps::None},
   #endif
@@ -61,13 +61,13 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
     {Symbols::stopWatch, Apps::StopWatch},
     {Symbols::hourGlass, Apps::Timer},
     {Symbols::clock, Apps::Alarm},
-  #ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},
+  #ifdef CUEBAND_INFO_APP_ENABLED
+    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
   #else
     {"", Apps::None},
   #endif
-  #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+  #ifdef CUEBAND_APP_ENABLED
+    {CUEBAND_APP_SYMBOL, Apps::CueBand},
   #else
     {"", Apps::None},
   #endif
