@@ -542,6 +542,7 @@ list(APPEND SOURCE_FILES
         components/barcode/barcode.c
         displayapp/screens/CueBandApp.cpp
         displayapp/screens/InfoApp.cpp
+        displayapp/screens/settings/SettingCueBandOptions.cpp
         displayapp/fonts/cueband_20.c
         displayapp/fonts/cueband_48.c
         )
@@ -744,6 +745,7 @@ set(INCLUDE_FILES
         components/barcode/barcode.h
         displayapp/screens/CueBandApp.h
         displayapp/screens/InfoApp.h
+        displayapp/screens/settings/SettingCueBandOptions.h
         )
 
 include_directories(

@@ -40,6 +40,9 @@
 #ifdef CUEBAND_INFO_APP_ENABLED
 #include "displayapp/screens/InfoApp.h"
 #endif
+#ifdef CUEBAND_OPTIONS_APP_ENABLED
+#include "displayapp/screens/settings/SettingCueBandOptions.h"
+#endif
 
 #include "drivers/Cst816s.h"
 #include "drivers/St7789.h"
@@ -601,6 +604,13 @@ case Apps::Weather: break;
         // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
         ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
       #endif
+      break;
+#endif
+
+#ifdef CUEBAND_OPTIONS_APP_ENABLED
+    case Apps::SettingCueBandOptions:
+      currentScreen = std::make_unique<Screens::SettingCueBandOptions>(this, settingsController);
+      ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
       break;
 #endif
 

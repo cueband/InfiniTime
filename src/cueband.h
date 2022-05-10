@@ -181,6 +181,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
     #define CUEBAND_WATCHFACE_CUE_STATUS
     #define CUEBAND_ANALOG_WATCHFACE_REMOVE_LABEL       // Remove "InfiniTime" label from original analog watch face (to make room for cue status)
     #define CUEBAND_APP_QUICK_SETTINGS  // Launch from quick settings
+    #define CUEBAND_OPTIONS_APP_ENABLED // CueBandOptionsApp
 #endif
 
 #ifdef CUEBAND_CUSTOMIZATION

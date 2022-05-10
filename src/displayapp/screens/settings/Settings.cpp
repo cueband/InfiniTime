@@ -52,6 +52,8 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
   std::array<Screens::List::Applications, 4> applications {{
 #if !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
     {Symbols::shoe, "Steps", Apps::SettingSteps},
+#elif defined(CUEBAND_OPTIONS_APP_ENABLED)
+    {CUEBAND_APP_SYMBOL, "Cues Options", Apps::SettingCueBandOptions},
 #elif defined(CUEBAND_APP_ENABLED)
     {CUEBAND_APP_SYMBOL, "Cues", Apps::CueBand},
 #else
@@ -86,9 +88,13 @@ std::unique_ptr<Screen> Settings::CreateScreen4() {
     {Symbols::none, "None", Apps::None},
 #endif
 #if !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
+#if defined(CUEBAND_OPTIONS_APP_ENABLED)
+    {CUEBAND_APP_SYMBOL, "Cues Options", Apps::SettingCueBandOptions},
+#elif defined(CUEBAND_APP_ENABLED)
     {CUEBAND_APP_SYMBOL, "Cues", Apps::CueBand},
 #else
     {Symbols::none, "None", Apps::None},
+#endif
 #endif
     {Symbols::none, "None", Apps::None}
   }};
