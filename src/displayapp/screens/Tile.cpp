@@ -7,13 +7,15 @@
 using namespace Pinetime::Applications::Screens;
 
 namespace {
-  static void lv_update_task(struct _lv_task_t* task) {
+  void lv_update_task(struct _lv_task_t* task) {
     auto* user_data = static_cast<Tile*>(task->user_data);
     user_data->UpdateScreen();
   }
 
-  static void event_handler(lv_obj_t* obj, lv_event_t event) {
-    if (event != LV_EVENT_VALUE_CHANGED) return;
+  void event_handler(lv_obj_t* obj, lv_event_t event) {
+    if (event != LV_EVENT_VALUE_CHANGED) {
+      return;
+    }
 
     Tile* screen = static_cast<Tile*>(obj->user_data);
     auto* eventDataPtr = (uint32_t*) lv_event_get_data();
@@ -35,19 +37,12 @@ Tile::Tile(uint8_t screenID,
 
   // Time
   label_time = lv_label_create(lv_scr_act(), nullptr);
-#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
-  if (dateTimeController.IsUnset()) {
-    lv_label_set_text_fmt(label_time, "");
-  } else
-#endif
-  lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
   lv_label_set_align(label_time, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label_time, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
 
   // Battery
-  batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text_static(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
-  lv_obj_align(batteryIcon, nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
+  batteryIcon.Create(lv_scr_act());
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
 
   if (numScreens > 1) {
     pageIndicatorBasePoints[0].x = LV_HOR_RES - 1;
@@ -70,7 +65,7 @@ Tile::Tile(uint8_t screenID,
 
     pageIndicator = lv_line_create(lv_scr_act(), nullptr);
     lv_obj_set_style_local_line_width(pageIndicator, LV_LINE_PART_MAIN, LV_STATE_DEFAULT, 3);
-    lv_obj_set_style_local_line_color(pageIndicator, LV_LINE_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+    lv_obj_set_style_local_line_color(pageIndicator, LV_LINE_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_MAKE(0xb0, 0xb0, 0xb0));
     lv_line_set_points(pageIndicator, pageIndicatorPoints, 2);
   }
 
@@ -108,9 +103,9 @@ Tile::Tile(uint8_t screenID,
   lv_obj_align(btnm1, NULL, LV_ALIGN_CENTER, 0, 10);
 
   lv_obj_set_style_local_radius(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, 20);
-  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, LV_OPA_20);
+  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, LV_OPA_40);
   lv_obj_set_style_local_bg_color(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, LV_COLOR_AQUA);
-  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DISABLED, LV_OPA_20);
+  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DISABLED, LV_OPA_40);
   lv_obj_set_style_local_bg_color(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DISABLED, lv_color_hex(0x111111));
   lv_obj_set_style_local_pad_all(btnm1, LV_BTNMATRIX_PART_BG, LV_STATE_DEFAULT, 0);
   lv_obj_set_style_local_pad_inner(btnm1, LV_BTNMATRIX_PART_BG, LV_STATE_DEFAULT, 10);
@@ -138,6 +133,8 @@ Tile::Tile(uint8_t screenID,
   lv_label_set_text_static(backgroundLabel, "");
 
   taskUpdate = lv_task_create(lv_update_task, 5000, LV_TASK_PRIO_MID, this);
+
+  UpdateScreen();
 }
 
 Tile::~Tile() {
@@ -152,7 +149,7 @@ void Tile::UpdateScreen() {
   } else
 #endif
   lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
-  lv_label_set_text_static(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
+  batteryIcon.SetBatteryPercentage(batteryController.PercentRemaining());
 }
 
 void Tile::OnValueChangedEvent(lv_obj_t* obj, uint32_t buttonId) {

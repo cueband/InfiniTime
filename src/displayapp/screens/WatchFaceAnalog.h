@@ -9,6 +9,7 @@
 #include "components/battery/BatteryController.h"
 #include "components/ble/BleController.h"
 #include "components/ble/NotificationManager.h"
+#include <displayapp/screens/BatteryIcon.h>
 
 namespace Pinetime {
   namespace Controllers {
@@ -64,8 +65,10 @@ namespace Pinetime {
         lv_style_t second_line_style;
 
         lv_obj_t* label_date_day;
-        lv_obj_t* batteryIcon;
+        lv_obj_t* plugIcon;
         lv_obj_t* notificationIcon;
+
+        BatteryIcon batteryIcon;
 
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
         lv_obj_t* cue_status;

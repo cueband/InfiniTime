@@ -53,7 +53,7 @@ Music::Music(Pinetime::Applications::DisplayApp* app, Pinetime::Controllers::Mus
   lv_style_init(&btn_style);
   lv_style_set_radius(&btn_style, LV_STATE_DEFAULT, 20);
   lv_style_set_bg_color(&btn_style, LV_STATE_DEFAULT, LV_COLOR_AQUA);
-  lv_style_set_bg_opa(&btn_style, LV_STATE_DEFAULT, LV_OPA_20);
+  lv_style_set_bg_opa(&btn_style, LV_STATE_DEFAULT, LV_OPA_40);
 
   btnVolDown = lv_btn_create(lv_scr_act(), nullptr);
   btnVolDown->user_data = this;
@@ -152,32 +152,24 @@ Music::~Music() {
 void Music::Refresh() {
   if (artist != musicService.getArtist()) {
     artist = musicService.getArtist();
-    currentLength = 0;
     lv_label_set_text(txtArtist, artist.data());
   }
 
   if (track != musicService.getTrack()) {
     track = musicService.getTrack();
-    currentLength = 0;
     lv_label_set_text(txtTrack, track.data());
   }
 
   if (album != musicService.getAlbum()) {
     album = musicService.getAlbum();
-    currentLength = 0;
   }
 
   if (playing != musicService.isPlaying()) {
     playing = musicService.isPlaying();
   }
 
-  // Because we increment this ourselves,
-  // we can't compare with the old data directly
-  // have to update it when there's actually new data
-  // just to avoid unnecessary draws that make UI choppy
-  if (lastLength != musicService.getProgress()) {
-    currentLength = musicService.getProgress();
-    lastLength = currentLength;
+  if (currentPosition != musicService.getProgress()) {
+    currentPosition = musicService.getProgress();
     UpdateLength();
   }
 
@@ -186,7 +178,7 @@ void Music::Refresh() {
     UpdateLength();
   }
 
-  if (playing == Pinetime::Controllers::MusicService::MusicStatus::Playing) {
+  if (playing) {
     lv_label_set_text_static(txtPlayPause, Symbols::pause);
     if (xTaskGetTickCount() - 1024 >= lastIncrement) {
 
@@ -197,18 +189,12 @@ void Music::Refresh() {
       }
       frameB = !frameB;
 
-      if (currentLength < totalLength) {
-        currentLength +=
-          static_cast<int>((static_cast<float>(xTaskGetTickCount() - lastIncrement) / 1024.0f) * musicService.getPlaybackSpeed());
-      } else {
+      if (currentPosition >= totalLength) {
         // Let's assume the getTrack finished, paused when the timer ends
         //  and there's no new getTrack being sent to us
-        // TODO: ideally this would be configurable
         playing = false;
       }
       lastIncrement = xTaskGetTickCount();
-
-      UpdateLength();
     }
   } else {
     lv_label_set_text_static(txtPlayPause, Symbols::play);
@@ -221,15 +207,15 @@ void Music::UpdateLength() {
   } else if (totalLength > (99 * 60)) {
     lv_label_set_text_fmt(txtTrackDuration,
                           "%02d:%02d/%02d:%02d",
-                          (currentLength / (60 * 60)) % 100,
-                          ((currentLength % (60 * 60)) / 60) % 100,
+                          (currentPosition / (60 * 60)) % 100,
+                          ((currentPosition % (60 * 60)) / 60) % 100,
                           (totalLength / (60 * 60)) % 100,
                           ((totalLength % (60 * 60)) / 60) % 100);
   } else {
     lv_label_set_text_fmt(txtTrackDuration,
                           "%02d:%02d/%02d:%02d",
-                          (currentLength / 60) % 100,
-                          (currentLength % 60) % 100,
+                          (currentPosition / 60) % 100,
+                          (currentPosition % 60) % 100,
                           (totalLength / 60) % 100,
                           (totalLength % 60) % 100);
   }

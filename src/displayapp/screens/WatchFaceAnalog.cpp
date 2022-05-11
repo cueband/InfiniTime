@@ -68,10 +68,13 @@ WatchFaceAnalog::WatchFaceAnalog(Pinetime::Applications::DisplayApp* app,
   lv_img_set_src(bg_clock_img, &bg_clock);
   lv_obj_align(bg_clock_img, NULL, LV_ALIGN_CENTER, 0, 0);
 
-  batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text_static(batteryIcon, Symbols::batteryHalf);
-  lv_obj_align(batteryIcon, NULL, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
-  lv_obj_set_auto_realign(batteryIcon, true);
+  batteryIcon.Create(lv_scr_act());
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
+
+  plugIcon = lv_label_create(lv_scr_act(), nullptr);
+  lv_label_set_text_static(plugIcon, Symbols::plug);
+  lv_obj_set_style_local_text_color(plugIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_RED);
+  lv_obj_align(plugIcon, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
 
   notificationIcon = lv_label_create(lv_scr_act(), NULL);
   lv_obj_set_style_local_text_color(notificationIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x00FF00));
@@ -81,7 +84,7 @@ WatchFaceAnalog::WatchFaceAnalog(Pinetime::Applications::DisplayApp* app,
   // Date - Day / Week day
 
   label_date_day = lv_label_create(lv_scr_act(), NULL);
-  lv_obj_set_style_local_text_color(label_date_day, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0xf0a500));
+  lv_obj_set_style_local_text_color(label_date_day, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_MAKE(0xff, 0xb0, 0x0));
   lv_label_set_text_fmt(label_date_day, "%s\n%02i", dateTimeController.DayOfWeekShortToString(), dateTimeController.Day());
   lv_label_set_align(label_date_day, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label_date_day, NULL, LV_ALIGN_CENTER, 50, 0);
@@ -132,7 +135,8 @@ WatchFaceAnalog::WatchFaceAnalog(Pinetime::Applications::DisplayApp* app,
   lv_obj_add_style(hour_body_trace, LV_LINE_PART_MAIN, &hour_line_style_trace);
 
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
-  UpdateClock();
+
+  Refresh();
 }
 
 WatchFaceAnalog::~WatchFaceAnalog() {
@@ -199,21 +203,18 @@ void WatchFaceAnalog::UpdateClock() {
 
 void WatchFaceAnalog::SetBatteryIcon() {
   auto batteryPercent = batteryPercentRemaining.Get();
-  if (batteryPercent == 100) {
-    lv_obj_set_style_local_text_color(batteryIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GREEN);
-  } else {
-    lv_obj_set_style_local_text_color(batteryIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
-  }
-  lv_label_set_text_static(batteryIcon, BatteryIcon::GetBatteryIcon(batteryPercent));
+  batteryIcon.SetBatteryPercentage(batteryPercent);
 }
 
 void WatchFaceAnalog::Refresh() {
   isCharging = batteryController.IsCharging();
   if (isCharging.IsUpdated()) {
     if (isCharging.Get()) {
-      lv_obj_set_style_local_text_color(batteryIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_RED);
-      lv_label_set_text_static(batteryIcon, Symbols::plug);
+      lv_obj_set_hidden(batteryIcon.GetObject(), true);
+      lv_obj_set_hidden(plugIcon, false);
     } else {
+      lv_obj_set_hidden(batteryIcon.GetObject(), false);
+      lv_obj_set_hidden(plugIcon, true);
       SetBatteryIcon();
     }
   }

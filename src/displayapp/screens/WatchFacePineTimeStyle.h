@@ -8,6 +8,7 @@
 #include "displayapp/Colors.h"
 #include "components/datetime/DateTimeController.h"
 #include "components/ble/BleController.h"
+#include <displayapp/screens/BatteryIcon.h>
 
 namespace Pinetime {
   namespace Controllers {
@@ -79,7 +80,7 @@ namespace Pinetime {
         lv_obj_t* dateDay;
         lv_obj_t* dateMonth;
         lv_obj_t* backgroundLabel;
-        lv_obj_t* batteryIcon;
+        lv_obj_t* plugIcon;
         lv_obj_t* bleIcon;
         lv_obj_t* calendarOuter;
         lv_obj_t* calendarInner;
@@ -95,6 +96,8 @@ namespace Pinetime {
 #ifdef CUEBAND_WATCHFACE_CUE_STATUS
         lv_obj_t* cue_status;
 #endif
+
+        BatteryIcon batteryIcon;
 
         Controllers::DateTime& dateTimeController;
         Controllers::Battery& batteryController;
