@@ -8,6 +8,7 @@
 #include "Screen.h"
 #include "components/datetime/DateTimeController.h"
 #include "components/battery/BatteryController.h"
+#include <displayapp/screens/BatteryIcon.h>
 #ifdef CUEBAND_CUE_ENABLED
 #include "components/cue/CueController.h"
 #endif
@@ -71,7 +72,7 @@ namespace Pinetime {
           lv_obj_t* lInfoIcon;
           lv_obj_t* lInfo;
 
-          lv_obj_t* batteryIcon;
+          BatteryIcon batteryIcon;
           lv_obj_t* label_time;
 
           lv_obj_t *duration;

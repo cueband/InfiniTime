@@ -137,9 +137,8 @@ CueBandApp::CueBandApp(
   lv_obj_align(label_time, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
 
   // Battery
-  batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
-  lv_obj_align(batteryIcon, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
+  batteryIcon.Create(lv_scr_act());
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
 
   // Cueing information icon
   lInfoIcon = lv_label_create(lv_scr_act(), nullptr);
@@ -242,7 +241,7 @@ void CueBandApp::Update() {
     } else
 #endif
     lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
-    lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
+    batteryIcon.SetBatteryPercentage(batteryController.PercentRemaining());
 
     static char text[80];
     static char durationText[16]; // "00"
