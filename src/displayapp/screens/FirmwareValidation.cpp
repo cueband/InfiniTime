@@ -5,6 +5,8 @@
 #include "displayapp/DisplayApp.h"
 
 #include "cueband.h"
+#include "components/ble/BleController.h"
+#include "systemtask/SystemTask.h"
 
 using namespace Pinetime::Applications::Screens;
 
