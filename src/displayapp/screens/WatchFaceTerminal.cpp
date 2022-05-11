@@ -75,13 +75,6 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
   lv_label_set_recolor(label_time, true);
   lv_obj_align(label_time, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, -60);
 
-  backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
-  lv_obj_set_click(backgroundLabel, true);
-  lv_label_set_long_mode(backgroundLabel, LV_LABEL_LONG_CROP);
-  lv_obj_set_size(backgroundLabel, 240, 240);
-  lv_obj_set_pos(backgroundLabel, 0, 0);
-  lv_label_set_text_static(backgroundLabel, "");
-
 #ifndef CUEBAND_CUSTOMIZATION_NO_HR
   heartbeatValue = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(heartbeatValue, true);
@@ -103,7 +96,7 @@ WatchFaceTerminal::WatchFaceTerminal(DisplayApp* app,
   //lv_label_set_text_static(cue_status, "");
   lv_label_set_text_fmt(cue_status, "");
   //lv_label_set_align(cue_status, LV_LABEL_ALIGN_CENTER);
-  lv_obj_align(cue_status, backgroundLabel, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
+  lv_obj_align(cue_status, lv_scr_act(), LV_ALIGN_IN_BOTTOM_MID, 0, 0);
   lv_obj_set_style_local_text_color(cue_status, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x999999));
 #endif
 
@@ -239,7 +232,7 @@ void WatchFaceTerminal::Refresh() {
   if (app->GetCueController().IsShowStatus()) {
     const char *description = app->GetCueController().Description();
     lv_label_set_text_fmt(cue_status, "%s", description);
-    lv_obj_align(cue_status, backgroundLabel, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
+    lv_obj_align(cue_status, lv_scr_act(), LV_ALIGN_IN_BOTTOM_MID, 0, 0);
   }
 #endif
 }

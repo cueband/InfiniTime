@@ -61,7 +61,6 @@ namespace Pinetime {
         lv_obj_t* label_date;
         lv_obj_t* label_prompt_1;
         lv_obj_t* label_prompt_2;
-        lv_obj_t* backgroundLabel;
         lv_obj_t* batteryValue;
 #ifndef CUEBAND_CUSTOMIZATION_NO_HR
         lv_obj_t* heartbeatValue;
