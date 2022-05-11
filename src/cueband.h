@@ -175,7 +175,6 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #if defined(CUEBAND_APP_ENABLED)
     #define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
     //#define CUEBAND_APP_SYMBOL_ALTERNATIVE "C"    // For application list as icon not in font for application menu
-    #define CUEBAND_PATCH_FONT 0xf83e   // 0xf83e, wave-square -- patch into font for application menu: jetbrains_mono_bold_20.c 
     #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
     #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
     #define CUEBAND_WATCHFACE_CUE_STATUS
