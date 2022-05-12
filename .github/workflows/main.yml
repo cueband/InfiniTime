@@ -11,7 +11,11 @@ on:
 
   # Run this Workflow when files are updated (Pushed) in the "master" and "develop" Branch
   push:
-    branches: [ master, develop, cueband, cueband-stable ]
+    branches: [ master, develop
+      , cueband                   # Track upstream/develop
+      , cueband-stable            # Public releases (on major upstream releases?)
+      , cueband-experimental      # Experimentation on alternatively-configured builds
+    ]
 
   # Also run this Workflow when a Pull Request is created or updated in the "master" and "develop" Branch
   pull_request:
