@@ -21,7 +21,7 @@
 
 // Test: Compilation of (close to) upstream firmware
 //#undef CUEBAND_ACTIVITY_ENABLED    // Disable activity monitoring service etc.
-//#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.
+#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.
 
 // Test: custom info org on local builds
 #define CUEBAND_GITHUB_ORG "InfiniTimeOrg"
