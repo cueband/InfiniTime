@@ -537,7 +537,7 @@ void CueController::DebugText(char *debugText) {
   p += sprintf(p, "S/S: %d %d /%d\n", countStored, countScratch, PROMPT_MAX_CONTROLS);
 
   // Current scheduled cue control point
-  p += sprintf(p, "Cue: ##%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? (currentControlPoint.IsNonPrompting() ? "P" : "N") : "D", currentControlPoint.GetWeekdays());
+  p += sprintf(p, "Cue: ##%d %s d%02x\n", currentCueIndex, currentControlPoint.IsEnabled() ? (currentControlPoint.IsNonPrompting() ? "n" : "p") : "d", currentControlPoint.GetWeekdays());
   p += sprintf(p, " @%d i%d v%d\n", currentControlPoint.GetTimeOfDay(), currentControlPoint.GetInterval(), currentControlPoint.GetVolume());
 
   // Status
@@ -631,7 +631,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
             // Scheduled cueing Disabled
             //p += sprintf(p, ".");
             //icon = Applications::Screens::Symbols::cuebandDisabled;
-        } else if (current_control_point < 0xffff) {
+        } else if (current_control_point < 0xffff && intensity > 0 && interval > 0)  { // !currentControlPoint.IsNonPrompting()
             // Scheduled cueing in progress
 #ifdef CUEBAND_SILENT_WHEN_UNWORN
             if (SilencedAsUnworn()) {
