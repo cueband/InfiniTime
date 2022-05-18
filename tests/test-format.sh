@@ -2,11 +2,13 @@
 
 set -e
 
-[ -z "$1" ] && exit
+if [ -z "$GITHUB_BASE_REF" ]
+then
+  echo "This script is only meant to be run in a GitHub Workflow"
+  exit 1
+fi
 
-basebranch=$1
-
-CHANGED_FILES=$(git diff --name-only "$basebranch"...HEAD)
+CHANGED_FILES=$(git diff --name-only "$GITHUB_BASE_REF"...HEAD)
 
 CHANGED=0
 
@@ -14,6 +16,7 @@ for file in $CHANGED_FILES
 do
   [ -e "$file" ] || continue
   case "$file" in
+  src/libs/*) continue ;;
   *.cpp|*.h)
     echo Checking "$file"
     clang-format -i "$file"
