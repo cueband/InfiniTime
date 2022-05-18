@@ -146,7 +146,16 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
   #endif
 #endif
 
-// Custom org in info
+// Local build configuration: custom device name
+#ifdef CUEBAND_LOCAL_DEVICE_NAME
+  #warning "This build is using a non-default device name for local testing: CUEBAND_LOCAL_DEVICE_NAME"
+  #ifdef CUEBAND_DEVICE_NAME
+    #undef CUEBAND_DEVICE_NAME
+  #endif
+  #define CUEBAND_DEVICE_NAME CUEBAND_LOCAL_DEVICE_NAME
+#endif
+
+// Local build configuration: custom info
 #ifndef CUEBAND_GITHUB_ORG
     #define CUEBAND_GITHUB_ORG "cueband" // "InfiniTimeOrg"
 #endif
