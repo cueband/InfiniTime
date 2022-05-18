@@ -56,6 +56,8 @@ std::unique_ptr<Screen> Settings::CreateScreen2() {
     {CUEBAND_APP_SYMBOL, "Cues Options", Apps::SettingCueBandOptions},
 #elif defined(CUEBAND_APP_ENABLED)
     {CUEBAND_APP_SYMBOL, "Cues", Apps::CueBand},
+#elif defined(CUEBAND_INFO_APP_ENABLED)
+    {CUEBAND_INFO_APP_SYMBOL, "Info", Apps::Info},
 #else
     {Symbols::none, "None", Apps::None},
 #endif
@@ -82,7 +84,7 @@ std::unique_ptr<Screen> Settings::CreateScreen4() {
 
   std::array<Screens::List::Applications, 4> applications {{
     {Symbols::list, "About", Apps::SysInfo},
-#if defined(CUEBAND_INFO_APP_ENABLED)
+#if (!defined(CUEBAND_CUSTOMIZATION_NO_STEPS) || defined(CUEBAND_OPTIONS_APP_ENABLED) || defined(CUEBAND_APP_ENABLED)) && defined(CUEBAND_INFO_APP_ENABLED)
     {CUEBAND_INFO_APP_SYMBOL, "Info", Apps::Info},
 #else
     {Symbols::none, "None", Apps::None},
