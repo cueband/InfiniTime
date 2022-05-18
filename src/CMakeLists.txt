@@ -512,8 +512,6 @@ list(APPEND SOURCE_FILES
         displayapp/screens/CueBandApp.cpp
         displayapp/screens/InfoApp.cpp
         displayapp/screens/settings/SettingCueBandOptions.cpp
-        displayapp/fonts/cueband_20.c
-        displayapp/fonts/cueband_48.c
         )
 
 list(APPEND RECOVERY_SOURCE_FILES
