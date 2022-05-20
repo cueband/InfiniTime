@@ -42,7 +42,11 @@ Tile::Tile(uint8_t screenID,
 
   // Battery
   batteryIcon.Create(lv_scr_act());
+#ifdef CUEBAND_MINOR_FIXES
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
+#else
   lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
+#endif
 
   if (numScreens > 1) {
     pageIndicatorBasePoints[0].x = LV_HOR_RES - 1;
