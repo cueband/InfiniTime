@@ -53,7 +53,9 @@ namespace Pinetime {
 #endif      
 #endif
 #ifdef CUEBAND_INFO_APP_ENABLED
-      , Info
+      , InfoFromButton
+      , InfoFromLauncher
+      , InfoFromSettings
 #endif
 #ifdef CUEBAND_OPTIONS_APP_ENABLED
       , SettingCueBandOptions
