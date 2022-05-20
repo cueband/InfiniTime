@@ -97,12 +97,12 @@ SettingCueBandOptions::SettingCueBandOptions(
   }
 
   // Reset button
-  btnReset = lv_btn_create(lv_scr_act(), nullptr);
+  btnReset = lv_btn_create(lv_scr_act(), nullptr);  // container1
   btnReset->user_data = this;
   lv_obj_set_event_cb(btnReset, btnEventHandler);
   lv_obj_set_style_local_bg_color(btnReset, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0x990000));
   lv_obj_set_size(btnReset, 115, 50);
-  lv_obj_align(btnReset, lv_scr_act(), LV_ALIGN_IN_BOTTOM_MID, 0, -10);
+  lv_obj_align(btnReset, lv_scr_act(), LV_ALIGN_IN_BOTTOM_MID, 0, -10);   // container1
   lv_obj_set_hidden(btnReset, true);
   txtReset = lv_label_create(btnReset, nullptr);
   lv_label_set_text_static(txtReset, "------");
@@ -149,7 +149,7 @@ void SettingCueBandOptions::Refresh() {
   if (showResetButton == showWipe) {
     lv_label_set_text_static(txtReset, "!!Wipe!!");
     lv_obj_set_hidden(btnReset, false);
-  } else if (showResetButton >= showReset) {
+  } else if (showResetButton == showReset) {
     lv_label_set_text_static(txtReset, "!Reset!");
     lv_obj_set_hidden(btnReset, false);
   } else {
@@ -212,14 +212,17 @@ bool SettingCueBandOptions::OnTouchEvent(Pinetime::Applications::TouchEvents eve
 }
 
 void SettingCueBandOptions::OnButtonEvent(lv_obj_t* obj, lv_event_t event) {
-  if (event == LV_EVENT_CLICKED && obj == btnReset && showResetButton > showReset) {
+  if (event == LV_EVENT_CLICKED && obj == btnReset && (showResetButton == showReset || showResetButton == showWipe)) {
+    lv_label_set_text_static(txtReset, "-");
+    showResetButton = 0;
+
     cueController.Reset(true);
-    if (showResetButton >= showWipe) {
+    if (showResetButton == showWipe) {
 #ifdef CUEBAND_ACTIVITY_ENABLED
       activityController.DestroyData();
 #endif
     }
-    showResetButton = 0;
+
     //this->running = false;
     Refresh();
   }
