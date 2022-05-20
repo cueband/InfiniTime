@@ -308,7 +308,7 @@ touchHandler.CancelTap();
       case Messages::ButtonLongerPressed:
         // Create reboot app and open it instead
 #ifdef CUEBAND_LONGER_PRESS_INFO
-        LoadApp(Apps::Info, DisplayApp::FullRefreshDirections::Up);
+        LoadApp(Apps::InfoFromButton, DisplayApp::FullRefreshDirections::Up);
 #else
         LoadApp(Apps::SysInfo, DisplayApp::FullRefreshDirections::Up);
 #endif
@@ -566,7 +566,9 @@ case Apps::Weather: break;
 #endif
 
 #ifdef CUEBAND_INFO_APP_ENABLED
-    case Apps::Info:
+    case Apps::InfoFromButton:
+    case Apps::InfoFromLauncher:
+    case Apps::InfoFromSettings:
       currentScreen = std::make_unique<Screens::InfoApp>(
         this, *systemTask, dateTimeController, motionController, settingsController
         #ifdef CUEBAND_ACTIVITY_ENABLED
@@ -576,10 +578,14 @@ case Apps::Weather: break;
           , cueController
         #endif
       );
-      #ifdef CUEBAND_DISABLE_APP_LAUNCHER
-        // TODO: Fix issue when info app is in settings AND in app launcher, the default ReturnApp() -- set in DisplayApp::LoadApp() -- will be the app launcher, even if launched from settings.
+
+      // The default ReturnApp() is set above to be the app launcher
+      if (app == Apps::InfoFromButton) {
+        ReturnApp(Apps::Clock, FullRefreshDirections::Down, TouchEvents::SwipeDown);
+      } else if (app == Apps::InfoFromSettings) {
         ReturnApp(Apps::Settings, FullRefreshDirections::Down, TouchEvents::SwipeDown);
-      #endif
+      }
+
       break;
 #endif
 

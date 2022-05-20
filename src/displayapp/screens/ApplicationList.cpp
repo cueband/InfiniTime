@@ -44,7 +44,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   std::array<Screens::Tile::Applications, 6> applications {{
 #if defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
   #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+    {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
   #else
     {"", Apps::None},
   #endif
@@ -62,7 +62,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
     {Symbols::hourGlass, Apps::Timer},
     {Symbols::clock, Apps::Alarm},
   #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+    {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
   #else
     {"", Apps::None},
   #endif
@@ -103,7 +103,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
     {"", Apps::None},
 #else
   #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::Info},
+    {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
   #else
     {Symbols::paddle, Apps::Paddle},
   #endif
