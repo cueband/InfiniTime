@@ -138,7 +138,7 @@ CueBandApp::CueBandApp(
 
   // Battery
   batteryIcon.Create(lv_scr_act());
-  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
 
   // Cueing information icon
   lInfoIcon = lv_label_create(lv_scr_act(), nullptr);
