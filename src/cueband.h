@@ -82,6 +82,8 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
     #define QR_TRUE_COLOR       // Can only transform (zoom) a true color image rather than 1bpp image, but a scale of x4 is (4*4=)x16 the number of pixels, and at LV_COLOR_DEPTH==16 takes the same amount of memory
 #endif
 
+#define CUEBAND_METRONOME_ENABLED
+
 #define CUEBAND_AXES 3          // Must be 3
 
 // Activity monitoring
