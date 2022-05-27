@@ -66,12 +66,18 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   #else
     {"", Apps::None},
   #endif
+
+  #ifdef CUEBAND_METRONOME_ENABLED
+    {Symbols::drum, Apps::Metronome},
+  #else
+    {"", Apps::None},
+  #endif
+
   #ifdef CUEBAND_APP_ENABLED
     {CUEBAND_APP_SYMBOL, Apps::CueBand},
   #else
     {"", Apps::None},
   #endif
-    {"", Apps::None},
 #else
     {Symbols::stopWatch, Apps::StopWatch},
     {Symbols::music, Apps::Music},
