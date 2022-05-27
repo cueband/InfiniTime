@@ -133,6 +133,9 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
         }
     }
 
+    // Track the current effective sheduled interval
+    effectiveScheduledInterval = cueInterval;
+
     // If temporary prompt/snooze...
     if (currentUptime < overrideEndTime) {
         if (interval != 0) {  // if temporary prompting...

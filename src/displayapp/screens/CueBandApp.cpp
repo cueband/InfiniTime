@@ -20,7 +20,7 @@ static const uint32_t promptIntervals[] = { 30, 60, 90, 120, 180, 240, 0 };
 static const uint32_t promptStyles[] = { 1, 2, 3, 4, 5, 6, 7, 0 };
 static const char *const promptDescription[] = {
   // Proper descriptions for each style
-  "Off",     // 0
+  "Silent",  // 0
   "Short",   // 1
   "Medium",  // 2
   "Long",    // 3
@@ -269,7 +269,11 @@ void CueBandApp::Update() {
           sprintf(durationText, "%d", (int)((override_remaining + 30) / 60));
         } else {
           //                 "XXXXXXXXXXXXXXXXX"
-          p += sprintf(text, "Not muting");
+          if (cueController.IsWithinScheduledPrompt()) {
+            p += sprintf(text, "Not muting");
+          } else {
+            p += sprintf(text, "Not prompting");
+          }
           sprintf(durationText, "--");
         }
         lv_label_set_text_static(units, "min");
