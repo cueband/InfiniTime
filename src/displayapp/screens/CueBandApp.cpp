@@ -242,6 +242,7 @@ void CueBandApp::Update() {
 #endif
     lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
     batteryIcon.SetBatteryPercentage(batteryController.PercentRemaining());
+    lv_obj_set_hidden(batteryIcon.GetObject(), screen == CUEBAND_SCREEN_MANUAL);  // Preferences button partially obscures battery level
 
     static char text[80];
     static char durationText[16]; // "00"
