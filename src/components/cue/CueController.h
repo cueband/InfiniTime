@@ -55,14 +55,7 @@ namespace Pinetime {
       bool SetOptionsBaseValue(options_t new_base_value);         // Local user-configured values
 
       bool SetInterval(unsigned int interval, unsigned int maximumRuntime);
-      void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
-        if (promptStyle < 0xffff) {
-          if (promptStyle != this->promptStyle) {
-            this->promptStyle = promptStyle;
-            DeferWriteCues();
-          }
-        }
-      }
+      void SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE);
 
       void GetStatus(uint32_t *active_schedule_id, uint16_t *max_control_points, uint16_t *current_control_point, uint32_t *override_remaining, uint32_t *intensity, uint32_t *interval, uint32_t *duration);
       void GetLastImpromptu(unsigned int *lastInterval, unsigned int *promptStyle);
@@ -90,6 +83,7 @@ namespace Pinetime {
       bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }
       bool IsScheduled() { return currentUptime >= overrideEndTime; }
+      bool IsWithinScheduledPrompt() { return effectiveScheduledInterval > 0; }
 
       bool SilencedAsUnworn();
 
@@ -147,6 +141,8 @@ namespace Pinetime {
       unsigned int settingsChanged = 0;                     // Settings change -> save debounce
       int lastCueIndex = ControlPoint::INDEX_NONE;
 
+      // Track the current effective sheduled interval
+      unsigned int effectiveScheduledInterval = 0;
 
       int readError = -1;                 // (Debug) File read status
       int writeError = -1;                // (Debug) File write status

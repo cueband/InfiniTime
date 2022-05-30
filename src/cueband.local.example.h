@@ -21,7 +21,17 @@
 
 // Test: Compilation of (close to) upstream firmware
 //#undef CUEBAND_ACTIVITY_ENABLED    // Disable activity monitoring service etc.
-//#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.
+#undef CUEBAND_CUE_ENABLED         // Disable cue prompts service etc.
 
 // Test: custom info org on local builds
 #define CUEBAND_GITHUB_ORG "InfiniTimeOrg"
+
+// Test: toggle specific other apps
+#ifdef CUEBAND_METRONOME_ENABLED
+  #undef CUEBAND_METRONOME_ENABLED
+#endif
+
+// When testing, vibrate even if unworn
+#ifdef CUEBAND_SILENT_WHEN_UNWORN
+  #undef CUEBAND_SILENT_WHEN_UNWORN
+#endif

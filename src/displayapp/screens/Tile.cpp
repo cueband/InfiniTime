@@ -7,13 +7,15 @@
 using namespace Pinetime::Applications::Screens;
 
 namespace {
-  static void lv_update_task(struct _lv_task_t* task) {
+  void lv_update_task(struct _lv_task_t* task) {
     auto* user_data = static_cast<Tile*>(task->user_data);
     user_data->UpdateScreen();
   }
 
-  static void event_handler(lv_obj_t* obj, lv_event_t event) {
-    if (event != LV_EVENT_VALUE_CHANGED) return;
+  void event_handler(lv_obj_t* obj, lv_event_t event) {
+    if (event != LV_EVENT_VALUE_CHANGED) {
+      return;
+    }
 
     Tile* screen = static_cast<Tile*>(obj->user_data);
     auto* eventDataPtr = (uint32_t*) lv_event_get_data();
@@ -35,19 +37,16 @@ Tile::Tile(uint8_t screenID,
 
   // Time
   label_time = lv_label_create(lv_scr_act(), nullptr);
-#if defined(CUEBAND_CUSTOMIZATION_NO_INVALID_TIME) && defined(CUEBAND_DETECT_UNSET_TIME)
-  if (dateTimeController.IsUnset()) {
-    lv_label_set_text_fmt(label_time, "");
-  } else
-#endif
-  lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
   lv_label_set_align(label_time, LV_LABEL_ALIGN_CENTER);
   lv_obj_align(label_time, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
 
   // Battery
-  batteryIcon = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
-  lv_obj_align(batteryIcon, nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
+  batteryIcon.Create(lv_scr_act());
+#ifdef CUEBAND_MINOR_FIXES
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
+#else
+  lv_obj_align(batteryIcon.GetObject(), nullptr, LV_ALIGN_IN_TOP_RIGHT, -8, 0);
+#endif
 
   if (numScreens > 1) {
     pageIndicatorBasePoints[0].x = LV_HOR_RES - 1;
@@ -70,7 +69,7 @@ Tile::Tile(uint8_t screenID,
 
     pageIndicator = lv_line_create(lv_scr_act(), nullptr);
     lv_obj_set_style_local_line_width(pageIndicator, LV_LINE_PART_MAIN, LV_STATE_DEFAULT, 3);
-    lv_obj_set_style_local_line_color(pageIndicator, LV_LINE_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+    lv_obj_set_style_local_line_color(pageIndicator, LV_LINE_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_MAKE(0xb0, 0xb0, 0xb0));
     lv_line_set_points(pageIndicator, pageIndicatorPoints, 2);
   }
 
@@ -82,7 +81,7 @@ Tile::Tile(uint8_t screenID,
       btnmMap[btIndex] = " ";
     } else {
       btnmMap[btIndex] = applications[i].icon;
-#if defined(CUEBAND_APP_SYMBOL) && !defined(CUEBAND_PATCH_FONT) && defined(CUEBAND_APP_SYMBOL_ALTERNATIVE)
+#if defined(CUEBAND_APP_SYMBOL) && defined(CUEBAND_APP_SYMBOL_ALTERNATIVE)
       // This icon is not in the default font and cannot set font for a button matrix
       if (!strcmp(CUEBAND_APP_SYMBOL, applications[i].icon)) {
         btnmMap[btIndex] = CUEBAND_APP_SYMBOL_ALTERNATIVE;
@@ -108,9 +107,9 @@ Tile::Tile(uint8_t screenID,
   lv_obj_align(btnm1, NULL, LV_ALIGN_CENTER, 0, 10);
 
   lv_obj_set_style_local_radius(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, 20);
-  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, LV_OPA_20);
+  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, LV_OPA_50);
   lv_obj_set_style_local_bg_color(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DEFAULT, LV_COLOR_AQUA);
-  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DISABLED, LV_OPA_20);
+  lv_obj_set_style_local_bg_opa(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DISABLED, LV_OPA_50);
   lv_obj_set_style_local_bg_color(btnm1, LV_BTNMATRIX_PART_BTN, LV_STATE_DISABLED, lv_color_hex(0x111111));
   lv_obj_set_style_local_pad_all(btnm1, LV_BTNMATRIX_PART_BG, LV_STATE_DEFAULT, 0);
   lv_obj_set_style_local_pad_inner(btnm1, LV_BTNMATRIX_PART_BG, LV_STATE_DEFAULT, 10);
@@ -120,7 +119,7 @@ Tile::Tile(uint8_t screenID,
     if (applications[i].application == Apps::None) {
       lv_btnmatrix_set_btn_ctrl(btnm1, i, LV_BTNMATRIX_CTRL_DISABLED);
     }
-#if defined(CUEBAND_APP_SYMBOL) && !defined(CUEBAND_PATCH_FONT) && !defined(CUEBAND_APP_SYMBOL_ALTERNATIVE)
+#if defined(CUEBAND_APP_SYMBOL) && !defined(CUEBAND_APP_SYMBOL_ALTERNATIVE)
     // This icon is not in the default font -- but cannot set font for a button matrix?
     if (!strcmp(CUEBAND_APP_SYMBOL, applications[i].icon)) {
       ; //lv_btnmatrix_set_style_local_text_font(btnm1, i, &cueband_20);
@@ -131,13 +130,9 @@ Tile::Tile(uint8_t screenID,
   btnm1->user_data = this;
   lv_obj_set_event_cb(btnm1, event_handler);
 
-  lv_obj_t* backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_long_mode(backgroundLabel, LV_LABEL_LONG_CROP);
-  lv_obj_set_size(backgroundLabel, 240, 240);
-  lv_obj_set_pos(backgroundLabel, 0, 0);
-  lv_label_set_text_static(backgroundLabel, "");
-
   taskUpdate = lv_task_create(lv_update_task, 5000, LV_TASK_PRIO_MID, this);
+
+  UpdateScreen();
 }
 
 Tile::~Tile() {
@@ -152,7 +147,7 @@ void Tile::UpdateScreen() {
   } else
 #endif
   lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
-  lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryController.PercentRemaining()));
+  batteryIcon.SetBatteryPercentage(batteryController.PercentRemaining());
 }
 
 void Tile::OnValueChangedEvent(lv_obj_t* obj, uint32_t buttonId) {

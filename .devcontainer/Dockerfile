@@ -58,6 +58,14 @@ RUN rm /tmp/nRF5_SDK_15.3.0_59ac345
 RUN git clone https://github.com/mcu-tools/mcuboot.git
 RUN pip3 install -r ./mcuboot/scripts/requirements.txt
 
+
+### cueband: fix for lv_font_conv
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -  &&  apt-get install -y nodejs  ## [cueband]
+RUN npm i -g lv_font_conv@1.5.2
+RUN apt install python-is-python3
+###
+
+
 RUN adduser infinitime
 
 ENV NRF5_SDK_PATH /opt/nRF5_SDK_15.3.0_59ac345

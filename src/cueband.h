@@ -16,6 +16,7 @@
 #define CUEBAND_STRINGIZE(S) #S
 #define CUEBAND_STRINGIZE_STRINGIZE(S) CUEBAND_STRINGIZE(S)
 
+#define CUEBAND_MINOR_FIXES             // Fix minor issues in upstream InfiniTime code
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
 /*
 #ifdef CUEBAND_FIX_WARNINGS
@@ -29,8 +30,8 @@
 */
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
-#define CUEBAND_REVISION_NUMBER 17      // Revision number (appears in user-visible version string, but not in block format)
-#define CUEBAND_VERSION_NUMBER CUEBAND_REVISION_NUMBER  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
+#define CUEBAND_VERSION_NUMBER 18  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
+#define CUEBAND_REVISION_NUMBER 0  // Revision number (only appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
@@ -80,6 +81,8 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
     #define QR_IMAGE_INVERT     // More recent specs of QR Codes allow light-on dark -- also saves memory as the quiet zone is skipped as the image is displayed on a dark background
     #define QR_TRUE_COLOR       // Can only transform (zoom) a true color image rather than 1bpp image, but a scale of x4 is (4*4=)x16 the number of pixels, and at LV_COLOR_DEPTH==16 takes the same amount of memory
 #endif
+
+#define CUEBAND_METRONOME_ENABLED
 
 #define CUEBAND_AXES 3          // Must be 3
 
@@ -184,7 +187,6 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #if defined(CUEBAND_APP_ENABLED)
     #define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
     //#define CUEBAND_APP_SYMBOL_ALTERNATIVE "C"    // For application list as icon not in font for application menu
-    #define CUEBAND_PATCH_FONT 0xf83e   // 0xf83e, wave-square -- patch into font for application menu: jetbrains_mono_bold_20.c 
     #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
     #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
     #define CUEBAND_WATCHFACE_CUE_STATUS
@@ -315,6 +317,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #if defined(CUEBAND_ACTIVITY_ENABLED)
     #define CUEBAND_FS_FILESIZE_ENABLED
     #define CUEBAND_FS_FILETELL_ENABLED
+    #define CUEBAND_BLUETOOTH_DISABLE_WARNING
 #endif
 
 #define CUEBAND_FIX_CURRENT_TIME_CLIENT // Validate response length

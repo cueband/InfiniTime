@@ -121,17 +121,20 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
             if (currentCueIndex != this->lastCueIndex) {
                 this->lastCueIndex = currentCueIndex;
                 // Check: if cueInterval/effectivePromptStyle are different, and store as last used values
-                if (cueInterval != this->lastInterval) {
+                if (cueInterval > 0 && cueInterval != this->lastInterval) {
                     this->lastInterval = cueInterval;
                     DeferWriteCues();
                 }
-                if (effectivePromptStyle != this->promptStyle) {
+                if (effectivePromptStyle > 0 && effectivePromptStyle != this->promptStyle) {
                     this->promptStyle = effectivePromptStyle;
                     DeferWriteCues();
                 }
             }
         }
     }
+
+    // Track the current effective sheduled interval
+    effectiveScheduledInterval = cueInterval;
 
     // If temporary prompt/snooze...
     if (currentUptime < overrideEndTime) {
@@ -148,7 +151,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     // Overridden or scheduled interval
     if (effectiveInterval > 0) {
         // prompt every N seconds
-        uint32_t elapsed = (lastPrompt != UPTIME_NONE) ? (currentUptime - lastPrompt) : UPTIME_NONE;
+        uint32_t elapsed = (lastPrompt != UPTIME_NONE) ? (uint32_t)((int32_t)currentUptime - (int32_t)lastPrompt) : UPTIME_NONE;
         bool prompt = (elapsed == UPTIME_NONE || elapsed >= effectiveInterval);
         if (prompt) {
             if (!snoozed) {
@@ -430,6 +433,18 @@ int CueController::WriteCues() {
     return 0;
 }
 
+void CueController::SetPromptStyle(unsigned int promptStyle) {
+    if (promptStyle < 0xffff) {
+        if (promptStyle != this->promptStyle) {
+            this->promptStyle = promptStyle;
+            DeferWriteCues();
+        }
+
+        // Now wait for a whole prompt cycle before prompting again
+        lastPrompt = currentUptime;
+    }
+}
+
 bool CueController::SetInterval(unsigned int interval, unsigned int maximumRuntime) {
     if (!initialized) return false;
 
@@ -458,9 +473,13 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
         this->interval = 0;
     }
 
-    // Record this as the last prompt time so that the full interval must elapse
+    // When setting manual prompt details...
     if (interval != (unsigned int)-1 || maximumRuntime != (unsigned int)-1) {
-        lastPrompt = currentUptime;
+        // Set as just before the next prompt time so that only a couple of seconds will elapse before prompting
+        const int delay = 2;
+        if (this->interval > delay) {
+            lastPrompt = (uint32_t)((int32_t)currentUptime - (int32_t)(this->interval - delay));        // UPTIME_NONE
+        }
     }
     
     descriptionValid = false;
