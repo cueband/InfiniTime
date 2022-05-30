@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <array>
 #include <cstdint>
 #include <lvgl/lvgl.h>
@@ -24,6 +26,9 @@ namespace Pinetime {
         Controllers::Settings& settingsController;
         lv_obj_t* cbEnabled;
         lv_obj_t* cbDisabled;
+#ifdef CUEBAND_BLUETOOTH_DISABLE_WARNING
+        lv_obj_t* lblWarning;
+#endif
         bool priorMode;
       };
     }

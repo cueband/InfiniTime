@@ -65,6 +65,20 @@ SettingBluetooth::SettingBluetooth(Pinetime::Applications::DisplayApp* app, Pine
     lv_checkbox_set_checked(cbDisabled, true);
     priorMode = false;
   }
+
+#ifdef CUEBAND_BLUETOOTH_DISABLE_WARNING
+  // Warning label
+  lblWarning = lv_label_create(lv_scr_act(), nullptr);
+  lv_obj_align(lblWarning, lv_scr_act(), LV_ALIGN_IN_BOTTOM_LEFT, 0, -68);
+  //lv_obj_align(lblWarning, container1, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+  //lv_label_set_recolor(lblWarning, true);
+  lv_label_set_align(lblWarning, LV_LABEL_ALIGN_CENTER);
+  lv_label_set_long_mode(lblWarning, LV_LABEL_LONG_BREAK);
+  lv_obj_set_width(lblWarning, 240);
+  lv_label_set_text_static(lblWarning, "You cannot sync with your phone while Bluetooth is disabled.");
+  lv_obj_set_hidden(lblWarning, priorMode);
+#endif
+
 }
 
 SettingBluetooth::~SettingBluetooth() {
@@ -79,6 +93,9 @@ void SettingBluetooth::OnBluetoothDisabled(lv_obj_t* object, lv_event_t event) {
   if (event == LV_EVENT_VALUE_CHANGED) {
     lv_checkbox_set_checked(cbEnabled, false);
     lv_checkbox_set_checked(cbDisabled, true);
+#ifdef CUEBAND_BLUETOOTH_DISABLE_WARNING
+    lv_obj_set_hidden(lblWarning, false);
+#endif
     settingsController.SetBleRadioEnabled(false);
   }
 }
@@ -87,6 +104,9 @@ void SettingBluetooth::OnBluetoothEnabled(lv_obj_t* object, lv_event_t event) {
   if (event == LV_EVENT_VALUE_CHANGED) {
     lv_checkbox_set_checked(cbEnabled, true);
     lv_checkbox_set_checked(cbDisabled, false);
+#ifdef CUEBAND_BLUETOOTH_DISABLE_WARNING
+    lv_obj_set_hidden(lblWarning, true);
+#endif
     settingsController.SetBleRadioEnabled(true);
   }
 }
