@@ -317,6 +317,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #if defined(CUEBAND_ACTIVITY_ENABLED)
     #define CUEBAND_FS_FILESIZE_ENABLED
     #define CUEBAND_FS_FILETELL_ENABLED
+    #define CUEBAND_BLUETOOTH_DISABLE_WARNING
 #endif
 
 #define CUEBAND_FIX_CURRENT_TIME_CLIENT // Validate response length

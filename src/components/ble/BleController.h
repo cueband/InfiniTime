@@ -73,8 +73,8 @@ namespace Pinetime {
       void SetTrusted(bool nearFuture = false) {
         // Trust the current connection, if established
         if (isConnected) trusted = true;
-        else if (nearFuture) {
-          // Otherwise, a connection in the near future
+        // Trust a re-connection in the near future
+        if (nearFuture) {
           trustSoonElapsed = elapsed;
         }
       }

@@ -30,3 +30,8 @@
 #ifdef CUEBAND_METRONOME_ENABLED
   #undef CUEBAND_METRONOME_ENABLED
 #endif
+
+// When testing, vibrate even if unworn
+#ifdef CUEBAND_SILENT_WHEN_UNWORN
+  #undef CUEBAND_SILENT_WHEN_UNWORN
+#endif

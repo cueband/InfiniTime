@@ -14,6 +14,8 @@ using namespace Pinetime::Applications::Screens;
 #define UNITS_Y_OFFSET -5
 #define DURATION_Y_OFFSET -25
 
+#define SCREEN_TIMEOUT 25
+
 static const uint32_t snoozeDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
 static const uint32_t impromptuDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
 static const uint32_t promptIntervals[] = { 30, 60, 90, 120, 180, 240, 0 };
@@ -228,7 +230,7 @@ void CueBandApp::Update() {
   uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
   if (now != lastTime || changes) {
     if (changes) timeout = 0;
-    if (now != lastTime && timeout++ > 20) Close();
+    if (now != lastTime && timeout++ >= SCREEN_TIMEOUT) Close(true);
     changes = false;
     lastTime = now;
 
@@ -242,6 +244,7 @@ void CueBandApp::Update() {
 #endif
     lv_label_set_text(label_time, dateTimeController.FormattedTime().c_str());
     batteryIcon.SetBatteryPercentage(batteryController.PercentRemaining());
+    lv_obj_set_hidden(batteryIcon.GetObject(), screen == CUEBAND_SCREEN_MANUAL);  // Preferences button partially obscures battery level
 
     static char text[80];
     static char durationText[16]; // "00"
@@ -255,7 +258,7 @@ void CueBandApp::Update() {
       case CUEBAND_SCREEN_OVERVIEW:
       {
         p += sprintf(text, "%s", cueController.Description(true, &symbol));
-        //lv_label_set_text_static(units, "#444444  Mute     Manual#");
+        //lv_label_set_text_static(units, "#808080  Mute     Manual#");  // LV_COLOR_GRAY #808080
         lv_label_set_text_static(units, " Mute     Manual");
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, 0, UNITS_Y_OFFSET);
         break;
@@ -301,7 +304,8 @@ void CueBandApp::Update() {
         cueController.GetLastImpromptu(&lastInterval, &promptStyle);
         // Interval Style
         // _15 sec.
-        p += sprintf(text, "Cue Preferences\n\n#444444 Interval Style#\n%3d %s   %s", lastInterval < 100 ? lastInterval : (lastInterval / 60), lastInterval < 100 ? "s" : "m", promptDescription[promptStyle % 16]);
+        // LV_COLOR_GRAY #808080
+        p += sprintf(text, "Cue Preferences\n\n#808080 Interval Style#\n%3d %s   %s", lastInterval < 100 ? lastInterval : (lastInterval / 60), lastInterval < 100 ? "s" : "m", promptDescription[promptStyle % 16]);
         lv_label_set_text_static(units, "");
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, UNITS_X_OFFSET, UNITS_Y_OFFSET);
         break;
@@ -538,8 +542,11 @@ bool CueBandApp::OnButtonPushed() {
   return false;
 }
 
-void CueBandApp::Close() {
+void CueBandApp::Close(bool timeout) {
   this->running = false;
+  if (timeout) {
+    app->StartApp(Apps::Clock, DisplayApp::FullRefreshDirections::RightAnim);
+  }
 }
 
 void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
