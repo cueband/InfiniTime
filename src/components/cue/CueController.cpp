@@ -477,7 +477,7 @@ bool CueController::SetInterval(unsigned int interval, unsigned int maximumRunti
     if (interval != (unsigned int)-1 || maximumRuntime != (unsigned int)-1) {
         // Set as just before the next prompt time so that only a couple of seconds will elapse before prompting
         const int delay = 2;
-        lastPrompt = (uint32_t)((int32_t)currentUptime - (int32_t)interval - delay);        // UPTIME_NONE
+        lastPrompt = (uint32_t)((int32_t)currentUptime - (int32_t)this->interval - delay);        // UPTIME_NONE
     }
     
     descriptionValid = false;

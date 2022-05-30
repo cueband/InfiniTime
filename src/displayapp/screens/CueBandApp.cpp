@@ -258,7 +258,7 @@ void CueBandApp::Update() {
       case CUEBAND_SCREEN_OVERVIEW:
       {
         p += sprintf(text, "%s", cueController.Description(true, &symbol));
-        //lv_label_set_text_static(units, "#444444  Mute     Manual#");
+        //lv_label_set_text_static(units, "#808080  Mute     Manual#");  // LV_COLOR_GRAY #808080
         lv_label_set_text_static(units, " Mute     Manual");
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, 0, UNITS_Y_OFFSET);
         break;
@@ -304,7 +304,8 @@ void CueBandApp::Update() {
         cueController.GetLastImpromptu(&lastInterval, &promptStyle);
         // Interval Style
         // _15 sec.
-        p += sprintf(text, "Cue Preferences\n\n#444444 Interval Style#\n%3d %s   %s", lastInterval < 100 ? lastInterval : (lastInterval / 60), lastInterval < 100 ? "s" : "m", promptDescription[promptStyle % 16]);
+        // LV_COLOR_GRAY #808080
+        p += sprintf(text, "Cue Preferences\n\n#808080 Interval Style#\n%3d %s   %s", lastInterval < 100 ? lastInterval : (lastInterval / 60), lastInterval < 100 ? "s" : "m", promptDescription[promptStyle % 16]);
         lv_label_set_text_static(units, "");
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, UNITS_X_OFFSET, UNITS_Y_OFFSET);
         break;
