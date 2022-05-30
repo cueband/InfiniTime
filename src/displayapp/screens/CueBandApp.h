@@ -48,7 +48,7 @@ namespace Pinetime {
           ~CueBandApp() override;
 
           void Update();
-          void Close();
+          void Close(bool timeout = false);
 
           void OnButtonEvent(lv_obj_t* object, lv_event_t event);
           bool OnButtonPushed() override;

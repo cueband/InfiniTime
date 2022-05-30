@@ -433,7 +433,7 @@ int CueController::WriteCues() {
     return 0;
 }
 
-void CueController::SetPromptStyle(unsigned int promptStyle = DEFAULT_PROMPT_STYLE) {
+void CueController::SetPromptStyle(unsigned int promptStyle) {
     if (promptStyle < 0xffff) {
         if (promptStyle != this->promptStyle) {
             this->promptStyle = promptStyle;

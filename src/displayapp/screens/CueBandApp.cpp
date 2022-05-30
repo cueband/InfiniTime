@@ -14,6 +14,8 @@ using namespace Pinetime::Applications::Screens;
 #define UNITS_Y_OFFSET -5
 #define DURATION_Y_OFFSET -25
 
+#define SCREEN_TIMEOUT 25
+
 static const uint32_t snoozeDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
 static const uint32_t impromptuDurations[] = { 10 * 60, 30 * 60, 60 * 60, 0 };
 static const uint32_t promptIntervals[] = { 30, 60, 90, 120, 180, 240, 0 };
@@ -228,7 +230,7 @@ void CueBandApp::Update() {
   uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
   if (now != lastTime || changes) {
     if (changes) timeout = 0;
-    if (now != lastTime && timeout++ > 20) Close();
+    if (now != lastTime && timeout++ >= SCREEN_TIMEOUT) Close(true);
     changes = false;
     lastTime = now;
 
@@ -539,8 +541,11 @@ bool CueBandApp::OnButtonPushed() {
   return false;
 }
 
-void CueBandApp::Close() {
+void CueBandApp::Close(bool timeout) {
   this->running = false;
+  if (timeout) {
+    app->StartApp(Apps::Clock, DisplayApp::FullRefreshDirections::RightAnim);
+  }
 }
 
 void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
