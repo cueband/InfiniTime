@@ -80,12 +80,11 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
   #endif
 #else
     {Symbols::stopWatch, Apps::StopWatch},
-    {Symbols::music, Apps::Music},
-    {Symbols::map, Apps::Navigation},
+    {Symbols::clock, Apps::Alarm},
+    {Symbols::hourGlass, Apps::Timer},
     {Symbols::shoe, Apps::Steps},
     {Symbols::heartBeat, Apps::HeartRate},
-    {Symbols::hourGlass, Apps::Timer},
-#endif
+    {Symbols::music, Apps::Music},
   }};
 
   return std::make_unique<Screens::Tile>(0, 
@@ -121,7 +120,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
 #endif
     {Symbols::chartLine, Apps::Motion},
     {Symbols::drum, Apps::Metronome},
-    {Symbols::clock, Apps::Alarm},
+    {Symbols::map, Apps::Navigation},
 #endif
   }};
 
