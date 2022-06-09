@@ -3,25 +3,26 @@
 #include "components/motor/MotorController.h"
 #include <hal/nrf_gpio.h>
 #include "systemtask/SystemTask.h"
-#include "app_timer.h"
 #include "drivers/PinMap.h"
-
-APP_TIMER_DEF(shortVibTimer);
-APP_TIMER_DEF(longVibTimer);
 
 using namespace Pinetime::Controllers;
 
 void MotorController::Init() {
   nrf_gpio_cfg_output(PinMap::Motor);
   nrf_gpio_pin_set(PinMap::Motor);
-  app_timer_init();
 
-  app_timer_create(&shortVibTimer, APP_TIMER_MODE_SINGLE_SHOT, StopMotor);
-  app_timer_create(&longVibTimer, APP_TIMER_MODE_REPEATED, Ring);
+  shortVib = xTimerCreate("shortVib", 1, pdFALSE, 
+#ifdef CUEBAND_MOTOR_PATTERNS
+    this      // Context required to advance pattern
+#else
+    nullptr
+#endif
+    , StopMotor);
+  longVib = xTimerCreate("longVib", pdMS_TO_TICKS(1000), pdTRUE, this, Ring);
 }
 
-void MotorController::Ring(void* p_context) {
-  auto* motorController = static_cast<MotorController*>(p_context);
+void MotorController::Ring(TimerHandle_t xTimer) {
+  auto* motorController = static_cast<MotorController*>(pvTimerGetTimerID(xTimer));
   motorController->RunForDuration(50);
 }
 
@@ -29,33 +30,34 @@ void MotorController::RunForDuration(uint8_t motorDuration) {
 #ifdef CUEBAND_MOTOR_PATTERNS
   BeginPattern(nullptr);
 #endif
-  nrf_gpio_pin_clear(PinMap::Motor);
+  if (xTimerChangePeriod(shortVib, pdMS_TO_TICKS(motorDuration), 0) == pdPASS && xTimerStart(shortVib, 0) == pdPASS) {
+    nrf_gpio_pin_clear(PinMap::Motor);
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
-  TrackActive(motorDuration);
+    TrackActive(motorDuration);
 #endif
-  app_timer_start(shortVibTimer, APP_TIMER_TICKS(motorDuration), nullptr);
+  }
 }
 
 void MotorController::StartRinging() {
 #ifdef CUEBAND_MOTOR_PATTERNS
   BeginPattern(nullptr);
 #endif
-  Ring(this);
-  app_timer_start(longVibTimer, APP_TIMER_TICKS(1000), this);
+  RunForDuration(50);
+  xTimerStart(longVib, 0);
 }
 
 void MotorController::StopRinging() {
 #ifdef CUEBAND_MOTOR_PATTERNS
   BeginPattern(nullptr);
 #endif
-  app_timer_stop(longVibTimer);
+  xTimerStop(longVib, 0);
   nrf_gpio_pin_set(PinMap::Motor);
 }
 
-void MotorController::StopMotor(void* p_context) {
+void MotorController::StopMotor(TimerHandle_t xTimer) {
   nrf_gpio_pin_set(PinMap::Motor);
 #ifdef CUEBAND_MOTOR_PATTERNS
-  auto* motorController = static_cast<MotorController*>(p_context);
+  auto* motorController = static_cast<MotorController*>(pvTimerGetTimerID(xTimer));
   if (motorController != nullptr) {
     motorController->AdvancePattern();
   }
@@ -109,22 +111,25 @@ void MotorController::AdvancePattern() {
   int duration = currentPattern[currentIndex];
 
   if (duration <= 0) {
-    nrf_gpio_pin_set(PinMap::Motor);    // Off
+    nrf_gpio_pin_set(PinMap::Motor);    // Off at end of pattern
     currentPattern = nullptr;
     currentIndex = 0;
     return;
   }
   
-  if ((currentIndex & 1) == 0) {
-    nrf_gpio_pin_clear(PinMap::Motor);  // On
+  if (xTimerChangePeriod(shortVib, pdMS_TO_TICKS(duration), 0) == pdPASS && xTimerStart(shortVib, 0) == pdPASS) {
+    if ((currentIndex & 1) == 0) {
+      nrf_gpio_pin_clear(PinMap::Motor);  // On phase of pattern
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
     TrackActive(duration);
 #endif
+    } else {
+      nrf_gpio_pin_set(PinMap::Motor);    // Off phase of pattern
+    }
   } else {
-    nrf_gpio_pin_set(PinMap::Motor);    // Off
+    nrf_gpio_pin_set(PinMap::Motor);    // Off because of timer error
   }
   currentIndex++;
-  app_timer_start(shortVibTimer, APP_TIMER_TICKS(duration), this);
 }
 
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
