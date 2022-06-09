@@ -36,6 +36,11 @@
   #undef CUEBAND_METRONOME_ENABLED
 #endif
 
+// Test: allow other watchfaces to check status message
+#ifdef CUEBAND_WATCHFACE_LIMIT_OPTIONS
+  #undef CUEBAND_WATCHFACE_LIMIT_OPTIONS
+#endif
+
 // When testing, vibrate even if unworn
 #ifdef CUEBAND_SILENT_WHEN_UNWORN
   #undef CUEBAND_SILENT_WHEN_UNWORN
