@@ -477,7 +477,7 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
       cueService.Disconnect();
 #endif
       connectionHandle = BLE_HS_CONN_HANDLE_NONE;
-      if(bleController.IsConnected()) {
+      if (bleController.IsConnected()) {
         bleController.Disconnect();
         fastAdvCount = 0;
         StartAdvertising();
