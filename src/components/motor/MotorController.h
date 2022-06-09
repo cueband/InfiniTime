@@ -7,6 +7,8 @@
 //namespace Pinetime::Controllers { class DateTime; }
 #endif
 
+#include <FreeRTOS.h>
+#include <timers.h>
 #include <cstdint>
 
 namespace Pinetime {
@@ -34,8 +36,10 @@ namespace Pinetime {
 #endif
 
     private:
-      static void Ring(void* p_context);
-      static void StopMotor(void* p_context);
+      static void Ring(TimerHandle_t xTimer);
+      static void StopMotor(TimerHandle_t xTimer);
+      TimerHandle_t shortVib;
+      TimerHandle_t longVib;
 
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
       void TrackActive(unsigned int timeMs);
