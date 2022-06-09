@@ -85,6 +85,7 @@ std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
     {Symbols::shoe, Apps::Steps},
     {Symbols::heartBeat, Apps::HeartRate},
     {Symbols::music, Apps::Music},
+#endif
   }};
 
   return std::make_unique<Screens::Tile>(0, 
