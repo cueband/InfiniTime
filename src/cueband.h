@@ -125,7 +125,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_CUSTOMIZATION
 //#define CUEBAND_SAVE_MEMORY                           // Actions to reduce program memory
 //#define CUEBAND_DEBUG_INIT_TIME                       // While debugging, use the build time to initialize the clock if the time is invalid
-//#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
+#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
