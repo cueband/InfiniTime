@@ -100,9 +100,26 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
             if (intensity > 0xffff) intensity = 0xffff;
             if (interval > 0xffff) interval = 0xffff;
             if (duration > 0xffff) duration = 0xffff;
-            if (cueController.IsInitialized()) status_flags |= 0x01;        // b0 = service initialized
-            if (firmwareValidator.IsValidated()) status_flags |= 0x02;      // b1 = firmware validated
-            if (bleController.IsTrusted()) status_flags |= 0x04;            // b2 = connection trusted
+            if (cueController.IsInitialized()) status_flags |= 0x01;            // b0 = service initialized
+            if (firmwareValidator.IsValidated()) status_flags |= 0x02;          // b1 = firmware validated
+            if (bleController.IsTrusted()) status_flags |= 0x04;                // b2 = connection trusted
+            if (m_system.IsSleeping()) status_flags |= 0x08;                    // b3 = screen off
+#ifdef CUEBAND_APP_ENABLED
+            int appId = 0;
+            switch (m_system.currentAppId) {
+                case Applications::Apps::Clock: appId = 1; break;               // Watch Face
+                case Applications::Apps::CueBand: appId = 2; break;             // 2+CUEBAND_SCREEN_OVERVIEW
+#ifdef CUEBAND_APP_RELOAD_SCREENS
+                case Applications::Apps::CueBandSnooze: appId = 3; break;       // 2+CUEBAND_SCREEN_SNOOZE
+                case Applications::Apps::CueBandManual: appId = 4; break;       // 2+CUEBAND_SCREEN_MANUAL
+                case Applications::Apps::CueBandPreferences: appId = 5; break;  // 2+CUEBAND_SCREEN_PREFERENCES
+                case Applications::Apps::CueBandInterval: appId = 6; break;     // 2+CUEBAND_SCREEN_INTERVAL
+                case Applications::Apps::CueBandStyle: appId = 7; break;        // 2+CUEBAND_SCREEN_STYLE
+#endif
+                default: appId = 0; break;                                      // Other
+            }
+            status_flags |= (appId << 4) & 0x07;                                // b4-b6 = appId
+#endif
 
             // @0 Active cue schedule ID
             status[0] = (uint8_t)(active_schedule_id >> 0);

@@ -144,7 +144,7 @@ The BLE service can be used to:
 >     uint8_t options_base;           // @16 Device interface options base value (lower 8-bits only)
 >     uint8_t options_mask;           // @17 Device interface options remote mask (lower 8-bits only)
 >     uint8_t options_value;          // @18 Device interface options effective value (lower 8-bits only)
->     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted)
+>     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted, b3 = screen off, b4-b6 = application_id)
 > } // @20
 > ```
 
@@ -179,6 +179,19 @@ The BLE service can be used to:
 > * `b7` - (reserved)
 > * `b8-b15` - (unused)
 >
+
+`application_id` is:
+
+> ```c
+> const uint8_t APPLICATION_ID_OTHER = 0x00;            // Other application
+> const uint8_t APPLICATION_ID_WATCHFACE = 0x01;        // Watch face
+> const uint8_t APPLICATION_ID_CUE_OVERVIEW = 0x02;     // Cue App: Overview
+> const uint8_t APPLICATION_ID_CUE_SNOOZE = 0x03;       // Cue App: Snooze duration
+> const uint8_t APPLICATION_ID_CUE_MANUAL = 0x04;       // Cue App: Manual cue duration
+> const uint8_t APPLICATION_ID_CUE_PREFERENCES = 0x05;  // Cue App: Manual cue preferences
+> const uint8_t APPLICATION_ID_CUE_INTERVAL = 0x06;     // Cue App: Manual cue preferences: interval
+> const uint8_t APPLICATION_ID_CUE_STYLE = 0x07;        // Cue App: Manual cue preferences: style
+> ```
 
 `set_impromtu` is:
 

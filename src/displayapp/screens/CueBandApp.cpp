@@ -103,9 +103,6 @@ CueBandApp::CueBandApp(
   this->screen = screen;
 
 #ifdef CUEBAND_CUE_ENABLED
-  if (this->screen == CUEBAND_SCREEN_OVERVIEW) {
-    systemTask.ReportAppActivated();
-  }
   isManualAllowed = cueController.IsManualAllowed();
 #endif
 
@@ -501,6 +498,10 @@ void CueBandApp::ChangeScreen(CueBandScreen screen, bool forward) {
   }
 #else         // Change screen but stay in app -- no screen transition
   this->screen = screen;
+#ifndef CUEBAND_APP_RELOAD_SCREENS
+  #warning "If CUEBAND_APP_RELOAD_SCREENS is not defined, the current app id status will not work correctly."
+  //systemTask.ReportAppActivated(this->screen);
+#endif
   //app->SetFullRefresh(forward ? DisplayApp::FullRefreshDirections::LeftAnim : DisplayApp::FullRefreshDirections::RightAnim);  // Right / Left / RightAnim / LeftAnim
   //Update();
 #endif
