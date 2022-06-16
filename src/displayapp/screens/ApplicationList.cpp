@@ -1,12 +1,22 @@
 #include "displayapp/screens/ApplicationList.h"
 #include <lvgl/lvgl.h>
-#include <array>
-#include "displayapp/screens/Symbols.h"
-#include "displayapp/screens/Tile.h"
+#include <functional>
 #include "displayapp/Apps.h"
 #include "displayapp/DisplayApp.h"
 
 using namespace Pinetime::Applications::Screens;
+
+constexpr std::array<Tile::Applications, ApplicationList::applications.size()> ApplicationList::applications;
+
+auto ApplicationList::CreateScreenList() const {
+  std::array<std::function<std::unique_ptr<Screen>()>, nScreens> screens;
+  for (size_t i = 0; i < screens.size(); i++) {
+    screens[i] = [this, i]() -> std::unique_ptr<Screen> {
+      return CreateScreen(i);
+    };
+  }
+  return screens;
+}
 
 ApplicationList::ApplicationList(Pinetime::Applications::DisplayApp* app,
                                  Pinetime::Controllers::Settings& settingsController,
@@ -16,20 +26,7 @@ ApplicationList::ApplicationList(Pinetime::Applications::DisplayApp* app,
     settingsController {settingsController},
     batteryController {batteryController},
     dateTimeController {dateTimeController},
-    screens {app,
-             settingsController.GetAppMenu(),
-             {
-               [this]() -> std::unique_ptr<Screen> {
-                 return CreateScreen1();
-               },
-#if !defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) && !defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-               [this]() -> std::unique_ptr<Screen> {
-                 return CreateScreen2();
-               },
-               //[this]() -> std::unique_ptr<Screen> { return CreateScreen3(); }
-#endif
-             },
-             Screens::ScreenListModes::UpDown} {
+    screens {app, settingsController.GetAppMenu(), CreateScreenList(), Screens::ScreenListModes::UpDown} {
 }
 
 ApplicationList::~ApplicationList() {
@@ -40,105 +37,11 @@ bool ApplicationList::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
   return screens.OnTouchEvent(event);
 }
 
-std::unique_ptr<Screen> ApplicationList::CreateScreen1() {
-  std::array<Screens::Tile::Applications, 6> applications {{
-#if defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-  #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
-  #else
-    {"", Apps::None},
-  #endif
-  #ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},
-  #else
-    {"", Apps::None},
-  #endif
-    {"", Apps::None},
-    {"", Apps::None},
-    {"", Apps::None},
-    {"", Apps::None},
-#elif defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)
-    {Symbols::stopWatch, Apps::StopWatch},
-    {Symbols::hourGlass, Apps::Timer},
-    {Symbols::clock, Apps::Alarm},
-  #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
-  #else
-    {"", Apps::None},
-  #endif
+std::unique_ptr<Screen> ApplicationList::CreateScreen(unsigned int screenNum) const {
+  std::array<Tile::Applications, appsPerScreen> apps;
+  for (int i = 0; i < appsPerScreen; i++) {
+    apps[i] = applications[screenNum * appsPerScreen + i];
+  }
 
-  #ifdef CUEBAND_METRONOME_ENABLED
-    {Symbols::drum, Apps::Metronome},
-  #else
-    {"", Apps::None},
-  #endif
-
-  #ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},
-  #else
-    {"", Apps::None},
-  #endif
-#else
-    {Symbols::stopWatch, Apps::StopWatch},
-    {Symbols::clock, Apps::Alarm},
-    {Symbols::hourGlass, Apps::Timer},
-    {Symbols::shoe, Apps::Steps},
-    {Symbols::heartBeat, Apps::HeartRate},
-    {Symbols::music, Apps::Music},
-#endif
-  }};
-
-  return std::make_unique<Screens::Tile>(0, 
-#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) || defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-    1,  // Scrollbar suitable for only one screen of apps
-#else
-    2, 
-#endif
-    app, settingsController, batteryController, dateTimeController, applications);
+  return std::make_unique<Screens::Tile>(screenNum, nScreens, app, settingsController, batteryController, dateTimeController, apps);
 }
-
-#if !defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) && !defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-std::unique_ptr<Screen> ApplicationList::CreateScreen2() {
-  std::array<Screens::Tile::Applications, 6> applications {{
-#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS) || defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-    {"", Apps::None},
-    {"", Apps::None},
-    {"", Apps::None},
-    {"", Apps::None},
-    {"", Apps::None},
-    {"", Apps::None},
-#else
-  #ifdef CUEBAND_INFO_APP_ENABLED
-    {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
-  #else
-    {Symbols::paddle, Apps::Paddle},
-  #endif
-    {Symbols::paddle, Apps::Paddle},
-#ifdef CUEBAND_APP_ENABLED
-    {CUEBAND_APP_SYMBOL, Apps::CueBand},
-#else
-    {"2", Apps::Twos},
-#endif
-    {Symbols::chartLine, Apps::Motion},
-    {Symbols::drum, Apps::Metronome},
-    {Symbols::map, Apps::Navigation},
-#endif
-  }};
-
-  return std::make_unique<Screens::Tile>(1, 2, app, settingsController, batteryController, dateTimeController, applications);
-}
-#endif
-
-/*std::unique_ptr<Screen> ApplicationList::CreateScreen3() {
-  std::array<Screens::Tile::Applications, 6> applications {
-          {{"A", Apps::Meter},
-           {"B", Apps::Navigation},
-           {"C", Apps::Clock},
-           {"D", Apps::Music},
-           {"E", Apps::SysInfo},
-           {"F", Apps::Brightness}
-          }
-  };
-
-  return std::make_unique<Screens::Tile>(2, 3, app, settingsController, batteryController, dateTimeController, applications);
-}*/
