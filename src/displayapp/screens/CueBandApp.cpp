@@ -255,8 +255,14 @@ void CueBandApp::Update() {
       case CUEBAND_SCREEN_OVERVIEW:
       {
         p += sprintf(text, "%s", cueController.Description(true, &symbol));
-        //lv_label_set_text_static(units, "#808080  Mute     Manual#");  // LV_COLOR_GRAY #808080
-        lv_label_set_text_static(units, " Mute     Manual");
+        const char *unitsStr = "";
+        if (cueController.IsGloballyEnabled() && !cueController.IsAllowed()) {
+          unitsStr = "";  // "Cueing Disallowed"
+        } else {
+          //unitsStr = "#808080  Mute     Manual#";  // LV_COLOR_GRAY #808080
+          unitsStr = " Mute     Manual";
+        }
+        lv_label_set_text_static(units, unitsStr);
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, 0, UNITS_Y_OFFSET);
         break;
       }
