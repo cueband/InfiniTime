@@ -5,6 +5,10 @@
 #include <array>
 #include <cstdint>
 
+#ifdef CUEBAND_BUILD_FIXES
+#include <cstddef>  // size_t
+#endif
+
 namespace Pinetime {
   namespace Controllers {
     class Ble {
