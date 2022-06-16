@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cueband.h"
+
 #include <array>
 #include <memory>
 #include "displayapp/screens/Screen.h"
@@ -36,7 +38,12 @@ namespace Pinetime {
           {Symbols::clock, "Time format", Apps::SettingTimeFormat},
           {Symbols::home, "Watch face", Apps::SettingWatchFace},
 
+#if defined(CUEBAND_OPTIONS_APP_ENABLED)
+          {CUEBAND_APP_SYMBOL, "Cues Options", Apps::SettingCueBandOptions},
+#endif
+#if !defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
           {Symbols::shoe, "Steps", Apps::SettingSteps},
+#endif
           {Symbols::clock, "Set date", Apps::SettingSetDate},
           {Symbols::clock, "Set time", Apps::SettingSetTime},
           {Symbols::batteryHalf, "Battery", Apps::BatteryInfo},
@@ -47,9 +54,19 @@ namespace Pinetime {
           {Symbols::bluetooth, "Bluetooth", Apps::SettingBluetooth},
 
           {Symbols::list, "About", Apps::SysInfo},
+#if defined(CUEBAND_INFO_APP_ENABLED)
+          {CUEBAND_INFO_APP_SYMBOL, "Info", Apps::InfoFromSettings},
+#endif
           {Symbols::none, "None", Apps::None},
+#if !defined(CUEBAND_OPTIONS_APP_ENABLED)
           {Symbols::none, "None", Apps::None},
+#endif
+#if defined(CUEBAND_CUSTOMIZATION_NO_STEPS)
           {Symbols::none, "None", Apps::None},
+#endif
+#if !defined(CUEBAND_INFO_APP_ENABLED)
+          {Symbols::none, "None", Apps::None},
+#endif
         }};
         ScreenList<nScreens> screens;
       };
