@@ -2,6 +2,10 @@
 
 #include "cueband.h"
 
+#ifdef CUEBAND_CUE_ENABLED
+#include "displayapp/Apps.h"
+#endif
+
 #include <memory>
 
 #include <FreeRTOS.h>
@@ -30,7 +34,6 @@
 #endif
 #ifdef CUEBAND_CUE_ENABLED
 #include "components/cue/CueController.h"
-#include "displayapp/Apps.h"
 #endif
 #if defined(CUEBAND_INFO_APP_ENABLED)
 #include "components/battery/BatteryController.h"
