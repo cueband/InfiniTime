@@ -585,10 +585,12 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
         if (!handled) {
           uint16_t current_control_point;
           uint32_t override_remaining;
+          uint32_t intensity;
+          uint32_t interval;
           uint32_t duration;
-          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
-          // If scheduled prompting is active...
-          if (cueController.IsAllowed() && override_remaining <= 0 && current_control_point < 0xffff) {
+          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, &intensity, &interval, &duration);
+          // If scheduled prompting allowed, no manual override, and within an active cueing period
+          if (cueController.IsAllowed() && override_remaining <= 0 && current_control_point < 0xffff && intensity > 0 && interval > 0) {
             // ...snooze for remaining cueing duration
             cueController.SetInterval(0, duration);
           }
