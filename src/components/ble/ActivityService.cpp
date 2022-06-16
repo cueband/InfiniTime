@@ -5,6 +5,10 @@
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
 
+#if defined(CUEBAND_CUE_ENABLED)
+#include "components/cue/CueController.h"
+#endif
+
 #include "ActivityService.h"
 
 #include "systemtask/SystemTask.h"
@@ -352,6 +356,42 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                     const char *key = (const char *)data + 1;
                     size_t length = notifSize - 1;
                     bleController.ProvideKey(key, length);
+#endif
+                }
+            }
+
+            // Remote options: none
+            {
+                const char *cmd = "OptNone";
+                if (trusted && notifSize == strlen(cmd) && memcmp(data, cmd, strlen(cmd)) == 0) {
+#if defined(CUEBAND_CUE_ENABLED)
+                    m_system.GetCueController().SetOptionsMaskValue(0, 0);
+#endif
+                }
+            }
+
+            // Remote options: cueing
+            {
+                const char *cmd = "OptCue";
+                if (trusted && notifSize == strlen(cmd) && memcmp(data, cmd, strlen(cmd)) == 0) {
+#if defined(CUEBAND_CUE_ENABLED)
+                    m_system.GetCueController().SetOptionsMaskValue(
+                        CueController::OPTIONS_CUE_ENABLED | CueController::OPTIONS_CUE_STATUS | CueController::OPTIONS_CUE_DETAILS | CueController::OPTIONS_CUE_MANUAL,
+                        CueController::OPTIONS_CUE_ENABLED | CueController::OPTIONS_CUE_STATUS | CueController::OPTIONS_CUE_DETAILS | CueController::OPTIONS_CUE_MANUAL
+                    );
+#endif
+                }
+            }
+
+            // Remote options: disallowed cueing
+            {
+                const char *cmd = "OptDis";
+                if (trusted && notifSize == strlen(cmd) && memcmp(data, cmd, strlen(cmd)) == 0) {
+#if defined(CUEBAND_CUE_ENABLED)
+                    m_system.GetCueController().SetOptionsMaskValue(
+                        CueController::OPTIONS_CUE_ENABLED | CueController::OPTIONS_CUE_STATUS | CueController::OPTIONS_CUE_DETAILS | CueController::OPTIONS_CUE_MANUAL | CueController::OPTIONS_CUE_DISALLOW,
+                        CueController::OPTIONS_CUE_ENABLED | CueController::OPTIONS_CUE_STATUS | CueController::OPTIONS_CUE_DETAILS | CueController::OPTIONS_CUE_MANUAL | CueController::OPTIONS_CUE_DISALLOW
+                    );
 #endif
                 }
             }
