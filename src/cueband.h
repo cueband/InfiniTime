@@ -17,6 +17,7 @@
 #define CUEBAND_STRINGIZE_STRINGIZE(S) CUEBAND_STRINGIZE(S)
 
 #define CUEBAND_MINOR_FIXES             // Fix minor issues in upstream InfiniTime code
+#define CUEBAND_BUILD_FIXES             // Fix build issues (possibly?) in upstream InfiniTime code
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
 /*
 #ifdef CUEBAND_FIX_WARNINGS
