@@ -569,23 +569,32 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
     switch (screen) {
       case CUEBAND_SCREEN_OVERVIEW:
       {
+        bool handled = false;
+
         // If manual prompting, stop
         if (cueController.IsTemporary()) {
           // Return to schedule
           cueController.SetInterval(0, 0);
+          handled = true;
         }
 
-        uint16_t current_control_point;
-        uint32_t override_remaining;
-        uint32_t duration;
-        cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
-        // If scheduled prompting is active...
-        if (cueController.IsAllowed() && override_remaining <= 0 && current_control_point < 0xffff) {
-          // ...snooze for remaining cueing duration
-          cueController.SetInterval(0, duration);
+#ifndef CUEBAND_MANUAL_PROMPT_MUTE_STOP
+        handled = false;
+#endif
+
+        if (!handled) {
+          uint16_t current_control_point;
+          uint32_t override_remaining;
+          uint32_t duration;
+          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
+          // If scheduled prompting is active...
+          if (cueController.IsAllowed() && override_remaining <= 0 && current_control_point < 0xffff) {
+            // ...snooze for remaining cueing duration
+            cueController.SetInterval(0, duration);
+          }
+          // Open snooze screen.
+          ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
         }
-        // Open snooze screen.
-        ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:
