@@ -118,6 +118,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_SYMBOLS
 
 #define CUEBAND_APP_RELOAD_SCREENS            // Cueband app reloads for each screen (so that the transitions work correctly)
+#define CUEBAND_MANUAL_PROMPT_MUTE_STOP       // When manually prompting, mute button stops on first press, rather than enter mute screen
 
 #define CUEBAND_MOTOR_PATTERNS  // Allow vibration motor patterns
 
