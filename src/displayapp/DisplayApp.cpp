@@ -361,7 +361,6 @@ void DisplayApp::LoadApp(Apps app, DisplayApp::FullRefreshDirections direction) 
 
   // default return to launcher
   ReturnApp(Apps::Launcher, FullRefreshDirections::Down, TouchEvents::SwipeDown);
-
   switch (app) {
     case Apps::Launcher:
       currentScreen = std::make_unique<Screens::ApplicationList>(this, settingsController, batteryController, dateTimeController);
@@ -620,6 +619,9 @@ case Apps::Weather: break;
 
   }
   currentApp = app;
+#ifdef CUEBAND_CUE_ENABLED
+  systemTask->ReportAppActivated(currentApp);
+#endif
 }
 
 void DisplayApp::PushMessage(Messages msg) {

@@ -23,12 +23,12 @@ namespace Pinetime {
     namespace Screens {
 
       enum CueBandScreen {
-        CUEBAND_SCREEN_OVERVIEW,
-        CUEBAND_SCREEN_SNOOZE,
-        CUEBAND_SCREEN_MANUAL,
-        CUEBAND_SCREEN_PREFERENCES,
-        CUEBAND_SCREEN_INTERVAL,
-        CUEBAND_SCREEN_STYLE,
+        CUEBAND_SCREEN_OVERVIEW,    // 0
+        CUEBAND_SCREEN_SNOOZE,      // 1
+        CUEBAND_SCREEN_MANUAL,      // 2
+        CUEBAND_SCREEN_PREFERENCES, // 3
+        CUEBAND_SCREEN_INTERVAL,    // 4
+        CUEBAND_SCREEN_STYLE,       // 5
       };
 
       class CueBandApp : public Screen {

@@ -30,6 +30,7 @@
 #endif
 #ifdef CUEBAND_CUE_ENABLED
 #include "components/cue/CueController.h"
+#include "displayapp/Apps.h"
 #endif
 #if defined(CUEBAND_INFO_APP_ENABLED)
 #include "components/battery/BatteryController.h"
@@ -128,8 +129,12 @@ namespace Pinetime {
             return cueController;
       }
       bool appActivated = false;
-      void ReportAppActivated() {
-            appActivated = true;
+      Applications::Apps currentAppId = Applications::Apps::None;
+      void ReportAppActivated(Applications::Apps app) {
+            if (app == Applications::Apps::CueBand) {
+                  appActivated = true;
+            }
+            this->currentAppId = app;
       }
 #endif
 #if defined(CUEBAND_USE_TRUSTED_CONNECTION) || defined(CUEBAND_INFO_APP_ENABLED)
