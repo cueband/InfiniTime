@@ -144,7 +144,7 @@ The BLE service can be used to:
 >     uint8_t options_base;           // @16 Device interface options base value (lower 8-bits only)
 >     uint8_t options_mask;           // @17 Device interface options remote mask (lower 8-bits only)
 >     uint8_t options_value;          // @18 Device interface options effective value (lower 8-bits only)
->     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted)
+>     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted, b3 = screen off, b4-b6 = application_id)
 > } // @20
 > ```
 
@@ -170,15 +170,28 @@ The BLE service can be used to:
 > Each bit of `options_mask` and `options_value` represent features as follows:
 >
 > * `b0` - Feature: `OPTIONS_CUE_SETTING` - Allow user to toggle any non-overridden cueing functionality in the settings menu.
-> * `b1` - Feature: `OPTIONS_CUE_ENABLED` - Globally enable cueing
+> * `b1` - Feature: `OPTIONS_CUE_ENABLED` - Globally enable cueing feature
 > * `b2` - Feature: `OPTIONS_CUE_STATUS` - Show cueing status on watch face (when cueing enabled)
 > * `b3` - Feature: `OPTIONS_CUE_DETAILS` - Enable the cue app for cue details (when cueing enabled)
 > * `b4` - Feature: `OPTIONS_CUE_MANUAL` - Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
-> * `b5` - (reserved)
+> * `b5` - Feature: `OPTIONS_CUE_DISALLOW` - Temporarily and visibly disallow cueing (when cueing enabled)
 > * `b6` - (reserved)
 > * `b7` - (reserved)
 > * `b8-b15` - (unused)
 >
+
+`application_id` is:
+
+> ```c
+> const uint8_t APPLICATION_ID_OTHER = 0x00;            // Other application
+> const uint8_t APPLICATION_ID_WATCHFACE = 0x01;        // Watch face
+> const uint8_t APPLICATION_ID_CUE_OVERVIEW = 0x02;     // Cue App: Overview
+> const uint8_t APPLICATION_ID_CUE_SNOOZE = 0x03;       // Cue App: Snooze duration
+> const uint8_t APPLICATION_ID_CUE_MANUAL = 0x04;       // Cue App: Manual cue duration
+> const uint8_t APPLICATION_ID_CUE_PREFERENCES = 0x05;  // Cue App: Manual cue preferences
+> const uint8_t APPLICATION_ID_CUE_INTERVAL = 0x06;     // Cue App: Manual cue preferences: interval
+> const uint8_t APPLICATION_ID_CUE_STYLE = 0x07;        // Cue App: Manual cue preferences: style
+> ```
 
 `set_impromtu` is:
 

@@ -30,7 +30,7 @@
 */
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
-#define CUEBAND_VERSION_NUMBER 18  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
+#define CUEBAND_VERSION_NUMBER 20  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
 #define CUEBAND_REVISION_NUMBER 0  // Revision number (only appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
@@ -118,6 +118,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_SYMBOLS
 
 #define CUEBAND_APP_RELOAD_SCREENS            // Cueband app reloads for each screen (so that the transitions work correctly)
+#define CUEBAND_MANUAL_PROMPT_MUTE_STOP       // When manually prompting, mute button stops on first press, rather than enter mute screen
 
 #define CUEBAND_MOTOR_PATTERNS  // Allow vibration motor patterns
 
@@ -125,7 +126,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_CUSTOMIZATION
 //#define CUEBAND_SAVE_MEMORY                           // Actions to reduce program memory
 //#define CUEBAND_DEBUG_INIT_TIME                       // While debugging, use the build time to initialize the clock if the time is invalid
-//#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
+#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
@@ -187,6 +188,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #if defined(CUEBAND_APP_ENABLED)
     #define CUEBAND_APP_SYMBOL "\xEF\xA0\xBE" // cuebandCue / 0xf83e, wave-square  // "!" // "C"
     //#define CUEBAND_APP_SYMBOL_ALTERNATIVE "C"    // For application list as icon not in font for application menu
+    #define CUEBAND_WATCHFACE_LIMIT_OPTIONS         // Show limited watch face options (digital & analog)
     #define CUEBAND_TAP_WATCHFACE_LAUNCH_APP
     #define CUEBAND_SWIPE_WATCHFACE_LAUNCH_APP
     #define CUEBAND_WATCHFACE_CUE_STATUS

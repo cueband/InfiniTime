@@ -14,7 +14,11 @@ namespace {
   }
 }
 
+#ifdef CUEBAND_WATCHFACE_LIMIT_OPTIONS
+constexpr std::array<const char*, 2> SettingWatchFace::options;
+#else
 constexpr std::array<const char*, 4> SettingWatchFace::options;
+#endif
 
 SettingWatchFace::SettingWatchFace(Pinetime::Applications::DisplayApp* app, Pinetime::Controllers::Settings& settingsController)
   : Screen(app), settingsController {settingsController} {

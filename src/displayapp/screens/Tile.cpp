@@ -92,7 +92,7 @@ Tile::Tile(uint8_t screenID,
     apps[i] = applications[i].application;
 #if defined(CUEBAND_APP_ENABLED)
     // Erase cues app icon while cueing is disabled
-    if (applications[i].application == Apps::CueBand && !app->GetCueController().IsEnabled()) {
+    if (applications[i].application == Apps::CueBand && !app->GetCueController().IsGloballyEnabled()) {
       btnmMap[btIndex-1] = " ";
       apps[i] = Apps::None;
       applications[i].application = Apps::None;
@@ -151,7 +151,8 @@ void Tile::UpdateScreen() {
 }
 
 void Tile::OnValueChangedEvent(lv_obj_t* obj, uint32_t buttonId) {
-  if(obj != btnm1) return;
+  if (obj != btnm1)
+    return;
 
   app->StartApp(apps[buttonId], DisplayApp::FullRefreshDirections::Up);
   running = false;

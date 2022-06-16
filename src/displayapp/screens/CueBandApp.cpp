@@ -103,9 +103,6 @@ CueBandApp::CueBandApp(
   this->screen = screen;
 
 #ifdef CUEBAND_CUE_ENABLED
-  if (this->screen == CUEBAND_SCREEN_OVERVIEW) {
-    systemTask.ReportAppActivated();
-  }
   isManualAllowed = cueController.IsManualAllowed();
 #endif
 
@@ -258,8 +255,14 @@ void CueBandApp::Update() {
       case CUEBAND_SCREEN_OVERVIEW:
       {
         p += sprintf(text, "%s", cueController.Description(true, &symbol));
-        //lv_label_set_text_static(units, "#808080  Mute     Manual#");  // LV_COLOR_GRAY #808080
-        lv_label_set_text_static(units, " Mute     Manual");
+        const char *unitsStr = "";
+        if (cueController.IsGloballyEnabled() && !cueController.IsAllowed()) {
+          unitsStr = "";  // "Cueing Disallowed"
+        } else {
+          //unitsStr = "#808080  Mute     Manual#";  // LV_COLOR_GRAY #808080
+          unitsStr = " Mute     Manual";
+        }
+        lv_label_set_text_static(units, unitsStr);
         lv_obj_align(units, lv_scr_act(), LV_ALIGN_CENTER, 0, UNITS_Y_OFFSET);
         break;
       }
@@ -501,6 +504,10 @@ void CueBandApp::ChangeScreen(CueBandScreen screen, bool forward) {
   }
 #else         // Change screen but stay in app -- no screen transition
   this->screen = screen;
+#ifndef CUEBAND_APP_RELOAD_SCREENS
+  #warning "If CUEBAND_APP_RELOAD_SCREENS is not defined, the current app id status will not work correctly."
+  //systemTask.ReportAppActivated(this->screen);
+#endif
   //app->SetFullRefresh(forward ? DisplayApp::FullRefreshDirections::LeftAnim : DisplayApp::FullRefreshDirections::RightAnim);  // Right / Left / RightAnim / LeftAnim
   //Update();
 #endif
@@ -568,23 +575,34 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
     switch (screen) {
       case CUEBAND_SCREEN_OVERVIEW:
       {
+        bool handled = false;
+
         // If manual prompting, stop
         if (cueController.IsTemporary()) {
           // Return to schedule
           cueController.SetInterval(0, 0);
+          handled = true;
         }
 
-        uint16_t current_control_point;
-        uint32_t override_remaining;
-        uint32_t duration;
-        cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
-        // If scheduled prompting is active...
-        if (cueController.IsEnabled() && override_remaining <= 0 && current_control_point < 0xffff) {
-          // ...snooze for remaining cueing duration
-          cueController.SetInterval(0, duration);
+#ifndef CUEBAND_MANUAL_PROMPT_MUTE_STOP
+        handled = false;
+#endif
+
+        if (!handled) {
+          uint16_t current_control_point;
+          uint32_t override_remaining;
+          uint32_t intensity;
+          uint32_t interval;
+          uint32_t duration;
+          cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, &intensity, &interval, &duration);
+          // If scheduled prompting allowed, no manual override, and within an active cueing period
+          if (cueController.IsAllowed() && override_remaining <= 0 && current_control_point < 0xffff && intensity > 0 && interval > 0) {
+            // ...snooze for remaining cueing duration
+            cueController.SetInterval(0, duration);
+          }
+          // Open snooze screen.
+          ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
         }
-        // Open snooze screen.
-        ChangeScreen(CUEBAND_SCREEN_SNOOZE, true);
         break;
       }
       case CUEBAND_SCREEN_SNOOZE:
@@ -655,7 +673,7 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
         uint32_t duration;
         cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
         // If not manual prompting or scheduled prompting...
-        if (!cueController.IsTemporary() && !(cueController.IsEnabled() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
+        if (!cueController.IsTemporary() && !(cueController.IsAllowed() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
           // ...begin manual prompting for default duration
           cueController.SetInterval((unsigned int)-1, Pinetime::Controllers::CueController::DEFAULT_DURATION);
         }
