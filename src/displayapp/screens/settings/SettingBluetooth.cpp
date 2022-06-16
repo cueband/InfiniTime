@@ -110,4 +110,3 @@ void SettingBluetooth::OnBluetoothEnabled(lv_obj_t* object, lv_event_t event) {
     settingsController.SetBleRadioEnabled(true);
   }
 }
-
