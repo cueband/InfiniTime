@@ -580,7 +580,7 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
         uint32_t duration;
         cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
         // If scheduled prompting is active...
-        if (cueController.IsEnabled() && override_remaining <= 0 && current_control_point < 0xffff) {
+        if (cueController.IsAllowed() && override_remaining <= 0 && current_control_point < 0xffff) {
           // ...snooze for remaining cueing duration
           cueController.SetInterval(0, duration);
         }
@@ -656,7 +656,7 @@ void CueBandApp::OnButtonEvent(lv_obj_t* object, lv_event_t event) {
         uint32_t duration;
         cueController.GetStatus(nullptr, nullptr, &current_control_point, &override_remaining, nullptr, nullptr, &duration);
         // If not manual prompting or scheduled prompting...
-        if (!cueController.IsTemporary() && !(cueController.IsEnabled() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
+        if (!cueController.IsTemporary() && !(cueController.IsAllowed() && (override_remaining > 0 || (current_control_point < 0xffff && duration > 0)))) {
           // ...begin manual prompting for default duration
           cueController.SetInterval((unsigned int)-1, Pinetime::Controllers::CueController::DEFAULT_DURATION);
         }

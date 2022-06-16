@@ -100,7 +100,7 @@ void CueController::TimeChanged(uint32_t timestamp, uint32_t uptime) {
     unsigned int effectiveInterval = cueInterval;
 
     // If scheduled prompting is disabled...
-    if (!IsEnabled()) {
+    if (!IsAllowed()) {
         activityController.Event(ACTIVITY_EVENT_CUE_DISABLED);
         effectiveInterval = 0;
     }
@@ -622,7 +622,7 @@ const char *CueController::Description(bool detailed, const char **symbol) {
         uint32_t duration;
         GetStatus(&active_schedule_id, &max_control_points, &current_control_point, &override_remaining, &intensity, &interval, &duration);
 
-        if (!IsEnabled()) {
+        if (!IsGloballyEnabled()) {
             // (leave empty)
         } else if (!initialized) {
             p += sprintf(p, "Initializing...");
@@ -646,10 +646,10 @@ const char *CueController::Description(bool detailed, const char **symbol) {
                 p += sprintf(p, "Mute (%s)", niceTime(override_remaining));
                 icon = Applications::Screens::Symbols::cuebandSilence;
             }
-        } else if (!IsEnabled()) {
-            // Scheduled cueing Disabled
-            //p += sprintf(p, ".");
-            //icon = Applications::Screens::Symbols::cuebandDisabled;
+        } else if (!IsAllowed()) {  // but is: IsGloballyEnabled()
+            // Temporarily disallowed
+            p += sprintf(p, "Cueing Disallowed");
+            icon = Applications::Screens::Symbols::cuebandCancel;
         } else if (current_control_point < 0xffff && intensity > 0 && interval > 0)  { // !currentControlPoint.IsNonPrompting()
             // Scheduled cueing in progress
 #ifdef CUEBAND_SILENT_WHEN_UNWORN
