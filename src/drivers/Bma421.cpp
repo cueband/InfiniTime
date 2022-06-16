@@ -187,7 +187,7 @@ Bma421::Values Bma421::Process() {
 
         // Use: accel_data[0..count].{x|y|z}
         for (uint16_t i = 0; i < chunkSize; i++) {
-          if (written < sizeof(accel_buffer) / sizeof(accel_buffer[0] * CUEBAND_AXES)) {
+          if (written < (sizeof(accel_buffer) / (sizeof(accel_buffer[0]) * CUEBAND_AXES))) {
             // Scale 12-bit data to 16-bit width
             accel_buffer[CUEBAND_AXES * written + 0] = accel_data[i].x << 4;
             accel_buffer[CUEBAND_AXES * written + 1] = accel_data[i].y << 4;
