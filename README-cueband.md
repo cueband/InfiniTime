@@ -95,9 +95,6 @@ Brief notes:
 
 Cueing watch app interface... snooze/sleep/pause prompts... configure...
 
-**TODO:** Full description.
-
-
 
 ### Prompting Cue Schedule Configuration BLE Service
 
@@ -175,7 +172,7 @@ The BLE service can be used to:
 > * `b3` - Feature: `OPTIONS_CUE_DETAILS` - Enable the cue app for cue details (when cueing enabled)
 > * `b4` - Feature: `OPTIONS_CUE_MANUAL` - Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
 > * `b5` - Feature: `OPTIONS_CUE_DISALLOW` - Temporarily and visibly disallow cueing (when cueing enabled)
-> * `b6` - (reserved)
+> * `b6` - Feature: `OPTIONS_APPS_DISABLE` - Disable app launcher screen.
 > * `b7` - (reserved)
 > * `b8-b15` - (unused)
 >
