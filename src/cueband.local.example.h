@@ -26,11 +26,6 @@
 // Test: custom info org on local builds
 #define CUEBAND_GITHUB_ORG "InfiniTimeOrg"
 
-// Test: CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-#ifdef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-  #undef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-#endif
-
 // Test: toggle specific other apps
 #ifdef CUEBAND_METRONOME_ENABLED
   #undef CUEBAND_METRONOME_ENABLED

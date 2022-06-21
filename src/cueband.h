@@ -17,7 +17,6 @@
 #define CUEBAND_STRINGIZE_STRINGIZE(S) CUEBAND_STRINGIZE(S)
 
 #define CUEBAND_MINOR_FIXES             // Fix minor issues in upstream InfiniTime code
-#define CUEBAND_BUILD_FIXES             // Fix build issues (possibly?) in upstream InfiniTime code
 #define CUEBAND_FIX_WARNINGS            // Ignore warnings in original InfiniTime code (without modifying that code)
 /*
 #ifdef CUEBAND_FIX_WARNINGS
@@ -31,7 +30,7 @@
 */
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
-#define CUEBAND_VERSION_NUMBER 20  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
+#define CUEBAND_VERSION_NUMBER 19  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
 #define CUEBAND_REVISION_NUMBER 0  // Revision number (only appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
@@ -127,7 +126,6 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_CUSTOMIZATION
 //#define CUEBAND_SAVE_MEMORY                           // Actions to reduce program memory
 //#define CUEBAND_DEBUG_INIT_TIME                       // While debugging, use the build time to initialize the clock if the time is invalid
-#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
@@ -153,9 +151,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
 // Local build configuration: custom device name
 #ifdef CUEBAND_LOCAL_DEVICE_NAME
-  #if defined(CUEBAND_CONFIGURATION_WARNINGS)
-    #warning "This build is using a non-default device name for local testing: CUEBAND_LOCAL_DEVICE_NAME"
-  #endif
+  #warning "This build is using a non-default device name for local testing: CUEBAND_LOCAL_DEVICE_NAME"
   #ifdef CUEBAND_DEVICE_NAME
     #undef CUEBAND_DEVICE_NAME
   #endif
@@ -224,11 +220,6 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
     // Disable discovery for service clients (alert notification client and time client)
     #define CUEBAND_SERVICE_CLIENTS_DISABLED
-#endif
-
-#ifdef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-    // See: src/displayapp/screens/ApplicationList.cpp
-    #define CUEBAND_DISABLE_APP_LAUNCHER                // Don't show the app launcher at all
 #endif
 
 #ifdef CUEBAND_SAVE_MEMORY

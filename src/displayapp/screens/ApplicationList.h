@@ -35,7 +35,7 @@ namespace Pinetime {
 
         static constexpr int appsPerScreen = 6;
 
-#if defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS) || defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)
+#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)
         static constexpr int nScreens = 1;
 #else   // Upstream InfiniTime
         // Increment this when more space is needed
@@ -43,17 +43,11 @@ namespace Pinetime {
 #endif
 
         static constexpr std::array<Tile::Applications, appsPerScreen * nScreens> applications {{
-#if defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS) || defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)    // Customized
+#if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)    // Customized
 
-        #if defined(CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS)
           {Symbols::stopWatch, Apps::StopWatch},
           {Symbols::clock, Apps::Alarm},
           {Symbols::hourGlass, Apps::Timer},
-        #else // defined(CUEBAND_CUSTOMIZATION_NO_OTHER_APPS)
-          {"", Apps::None},
-          {"", Apps::None},
-          {"", Apps::None},
-        #endif
         #ifdef CUEBAND_INFO_APP_ENABLED
           {CUEBAND_INFO_APP_SYMBOL, Apps::InfoFromLauncher},
         #else

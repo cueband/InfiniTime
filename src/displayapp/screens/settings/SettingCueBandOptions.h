@@ -12,7 +12,7 @@
 #endif
 #include "displayapp/screens/Screen.h"
 
-#define SETTINGS_CUEBAND_NUM_OPTIONS 2
+#define SETTINGS_CUEBAND_NUM_OPTIONS 3
 
 namespace Pinetime {
 
