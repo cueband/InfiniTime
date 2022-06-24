@@ -222,7 +222,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
                         cueController.SetOptionsMaskValue(mask, value);
                     }
 
-                } else if (data[0] == 0x02) {  // STATUS: Write set_impromtu
+                } else if (data[0] == 0x02) {  // STATUS: Write set_impromptu
 
                     if (notifSize >= 16) {
                         // @4 Interval

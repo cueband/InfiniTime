@@ -71,5 +71,26 @@
         "lvgl.h": "c",
         "cfenv": "cpp"
     },
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "cSpell.words": [
+        "bytewise",
+        "CCCD",
+        "Comms",
+        "copydata",
+        "cueband",
+        "displayapp",
+        "gatts",
+        "ICSR",
+        "Infini",
+        "lvgl",
+        "NORESPONSE",
+        "Pinetime",
+        "PPUUZZSS",
+        "struct",
+        "svcs",
+        "SVMMO",
+        "UART",
+        "VECTACTIVE",
+        "WATCHFACE"
+    ]
 }
