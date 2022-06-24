@@ -267,7 +267,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
         // If not using FIFO, fall back to (rubbish) polled sampling
         #define CUEBAND_POLLED_ENABLED
         #define CUEBAND_POLLED_INPUT_RATE 8     // 8 Hz
-        #define CUEBAND_POLLED_OUTPUT_RATE 32   // 30/32 Hz (-> 32 Hz as x4 integer scaling for fakely synthesized nearest-neighbour sampling from polled input rate)
+        #define CUEBAND_POLLED_OUTPUT_RATE 32   // 30/32 Hz (-> 32 Hz as x4 integer scaling for fake-synthesized nearest-neighbour sampling from polled input rate)
 
         #define CUEBAND_BUFFER_EFFECTIVE_RATE CUEBAND_POLLED_OUTPUT_RATE
 
@@ -322,7 +322,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
 //#define CUEBAND_NO_ADV_RSP              // Optional test: do not split name into advertising response (name truncated, no UUID advertised)
 
-#define CUEBAND_DELAY_START 50          // Delay cue.band service intialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
+#define CUEBAND_DELAY_START 50          // Delay cue.band service initialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
 // Logging (30-40 days)
 #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
