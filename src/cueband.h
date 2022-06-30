@@ -152,7 +152,9 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
 // Local build configuration: custom device name
 #ifdef CUEBAND_LOCAL_DEVICE_NAME
-  #warning "This build is using a non-default device name for local testing: CUEBAND_LOCAL_DEVICE_NAME"
+  #if defined(CUEBAND_CONFIGURATION_WARNINGS)
+    #warning "This build is using a non-default device name for local testing: CUEBAND_LOCAL_DEVICE_NAME"
+  #endif
   #ifdef CUEBAND_DEVICE_NAME
     #undef CUEBAND_DEVICE_NAME
   #endif
