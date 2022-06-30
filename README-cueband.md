@@ -31,7 +31,7 @@ Further functionality:
 
 *	Additional security protections.
 * Interface simplifications (feature removal to standard watch functionality).
-* BLE UART alternative for all communciation.
+* BLE UART alternative for all communication.
 * ? Shipping mode
 
 In the following description, `(*)` denotes a feature not yet fully implemented.
@@ -94,9 +94,6 @@ Brief notes:
 ### Cueing watch app interface
 
 Cueing watch app interface... snooze/sleep/pause prompts... configure...
-
-**TODO:** Full description.
-
 
 
 ### Prompting Cue Schedule Configuration BLE Service
@@ -175,7 +172,7 @@ The BLE service can be used to:
 > * `b3` - Feature: `OPTIONS_CUE_DETAILS` - Enable the cue app for cue details (when cueing enabled)
 > * `b4` - Feature: `OPTIONS_CUE_MANUAL` - Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
 > * `b5` - Feature: `OPTIONS_CUE_DISALLOW` - Temporarily and visibly disallow cueing (when cueing enabled)
-> * `b6` - (reserved)
+> * `b6` - Feature: `OPTIONS_APPS_DISABLE` - Disable app launcher screen.
 > * `b7` - (reserved)
 > * `b8-b15` - (unused)
 >
@@ -193,7 +190,7 @@ The BLE service can be used to:
 > const uint8_t APPLICATION_ID_CUE_STYLE = 0x07;        // Cue App: Manual cue preferences: style
 > ```
 
-`set_impromtu` is:
+`set_impromptu` is:
 
 > ```c
 > struct {
@@ -484,14 +481,14 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Notification `uint8_t[<=20]`  | Subscribe to notifications to receive response.  |
 
 
-### UART Communcation Protocol
+### UART Communication Protocol
 
 Generally a subset compatible with the [Open Movement](https://openmovement.dev) [AxLE device](https://github.com/digitalinteraction/OpenMovement-AxLE-Firmware) protocol (with some extensions for the [TwoCan](https://twocan.dev/) project).  Some of the outbound numeric parameters are (for backwards-compatibility) hex-encoded bytewise little-endian representations of the integers, producing the 4-bit nibble indexes:
 
   * `INT16HEX`: `1032`
   * `INT32HEX`: `10325476`
 
-Commands and responses are terminated with a final line-feed (`\n`), which may be immediately preceeded with a carriage-return (`\r`) that can be ignored.  
+Commands and responses are terminated with a final line-feed (`\n`), which may be immediately preceded with a carriage-return (`\r`) that can be ignored.  
 
 A response may be prefixed with:
 

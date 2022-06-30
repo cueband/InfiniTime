@@ -44,7 +44,7 @@ namespace Pinetime {
       const static options_t OPTIONS_CUE_DETAILS    = (1 << 3); // Feature: Enable the cue app for cue details (when cueing enabled)
       const static options_t OPTIONS_CUE_MANUAL     = (1 << 4); // Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
       const static options_t OPTIONS_CUE_DISALLOW   = (1 << 5); // Feature: Temporarily and visibly disallow cueing (when cueing enabled)
-      const static options_t OPTIONS_CUE_RESERVED_6 = (1 << 6); // (reserved)
+      const static options_t OPTIONS_APPS_DISABLE   = (1 << 6); // Feature: Disable app launcher
       const static options_t OPTIONS_CUE_RESERVED_7 = (1 << 6); // (reserved)
 
       const static options_t OPTIONS_DEFAULT = OPTIONS_CUE_SETTING | OPTIONS_CUE_STATUS | OPTIONS_CUE_DETAILS | OPTIONS_CUE_MANUAL; // OPTIONS_CUE_ENABLED
@@ -80,6 +80,10 @@ namespace Pinetime {
       bool IsManualAllowed() {
         options_t options = GetOptionsMaskValue();
         return IsAllowed() && ((options & OPTIONS_CUE_DETAILS) != 0) && ((options & OPTIONS_CUE_MANUAL) != 0);
+      }
+      bool IsAppsDisabled() {
+        options_t options = GetOptionsMaskValue();
+        return (options & OPTIONS_APPS_DISABLE) != 0;
       }
       bool IsTemporary() { return currentUptime < overrideEndTime && interval > 0; }
       bool IsSnoozed() { return currentUptime < overrideEndTime && interval == 0; }

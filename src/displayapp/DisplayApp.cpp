@@ -32,6 +32,9 @@
 #include "displayapp/screens/PassKey.h"
 #include "displayapp/screens/Error.h"
 
+#ifdef CUEBAND_CUE_ENABLED
+#include "components/cue/CueController.h"
+#endif
 #ifdef CUEBAND_APP_ENABLED
 #include "displayapp/screens/CueBandApp.h"
 #endif
@@ -236,6 +239,9 @@ void DisplayApp::Refresh() {
             switch (gesture) {
               case TouchEvents::SwipeUp:
 #ifndef CUEBAND_DISABLE_APP_LAUNCHER
+#ifdef CUEBAND_CUE_ENABLED
+if (!cueController.IsAppsDisabled())
+#endif
                 LoadApp(Apps::Launcher, DisplayApp::FullRefreshDirections::Up);
 #endif
                 break;

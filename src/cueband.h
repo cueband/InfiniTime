@@ -31,7 +31,7 @@
 */
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
-#define CUEBAND_VERSION_NUMBER 20  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
+#define CUEBAND_VERSION_NUMBER 21  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
 #define CUEBAND_REVISION_NUMBER 0  // Revision number (only appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
@@ -127,7 +127,6 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_CUSTOMIZATION
 //#define CUEBAND_SAVE_MEMORY                           // Actions to reduce program memory
 //#define CUEBAND_DEBUG_INIT_TIME                       // While debugging, use the build time to initialize the clock if the time is invalid
-#define CUEBAND_CUSTOMIZATION_NO_OTHER_APPS           // Don't show any non-cueband apps in the launcher
 //#define CUEBAND_PREVENT_ACCIDENTAL_RECOVERY_MODE      // Make it trickier to accidentally wipe the firmware by holding the button while worn (risky)
 #define CUEBAND_LONGER_PRESS_INFO
 
@@ -186,6 +185,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
   // See: displayapp/screens/CueBandApp.h
   // See: displayapp/screens/CueBandApp.cpp
   #define CUEBAND_APP_ENABLED
+  #define CUEBAND_DISABLE_APPS_STOPS_ALARMS
 #endif
 
 #if defined(CUEBAND_APP_ENABLED)
@@ -224,11 +224,6 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
     // Disable discovery for service clients (alert notification client and time client)
     #define CUEBAND_SERVICE_CLIENTS_DISABLED
-#endif
-
-#ifdef CUEBAND_CUSTOMIZATION_NO_OTHER_APPS
-    // See: src/displayapp/screens/ApplicationList.cpp
-    #define CUEBAND_DISABLE_APP_LAUNCHER                // Don't show the app launcher at all
 #endif
 
 #ifdef CUEBAND_SAVE_MEMORY
@@ -276,7 +271,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
         // If not using FIFO, fall back to (rubbish) polled sampling
         #define CUEBAND_POLLED_ENABLED
         #define CUEBAND_POLLED_INPUT_RATE 8     // 8 Hz
-        #define CUEBAND_POLLED_OUTPUT_RATE 32   // 30/32 Hz (-> 32 Hz as x4 integer scaling for fakely synthesized nearest-neighbour sampling from polled input rate)
+        #define CUEBAND_POLLED_OUTPUT_RATE 32   // 30/32 Hz (-> 32 Hz as x4 integer scaling for fake-synthesized nearest-neighbour sampling from polled input rate)
 
         #define CUEBAND_BUFFER_EFFECTIVE_RATE CUEBAND_POLLED_OUTPUT_RATE
 
@@ -331,7 +326,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
 //#define CUEBAND_NO_ADV_RSP              // Optional test: do not split name into advertising response (name truncated, no UUID advertised)
 
-#define CUEBAND_DELAY_START 50          // Delay cue.band service intialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
+#define CUEBAND_DELAY_START 50          // Delay cue.band service initialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
 // Logging (30-40 days)
 #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60

@@ -71,5 +71,37 @@
         "lvgl.h": "c",
         "cfenv": "cpp"
     },
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "cSpell.words": [
+        "Acti",
+        "Actiwatch",
+        "Actiwave",
+        "bytewise",
+        "cblog",
+        "CCCD",
+        "Comms",
+        "copydata",
+        "cueband",
+        "displayapp",
+        "FILETELL",
+        "Fitmeter",
+        "gatts",
+        "ICSR",
+        "IDEEA",
+        "Infini",
+        "lvgl",
+        "Minisun",
+        "NORESPONSE",
+        "Ntech",
+        "Pinetime",
+        "PPUUZZSS",
+        "STRINGIZE",
+        "struct",
+        "svcs",
+        "SVMMO",
+        "UART",
+        "VECTACTIVE",
+        "WATCHFACE",
+        "Wsign"
+    ]
 }

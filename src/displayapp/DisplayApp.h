@@ -117,7 +117,7 @@ namespace Pinetime {
 #if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_ACTIVITY_ENABLED)
       Pinetime::Controllers::ActivityController& activityController;
 #endif
-#if (defined(CUEBAND_APP_ENABLED) || defined(CUEBAND_INFO_APP_ENABLED)) && defined(CUEBAND_CUE_ENABLED)
+#if defined(CUEBAND_CUE_ENABLED)
       Pinetime::Controllers::CueController& cueController;
 #endif
 
