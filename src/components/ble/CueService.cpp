@@ -220,6 +220,14 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
                         options_t mask = (options_t)(data[4] | (data[5] << 8));
                         options_t value = (options_t)(data[6] | (data[7] << 8));
                         cueController.SetOptionsMaskValue(mask, value);
+#ifdef CUEBAND_DISABLE_APPS_STOPS_ALARMS
+                        // Detect apps becoming disabled, and remove alarm/timer
+                        if (!cueController.IsAppsDisabled()) {
+                            // Remove any alarm or timer
+                            m_system.alarmController.DisableAlarm();
+                            m_system.timerController.StopTimer();
+                        }
+#endif
                     }
 
                 } else if (data[0] == 0x02) {  // STATUS: Write set_impromptu

@@ -185,6 +185,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
   // See: displayapp/screens/CueBandApp.h
   // See: displayapp/screens/CueBandApp.cpp
   #define CUEBAND_APP_ENABLED
+  #define CUEBAND_DISABLE_APPS_STOPS_ALARMS
 #endif
 
 #if defined(CUEBAND_APP_ENABLED)

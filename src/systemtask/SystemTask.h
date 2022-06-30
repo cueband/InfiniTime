@@ -169,8 +169,14 @@ namespace Pinetime {
 
       Pinetime::Controllers::Ble& bleController;
       Pinetime::Controllers::DateTime& dateTimeController;
+#ifdef CUEBAND_DISABLE_APPS_STOPS_ALARMS
+public: // hack
+#endif
       Pinetime::Controllers::TimerController& timerController;
       Pinetime::Controllers::AlarmController& alarmController;
+#ifdef CUEBAND_DISABLE_APPS_STOPS_ALARMS
+private: // hack
+#endif
       QueueHandle_t systemTasksMsgQueue;
       Pinetime::Drivers::Watchdog& watchdog;
       Pinetime::Controllers::NotificationManager& notificationManager;
