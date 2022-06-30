@@ -118,7 +118,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
 #endif
                 default: appId = 0; break;                                      // Other
             }
-            status_flags |= (appId << 4) & 0x07;                                // b4-b6 = appId
+            status_flags |= ((appId & 0x07) << 4);                              // b4-b6 = appId
 #endif
 
             // @0 Active cue schedule ID

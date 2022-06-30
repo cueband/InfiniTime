@@ -268,9 +268,10 @@ void InfoApp::Update() {
     char *p = debugText;
 #if defined(CUEBAND_TRUSTED_CONNECTION)
     // Connection overview
-    p += sprintf(p, "BLE: %s %s\n", 
+    p += sprintf(p, "BLE: %s %s #%d\n", 
       systemTask.nimble().GetBleController().IsConnected() ? "con" : "n/c", 
-      systemTask.nimble().GetBleController().IsTrusted() ? "trust" : "untrust"
+      systemTask.nimble().GetBleController().IsTrusted() ? "trst" : "untr",
+      (int)systemTask.currentAppId
     );
 #endif    
     cueController.DebugText(p);   // basic info
