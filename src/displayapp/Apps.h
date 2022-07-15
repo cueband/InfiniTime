@@ -43,7 +43,7 @@ namespace Pinetime {
       SettingBluetooth,
       Error
 #ifdef CUEBAND_APP_ENABLED
-      , CueBand
+      , CueBand  // ~37
 #ifdef CUEBAND_APP_RELOAD_SCREENS
       , CueBandSnooze
       , CueBandManual
@@ -53,7 +53,7 @@ namespace Pinetime {
 #endif      
 #endif
 #ifdef CUEBAND_INFO_APP_ENABLED
-      , InfoFromButton
+      , InfoFromButton  // ~43
       , InfoFromLauncher
       , InfoFromSettings
 #endif
