@@ -369,6 +369,15 @@ Where `response` is:
 Where `payload_length` is likely to be `256`, and `payload_body` should be interpreted as `activity_log` (see below: *Device Activity Log Block Format*).
 
 
+#### Characteristic: Encryption-Required Activity Status
+
+| Name                          | Value                                            |
+|-------------------------------|--------------------------------------------------|
+| Name                          | Activity Status Characteristic                   |
+| UUID                          | `0e1d0004-9d33-4e5e-aead-e062834bd8bb`           |
+| Read/Write                    | Identical to *Activity Status*, except the *encryption required* flag is set. <!-- `BLE_GATT_CHR_F_READ_ENC` / `BLE_GATT_CHR_F_WRITE_ENC` -->  |
+
+
 ### Device Activity Log Block Format
 
 The device activity log blocks are of the form `activity_log`:

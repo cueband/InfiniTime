@@ -50,6 +50,13 @@ Pinetime::Controllers::ActivityService::ActivityService(Pinetime::System::System
         .flags = BLE_GATT_CHR_F_NOTIFY, // | BLE_GATT_CHR_F_READ
         .val_handle = &transmitHandle
     };
+    characteristicDefinition[3] = {
+        .uuid = (ble_uuid_t*) (&activityEncStatusCharUuid), 
+        .access_cb = ActivityCallback, 
+        .arg = this, 
+        .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_READ_ENC | BLE_GATT_CHR_F_WRITE_ENC,
+        .val_handle = &encStatusHandle
+    };
     characteristicDefinition[3] = {0};
 
     serviceDefinition[0] = {
@@ -187,7 +194,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) { // Reading
 
-        if (attr_handle == statusHandle) {
+        if (attr_handle == statusHandle || attr_handle == encStatusHandle) {
             uint8_t status[20];
 
             // @0 Earliest available logical block ID
@@ -265,7 +272,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             readPending = true;
             // StartRead() is called in idle
 
-        } else if (attr_handle == statusHandle) {
+        } else if (attr_handle == statusHandle || attr_handle == encStatusHandle) {
 
             // Wake
             {
