@@ -57,7 +57,7 @@ Pinetime::Controllers::ActivityService::ActivityService(Pinetime::System::System
         .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_READ_ENC | BLE_GATT_CHR_F_WRITE_ENC,
         .val_handle = &encStatusHandle
     };
-    characteristicDefinition[3] = {0};
+    characteristicDefinition[4] = {0};
 
     serviceDefinition[0] = {
         .type = BLE_GATT_SVC_TYPE_PRIMARY, 
