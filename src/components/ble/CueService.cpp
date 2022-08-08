@@ -119,6 +119,7 @@ int Pinetime::Controllers::CueService::OnCommand(uint16_t conn_handle, uint16_t 
                 default: appId = 0; break;                                      // Other
             }
             status_flags |= ((appId & 0x07) << 4);                              // b4-b6 = appId
+            if (m_system.GetBatteryController().IsPowerPresent()) status_flags |= 0x80;       // b7 = externally connected: power present
 #endif
 
             // @0 Active cue schedule ID
