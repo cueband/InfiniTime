@@ -281,6 +281,16 @@ bool CueController::SetOptionsMaskValue(options_t mask, options_t value) {
 
     // If changed, save
     if (options_overridden_mask != oldMask || options_overridden_value != oldValue) {
+
+        // Detect prompts being disallowed while a temporary snooze/prompting is taking place
+        if (!IsAllowed()) {
+            uint32_t override_remaining;
+            GetStatus(nullptr, nullptr, nullptr, &override_remaining, nullptr, nullptr, nullptr);
+            if (override_remaining > 0) {
+                SetInterval(INTERVAL_OFF, MAXIMUM_RUNTIME_OFF);
+            }
+        }
+
         descriptionValid = false;
         DeferWriteCues();
     }

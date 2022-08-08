@@ -50,7 +50,14 @@ Pinetime::Controllers::ActivityService::ActivityService(Pinetime::System::System
         .flags = BLE_GATT_CHR_F_NOTIFY, // | BLE_GATT_CHR_F_READ
         .val_handle = &transmitHandle
     };
-    characteristicDefinition[3] = {0};
+    characteristicDefinition[3] = {
+        .uuid = (ble_uuid_t*) (&activityEncStatusCharUuid), 
+        .access_cb = ActivityCallback, 
+        .arg = this, 
+        .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_READ_ENC | BLE_GATT_CHR_F_WRITE_ENC,
+        .val_handle = &encStatusHandle
+    };
+    characteristicDefinition[4] = {0};
 
     serviceDefinition[0] = {
         .type = BLE_GATT_SVC_TYPE_PRIMARY, 
@@ -187,7 +194,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) { // Reading
 
-        if (attr_handle == statusHandle) {
+        if (attr_handle == statusHandle || attr_handle == encStatusHandle) {
             uint8_t status[20];
 
             // @0 Earliest available logical block ID
@@ -224,6 +231,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             if (firmwareValidator.IsValidated()) status_flags |= 0x01;      // b0 = firmware validated
             if (activityController.IsInitialized()) status_flags |= 0x02;   // b1 = service initialized
             if (bleController.IsTrusted()) status_flags |= 0x04;            // b2 = connection trusted
+            if (m_system.GetBatteryController().IsPowerPresent()) status_flags |= 0x08;   // b3 = externally connected: power present
             status[14] = status_flags;
 
             // @15 Reserved
@@ -265,7 +273,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             readPending = true;
             // StartRead() is called in idle
 
-        } else if (attr_handle == statusHandle) {
+        } else if (attr_handle == statusHandle || attr_handle == encStatusHandle) {
 
             // Wake
             {

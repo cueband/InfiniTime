@@ -31,7 +31,7 @@ Further functionality:
 
 *	Additional security protections.
 * Interface simplifications (feature removal to standard watch functionality).
-* BLE UART alternative for all communciation.
+* BLE UART alternative for all communication.
 * ? Shipping mode
 
 In the following description, `(*)` denotes a feature not yet fully implemented.
@@ -95,9 +95,6 @@ Brief notes:
 
 Cueing watch app interface... snooze/sleep/pause prompts... configure...
 
-**TODO:** Full description.
-
-
 
 ### Prompting Cue Schedule Configuration BLE Service
 
@@ -144,7 +141,7 @@ The BLE service can be used to:
 >     uint8_t options_base;           // @16 Device interface options base value (lower 8-bits only)
 >     uint8_t options_mask;           // @17 Device interface options remote mask (lower 8-bits only)
 >     uint8_t options_value;          // @18 Device interface options effective value (lower 8-bits only)
->     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted, b3 = screen off, b4-b6 = application_id)
+>     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted, b3 = screen off, b4-b6 = application_id, b7 = externally connected: power present)
 > } // @20
 > ```
 
@@ -175,7 +172,7 @@ The BLE service can be used to:
 > * `b3` - Feature: `OPTIONS_CUE_DETAILS` - Enable the cue app for cue details (when cueing enabled)
 > * `b4` - Feature: `OPTIONS_CUE_MANUAL` - Feature: Enable mute and manual cueing from the cue details (when cueing enabled and the cue app is enabled)
 > * `b5` - Feature: `OPTIONS_CUE_DISALLOW` - Temporarily and visibly disallow cueing (when cueing enabled)
-> * `b6` - (reserved)
+> * `b6` - Feature: `OPTIONS_APPS_DISABLE` - Disable app launcher screen.
 > * `b7` - (reserved)
 > * `b8-b15` - (unused)
 >
@@ -193,7 +190,7 @@ The BLE service can be used to:
 > const uint8_t APPLICATION_ID_CUE_STYLE = 0x07;        // Cue App: Manual cue preferences: style
 > ```
 
-`set_impromtu` is:
+`set_impromptu` is:
 
 > ```c
 > struct {
@@ -331,7 +328,7 @@ Where `status` is:
 >     uint16_t blockSize = 256;           // @8  Size (bytes) of each block
 >     uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
 >     uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
->     uint8_t  status_flags;              // @14 Status flags (b0 = firmware validated, b1 = service initialized, b2 = connection trusted)
+>     uint8_t  status_flags;              // @14 Status flags (b0 = firmware validated, b1 = service initialized, b2 = connection trusted, b3 = externally connected: power present)
 >     uint8_t  reserved;                  // @15 Reserved
 >     uint32_t challenge;                 // @16 Challenge for trusted connection
 > ```
@@ -370,6 +367,15 @@ Where `response` is:
 > ```
 
 Where `payload_length` is likely to be `256`, and `payload_body` should be interpreted as `activity_log` (see below: *Device Activity Log Block Format*).
+
+
+#### Characteristic: Encryption-Required Activity Status
+
+| Name                          | Value                                            |
+|-------------------------------|--------------------------------------------------|
+| Name                          | Activity Status Characteristic                   |
+| UUID                          | `0e1d0004-9d33-4e5e-aead-e062834bd8bb`           |
+| Read/Write                    | Identical to *Activity Status*, except the *encryption required* flag is set. <!-- `BLE_GATT_CHR_F_READ_ENC` / `BLE_GATT_CHR_F_WRITE_ENC` -->  |
 
 
 ### Device Activity Log Block Format
@@ -484,14 +490,14 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Notification `uint8_t[<=20]`  | Subscribe to notifications to receive response.  |
 
 
-### UART Communcation Protocol
+### UART Communication Protocol
 
 Generally a subset compatible with the [Open Movement](https://openmovement.dev) [AxLE device](https://github.com/digitalinteraction/OpenMovement-AxLE-Firmware) protocol (with some extensions for the [TwoCan](https://twocan.dev/) project).  Some of the outbound numeric parameters are (for backwards-compatibility) hex-encoded bytewise little-endian representations of the integers, producing the 4-bit nibble indexes:
 
   * `INT16HEX`: `1032`
   * `INT32HEX`: `10325476`
 
-Commands and responses are terminated with a final line-feed (`\n`), which may be immediately preceeded with a carriage-return (`\r`) that can be ignored.  
+Commands and responses are terminated with a final line-feed (`\n`), which may be immediately preceded with a carriage-return (`\r`) that can be ignored.  
 
 A response may be prefixed with:
 

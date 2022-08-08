@@ -28,6 +28,7 @@ static options_t optionForIndex[SETTINGS_CUEBAND_NUM_OPTIONS] = {
   CueController::OPTIONS_CUE_STATUS, 
   //CueController::OPTIONS_CUE_DETAILS, 
   //CueController::OPTIONS_CUE_MANUAL, 
+  CueController::OPTIONS_APPS_DISABLE,
 };
 
 static const char *labelForIndex[SETTINGS_CUEBAND_NUM_OPTIONS] = {
@@ -35,6 +36,7 @@ static const char *labelForIndex[SETTINGS_CUEBAND_NUM_OPTIONS] = {
   " Cue Status",
   //" Details",
   //" Manual",
+  " No Apps",
 };
 
 // Thresholds for showResetButton
