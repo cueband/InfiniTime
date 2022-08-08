@@ -231,6 +231,7 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             if (firmwareValidator.IsValidated()) status_flags |= 0x01;      // b0 = firmware validated
             if (activityController.IsInitialized()) status_flags |= 0x02;   // b1 = service initialized
             if (bleController.IsTrusted()) status_flags |= 0x04;            // b2 = connection trusted
+            if (m_system.GetBatteryController().IsPowerPresent()) status_flags |= 0x08;   // b3 = externally connected: power present
             status[14] = status_flags;
 
             // @15 Reserved

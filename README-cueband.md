@@ -141,7 +141,7 @@ The BLE service can be used to:
 >     uint8_t options_base;           // @16 Device interface options base value (lower 8-bits only)
 >     uint8_t options_mask;           // @17 Device interface options remote mask (lower 8-bits only)
 >     uint8_t options_value;          // @18 Device interface options effective value (lower 8-bits only)
->     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted, b3 = screen off, b4-b6 = application_id)
+>     uint8_t status_flags;           // @19 Status flags (b0 = service initialized, b1 = firmware validated, b2 = connection trusted, b3 = screen off, b4-b6 = application_id, b7 = externally connected: power present)
 > } // @20
 > ```
 
@@ -328,7 +328,7 @@ Where `status` is:
 >     uint16_t blockSize = 256;           // @8  Size (bytes) of each block
 >     uint16_t epochInterval = 60;        // @10 Epoch duration (seconds)
 >     uint16_t maxSamplesPerBlock = 28;   // @12 Maximum number of epoch samples in each block
->     uint8_t  status_flags;              // @14 Status flags (b0 = firmware validated, b1 = service initialized, b2 = connection trusted)
+>     uint8_t  status_flags;              // @14 Status flags (b0 = firmware validated, b1 = service initialized, b2 = connection trusted, b3 = externally connected: power present)
 >     uint8_t  reserved;                  // @15 Reserved
 >     uint32_t challenge;                 // @16 Challenge for trusted connection
 > ```
