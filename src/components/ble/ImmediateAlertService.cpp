@@ -62,6 +62,9 @@ int ImmediateAlertService::OnAlertLevelChanged(uint16_t connectionHandle, uint16
 #ifdef CUEBAND_TRUSTED_IMMEDIATE_ALERT
   if (!systemTask.GetBleController().IsTrusted()) return 0;
 #endif
+#ifdef CUEBAND_DISABLE_NOTIFICATIONS
+if (false)
+#endif
   if (attributeHandle == alertLevelHandle) {
     if (context->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
       auto alertLevel = static_cast<Levels>(context->om->om_data[0]);

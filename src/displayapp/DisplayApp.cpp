@@ -249,7 +249,9 @@ if (!cueController.IsAppsDisabled())
 #endif
                 break;
               case TouchEvents::SwipeDown:
+#ifndef CUEBAND_DISABLE_NOTIFICATIONS
                 LoadApp(Apps::Notifications, DisplayApp::FullRefreshDirections::Down);
+#endif
                 break;
               case TouchEvents::SwipeRight:
                 LoadApp(Apps::QuickSettings, DisplayApp::FullRefreshDirections::RightAnim);
