@@ -40,3 +40,7 @@
 #ifdef CUEBAND_SILENT_WHEN_UNWORN
   #undef CUEBAND_SILENT_WHEN_UNWORN
 #endif
+
+// Test: entirely disable app launcher
+//#define CUEBAND_DISABLE_APP_LAUNCHER
+//#define CUEBAND_DISABLE_NOTIFICATIONS

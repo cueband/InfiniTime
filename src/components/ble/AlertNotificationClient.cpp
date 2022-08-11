@@ -1,3 +1,5 @@
+#include "cueband.h"
+
 #include "components/ble/AlertNotificationClient.h"
 #include <algorithm>
 #include "components/ble/NotificationManager.h"
@@ -142,6 +144,9 @@ int AlertNotificationClient::OnDescriptorDiscoveryEventCallback(uint16_t connect
 }
 
 void AlertNotificationClient::OnNotification(ble_gap_event* event) {
+#ifdef CUEBAND_DISABLE_NOTIFICATIONS
+if (false)
+#endif
   if (event->notify_rx.attr_handle == newAlertHandle) {
     constexpr size_t stringTerminatorSize = 1; // end of string '\0'
     constexpr size_t headerSize = 3;

@@ -51,6 +51,9 @@ int AlertNotificationService::OnAlert(uint16_t conn_handle, uint16_t attr_handle
   if (!systemTask.GetBleController().IsTrusted()) return 0;
 #endif
 
+#ifdef CUEBAND_DISABLE_NOTIFICATIONS
+if (false)
+#endif
   if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
     constexpr size_t stringTerminatorSize = 1; // end of string '\0'
     constexpr size_t headerSize = 3;
