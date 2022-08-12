@@ -54,6 +54,7 @@ void Hrs3300::Disable() {
   WriteRegister(static_cast<uint8_t>(Registers::Enable), value);
 }
 
+// [dgj] HRS (up to 18-bit, but configured for 16-bit): 00000000 000000LL MMMMMMMM HHHHLLLL
 uint32_t Hrs3300::ReadHrs() {
   auto m = ReadRegister(static_cast<uint8_t>(Registers::C0DataM));
   auto h = ReadRegister(static_cast<uint8_t>(Registers::C0DataH));
@@ -61,10 +62,12 @@ uint32_t Hrs3300::ReadHrs() {
   return ((l & 0x30) << 12) | (m << 8) | ((h & 0x0f) << 4) | (l & 0x0f);
 }
 
+// [dgj] ALS (up to 17-bit here, 18-bit in manual, but configured for 16-bit): 00000000 000000?H HHHHHMMM MMMMMLLL
 uint32_t Hrs3300::ReadAls() {
   auto m = ReadRegister(static_cast<uint8_t>(Registers::C1dataM));
   auto h = ReadRegister(static_cast<uint8_t>(Registers::C1dataH));
   auto l = ReadRegister(static_cast<uint8_t>(Registers::C1dataL));
+  // [dgj] Documentation indicates this should really be (h & 0x7f) to extract top 7-bits of an 18-bit value (but configured in 16-bit mode anyway)
   return ((h & 0x3f) << 11) | (m << 3) | (l & 0x07);
 }
 

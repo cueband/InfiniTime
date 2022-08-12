@@ -5,6 +5,10 @@
 
 using namespace Pinetime::Applications;
 
+#ifdef CUEBAND_BUFFER_RAW_HR
+#include "components/activity/compander.h"
+#endif
+
 HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor, Controllers::HeartRateController& controller)
   : heartRateSensor {heartRateSensor}, controller {controller}, ppg {} {
 }
@@ -66,11 +70,9 @@ void HeartRateTask::Work() {
 
     if (measurementStarted) {
 #ifdef CUEBAND_BUFFER_RAW_HR
-      auto hrs = heartRateSensor.ReadHrs();
-      auto als = heartRateSensor.ReadAls();
-      uint32_t hrmValue = (((uint32_t)als) << 16) | ((uint16_t)hrs);
-      hrmBuffer[numSamples++ % hrmCapacity] = hrmValue;
-      ppg.Preprocess(hrs);
+      uint32_t hrs = heartRateSensor.ReadHrs();
+      uint32_t als = heartRateSensor.ReadAls();
+      ppg.Preprocess(static_cast<float>(hrs));
 #else
       ppg.Preprocess(static_cast<float>(heartRateSensor.ReadHrs()));
 #endif
@@ -82,6 +84,18 @@ void HeartRateTask::Work() {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
       }
+
+#ifdef CUEBAND_BUFFER_RAW_HR
+#if 1   // Include BPM and companded ALS (only suitable for rough inspection), rather than raw ALS
+      uint32_t bpmInt = bpm == 0 ? 0 : (int)(bpm + 0.5f);
+      if (bpmInt > 255) bpmInt = 255;
+      uint32_t hrmValue = (bpmInt << 24) | ((uint32_t)compander_compress((uint16_t)als) << 16) | hrs;
+#else
+      uint32_t hrmValue = (als << 16) | hrs;
+#endif
+
+      hrmBuffer[numSamples++ % hrmCapacity] = hrmValue;
+#endif
     }
   }
 }

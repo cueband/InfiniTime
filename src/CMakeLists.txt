@@ -496,6 +496,7 @@ list(APPEND SOURCE_FILES
         components/ble/CueService.cpp
         components/ble/UartService.cpp
         components/activity/ActivityController.cpp
+        components/activity/compander.c
         components/activity/resampler.c
         components/cue/CueController.cpp
         components/cue/ControlPoint.cpp
@@ -695,6 +696,7 @@ set(INCLUDE_FILES
         components/ble/CueService.h
         components/ble/UartService.h
         components/activity/ActivityController.h
+        components/activity/compander.h
         components/activity/iir.h
         components/activity/resampler.h
         components/cue/CueController.h

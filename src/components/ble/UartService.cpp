@@ -476,6 +476,7 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
 #ifdef CUEBAND_BUFFER_RAW_HR
                 if (streamOptions & 1) {
+                    hrCursor = 0;
                     heartRateController.Start();
                     streamingHr = true;
                 }
