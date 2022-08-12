@@ -212,7 +212,9 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
     #define CUEBAND_CUSTOMIZATION_NO_STEPS              // Removes from digital watch face and settings menu
 
     // See: src/displayapp/screens/ApplicationList.cpp
-    #define CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS   // Only keep essential watch apps in the launcher (stopwatch, timer, alarm)
+    #ifndef CUEBAND_DISABLE_CUSTOMIZATION_ONLY_ESSENTIAL_APPS
+        #define CUEBAND_CUSTOMIZATION_ONLY_ESSENTIAL_APPS   // Only keep essential watch apps in the launcher (stopwatch, timer, alarm)
+    #endif
 
     // See: src/components/ble/NimbleController.cpp
     #define CUEBAND_SERVICE_MUSIC_DISABLED

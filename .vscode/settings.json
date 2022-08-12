@@ -69,7 +69,9 @@
         "hal_timer.h": "c",
         "qcbor_common.h": "c",
         "lvgl.h": "c",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "disc_f_1.c": "cpp",
+        "disc.c": "cpp"
     },
     "cmake.configureOnOpen": true,
     "cSpell.words": [

@@ -976,6 +976,28 @@ bool Pinetime::Controllers::UartService::StreamSamples(const int16_t *samples, s
 #ifdef CUEBAND_BUFFER_RAW_HR
             // Insert HR packet between accelerometer packets
             if (streamingHr && streamSampleIndex == -1) {
+#if 0   // Add dummy HRM data for testing
+static uint16_t dummy = 0;
+for (int i = 0; i < (dummy & 0x03); i++) {
+    dummy += accelX ^ accelY ^ accelZ;
+    uint32_t dummyValue = dummy | ((uint32_t)(dummy / 2) << 16);
+    heartRateController.BufferAdd(dummyValue);
+}
+#endif
+
+// Dummy entry
+// sprintf(buffer, "#Hello\r\n");
+// StreamAppend((const uint8_t *)buffer, strlen(buffer));
+
+#if 0
+char buffer[16];
+
+// Dummy entry
+sprintf(buffer, "!%08x\r\n", dummy);
+StreamAppend((const uint8_t *)buffer, strlen(buffer));
+
+#else
+
                 // Count of buffer entries available since previous cursor position
                 //size_t available = heartRateController.BufferRead(nullptr, &hrCursor, SIZE_MAX);
 
@@ -998,6 +1020,7 @@ bool Pinetime::Controllers::UartService::StreamSamples(const int16_t *samples, s
                 sampleHex[sampleLen++] = '\r';
                 sampleHex[sampleLen++] = '\n';
                 StreamAppend(sampleHex, sampleLen);
+#endif
 
             }
 #endif

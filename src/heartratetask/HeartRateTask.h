@@ -24,6 +24,9 @@ namespace Pinetime {
       void PushMessage(Messages msg);
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+      // Only public for adding dummy test measurements
+      void BufferAdd(uint32_t measurement);
+
       // If NULL pointer: count of buffer entries available since previous cursor position
       // otherwise: read from buffer from previous cursor position, return count, update cursor position
       size_t BufferRead(uint32_t *data, size_t *cursor, size_t maxCount);
@@ -41,6 +44,7 @@ namespace Pinetime {
       Controllers::HeartRateController& controller;
       Controllers::Ppg ppg;
       bool measurementStarted = false;
+
 #ifdef CUEBAND_BUFFER_RAW_HR
       static const size_t hrmCapacity = 32;
       volatile size_t numSamples = 0;

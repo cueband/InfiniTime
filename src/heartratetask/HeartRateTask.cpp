@@ -93,8 +93,7 @@ void HeartRateTask::Work() {
 #else
       uint32_t hrmValue = (als << 16) | hrs;
 #endif
-
-      hrmBuffer[numSamples++ % hrmCapacity] = hrmValue;
+      BufferAdd(hrmValue);
 #endif
     }
   }
@@ -128,6 +127,10 @@ void HeartRateTask::StopMeasurement() {
 }
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+void HeartRateTask::BufferAdd(uint32_t measurement) {
+  hrmBuffer[numSamples++ % hrmCapacity] = measurement;
+}
+
 // If NULL pointer: count of buffer entries available since previous cursor position
 // otherwise: read from buffer from previous cursor position, return count, update cursor position
 size_t HeartRateTask::BufferRead(uint32_t *data, size_t *cursor, size_t maxCount) {
