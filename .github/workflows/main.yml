@@ -11,6 +11,7 @@ on:
       , cueband                   # Track upstream/develop
       , cueband-stable            # Public releases (on major upstream releases?)
       , cueband-experimental      # Experimentation on alternatively-configured builds
+      , cueband-testing           # Testing release
     ]
   pull_request:
     branches: [ master, develop ]
