@@ -49,7 +49,9 @@ namespace Pinetime {
       bool measurementStarted = false;
 
 #ifdef CUEBAND_BUFFER_RAW_HR
-      bool rawMeasurement;
+      bool rawMeasurement = false;
+      uint8_t lastMeasurement = 0;
+      unsigned int lastMeasurementAge = 0;
       static const size_t hrmCapacity = 32;
       volatile size_t numSamples = 0;
       uint32_t hrmBuffer[hrmCapacity];
