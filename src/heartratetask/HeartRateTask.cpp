@@ -89,13 +89,19 @@ void HeartRateTask::Work() {
       if (bpm != 0) {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
+#ifdef CUEBAND_BUFFER_RAW_HR
+lastMeasurement = lastBpm;
+lastMeasurementAge = 0;
+#endif
       }
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+      if (lastMeasurementAge++ > 5 * 25) {
+        lastMeasurementAge = 0;
+        lastMeasurement = 0;
+      }
 #if 1   // Include BPM and companded ALS (only suitable for rough inspection), rather than raw ALS
-      uint32_t bpmInt = bpm == 0 ? 0 : (int)(bpm + 0.5f);
-      if (bpmInt > 255) bpmInt = 255;
-      uint32_t hrmValue = (bpmInt << 24) | ((uint32_t)compander_compress((uint16_t)als) << 16) | hrs;
+      uint32_t hrmValue = (lastMeasurement << 24) | ((uint32_t)compander_compress((uint16_t)als) << 16) | hrs;
 #else
       uint32_t hrmValue = (als << 16) | hrs;
 #endif
