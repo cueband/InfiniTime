@@ -96,7 +96,7 @@ lastMeasurementAge = 0;
       }
 
 #ifdef CUEBAND_BUFFER_RAW_HR
-      if (lastMeasurementAge++ > 5 * 25) {
+      if (lastMeasurementAge++ > 10 * 25) {
         lastMeasurementAge = 0;
         lastMeasurement = 0;
       }
