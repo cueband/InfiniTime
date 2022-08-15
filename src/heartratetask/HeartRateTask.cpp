@@ -42,10 +42,16 @@ void HeartRateTask::Work() {
     if (xQueueReceive(messageQueue, &msg, delay)) {
       switch (msg) {
         case Messages::GoToSleep:
+#ifdef CUEBAND_BUFFER_RAW_HR
+          if (IsRawMeasurement()) break;
+#endif
           StopMeasurement();
           state = States::Idle;
           break;
         case Messages::WakeUp:
+#ifdef CUEBAND_BUFFER_RAW_HR
+          if (IsRawMeasurement()) break;
+#endif
           state = States::Running;
           if (measurementStarted) {
             lastBpm = 0;

@@ -35,6 +35,21 @@ void HeartRateController::SetService(Pinetime::Controllers::HeartRateService* se
 }
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+bool HeartRateController::IsRawMeasurement() {
+  if (task == nullptr) return false;
+  return task->IsRawMeasurement();
+}
+
+void HeartRateController::StartRaw() {
+  if (task != nullptr) task->SetRawMeasurement(true);
+  Start();
+}
+
+void HeartRateController::StopRaw() {
+  Stop();
+  if (task != nullptr) task->SetRawMeasurement(false);
+}
+
 bool HeartRateController::BufferAdd(uint32_t measurement) {
   if (task == nullptr) {
     return false;

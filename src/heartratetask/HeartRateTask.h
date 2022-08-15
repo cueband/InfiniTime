@@ -24,6 +24,9 @@ namespace Pinetime {
       void PushMessage(Messages msg);
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+      void SetRawMeasurement(bool rawMeasurement) { this->rawMeasurement = rawMeasurement; }
+      bool IsRawMeasurement() { return this->rawMeasurement; }
+
       // Only public for adding dummy test measurements
       void BufferAdd(uint32_t measurement);
 
@@ -46,6 +49,7 @@ namespace Pinetime {
       bool measurementStarted = false;
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+      bool rawMeasurement;
       static const size_t hrmCapacity = 32;
       volatile size_t numSamples = 0;
       uint32_t hrmBuffer[hrmCapacity];

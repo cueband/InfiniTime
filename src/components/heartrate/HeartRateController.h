@@ -32,6 +32,10 @@ namespace Pinetime {
       void SetService(Pinetime::Controllers::HeartRateService* service);
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+      bool IsRawMeasurement();
+      void StartRaw();
+      void StopRaw();
+      
       // Only for adding dummy test measurements
       bool BufferAdd(uint32_t measurement);
 
