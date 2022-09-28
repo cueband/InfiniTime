@@ -1,4 +1,5 @@
-FROM ubuntu:latest
+FROM --platform=linux/amd64 ubuntu:latest 
+#    ^[cueband: MacOS M1+]^
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq \

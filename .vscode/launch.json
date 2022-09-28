@@ -108,5 +108,53 @@
                 "continue"
             ]
         },
+
+        {   // "make FLASH_pinetime-app"
+            "name": "[docker] cue.band - flash and disconnect",
+            "type": "gdb",
+            "request": "attach",
+            "executable": "${workspaceRoot}/build/src/pinetime-app-1.10.0.out",  // "${workspaceRoot}/build/src/pinetime-app-1.10.0.out", // "${command:cmake.launchTargetPath}", 
+            "target": "host.docker.internal:3333",  // host.docker.internal localhost 172.255.255.1
+            "remote": true,
+            "cwd": "${workspaceRoot}", 
+            "gdbpath": "/opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gdb",
+            //  -nx --batch -ex 'target extended-remote ${GDB_CLIENT_TARGET_REMOTE}' -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'kill' ${EXECUTABLE_FILE_NAME}.hex
+            "debugger_args": [
+                "file ./build/src/pinetime-app-1.10.0.hex",
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "autorun": [
+                "target extended-remote host.docker.internal:3333",  // host.docker.internal localhost 172.255.255.1
+                //"symbol-file ./build/src/pinetime-app-1.10.0.out",
+                "monitor reset halt", // "monitor swdp_scan",
+                // "attach 1",
+                "load",
+                "continue", // "kill"
+                "disconnect", // "detach",
+            ]
+        },
+        {
+            // See: https://lonesometraveler.github.io/2020/03/27/debug.html
+            "name": "[docker] cue.band - debug",
+            "type":"cortex-debug",
+            "cortex-debug.armToolchainPath":"${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin",
+            "cwd": "${workspaceRoot}",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch", // "attach",
+            "servertype": "external",
+            // This may need to be arm-none-eabi-gdb depending on your system
+            "gdbPath" : "${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin/arm-none-eabi-gdb",
+            // Connect to an already running OpenOCD instance
+            "gdbTarget": "host.docker.internal:3333",  // host.docker.internal localhost 172.255.255.1
+            "svdFile": "${workspaceRoot}/nrf52.svd",
+            "runToMain": true,
+            "internalConsoleOptions": "openOnSessionStart",
+            // Work around for stopping at main on restart
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+
     ]
 }

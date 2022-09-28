@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # [cueband] Prevent test executable, use test library instead
-#set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose Debug or Release")
 
 project(pinetime VERSION 1.10.0 LANGUAGES C CXX ASM)
