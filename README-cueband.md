@@ -280,7 +280,7 @@ The device activity log measures device state, user interactions, and user activ
 
 ### Sampling and recording
 
-**TODO:** Full description.
+Measurements are appended to a circular series of log files in blocks (256 bytes).  Each block contains metadata, including the format, timestamp, and battery status; and per-epoch (e.g. 60 second) samples (activity, steps, event flags).  The activity data comes from sampling the accelerometer at a fixed rate in FIFO mode (e.g. at 50 Hz), optionally resampling (e.g. at 40 Hz) the data, optionally high-pass filtering the data (e.g. over 0.5 Hz), summarizing the vector magnitude into a mean value over an epoch (e.g. 60 seconds).
 
 Brief notes:
 
@@ -303,11 +303,11 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Name                          | Activity Service                                 |
 | UUID                          | `0e1d0000-9d33-4e5e-aead-e062834bd8bb`           |
 
-#### Characteristic: Activity Status
+#### Characteristic: Activity Sync Status
 
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
-| Name                          | Activity Status Characteristic                   |
+| Name                          | Activity Sync Status Characteristic              |
 | UUID                          | `0e1d0001-9d33-4e5e-aead-e062834bd8bb`           |
 | Read `status`                 | Query current activity log status.               |
 | Write `uint8_t[]`             | `"Erase!"`: resets the activity log.             |
@@ -369,13 +369,37 @@ Where `response` is:
 Where `payload_length` is likely to be `256`, and `payload_body` should be interpreted as `activity_log` (see below: *Device Activity Log Block Format*).
 
 
-#### Characteristic: Encryption-Required Activity Status
+#### Characteristic: Encryption-Required Activity Sync Status
 
 | Name                          | Value                                            |
 |-------------------------------|--------------------------------------------------|
-| Name                          | Activity Status Characteristic                   |
+| Name                          | Activity Sync Status Characteristic              |
 | UUID                          | `0e1d0004-9d33-4e5e-aead-e062834bd8bb`           |
-| Read/Write                    | Identical to *Activity Status*, except the *encryption required* flag is set. <!-- `BLE_GATT_CHR_F_READ_ENC` / `BLE_GATT_CHR_F_WRITE_ENC` -->  |
+| Read/Write                    | Identical to *Activity Sync Status*, except the *encryption required* flag is set. <!-- `BLE_GATT_CHR_F_READ_ENC` / `BLE_GATT_CHR_F_WRITE_ENC` -->  |
+
+
+#### *(TBC)* Characteristic: Activity Configuration
+
+| Name                          | Value                                            |
+|-------------------------------|--------------------------------------------------|
+| Name                          | Activity Configuration Characteristic            |
+| UUID                          | `0e1d0005-9d33-4e5e-aead-e062834bd8bb`           |
+| Read `config`                 | Query current activity configuration.            |
+| Write `config`                | Set activity configuration.                      |
+
+Where `config` is:
+
+> ```c
+> struct {
+>     uint8_t  version;                   // @0 Configuration format version (=1)
+>     uint8_t  reserved;                  // @1 Reserved (=0)
+>     uint16_t format;                    // @2 Algorithm and logging format (see `format` below, =0x0002) -- read back status to see the actual format in use (the requested one may not be supported)
+>     uint16_t epochInterval;             // @4 Epoch interval (=60 seconds) -- read back status to see the actual interval in use (the requested one may not be supported)
+>     uint8_t hrmDuration;                // @6 HR periodic sampling duration (seconds, 0=disabled)
+>     uint8_t hrmStep;                    // @7 HR periodic sampling epoch step (seconds, 0=continuous)
+>     //uint8_t  reserved[12];            // @8 Reserved
+> } // @20
+> ```
 
 
 ### Device Activity Log Block Format
@@ -390,7 +414,7 @@ The device activity log blocks are of the form `activity_log`:
 >     // @0 Header (30 bytes)
 >     uint16_t   block_type;              // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
 >     uint16_t   block_length;            // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
->     uint16_t   format;                  // @4  0x00 = current format (8-bytes per sample)
+>     uint16_t   format;                  // @4  0x0002 = current format (8-bytes per sample)
 >     uint32_t   block_id;                // @6  Logical block identifier
 >     uint8_t[6] device_id;               // @10 Device ID (address)
 >     uint32_t   timestamp;               // @16 Seconds since epoch for the first sample
@@ -415,6 +439,7 @@ Where `format` is:
 > |  Value | Description                                                |
 > |:------:|:-----------------------------------------------------------|
 > | 0x0002 | 40 Hz resampled data, high-pass filter SVMMO and unfiltered SVMMO. |
+> | 0x0003 | (TBC) 40 Hz resampled data, `hr` and unfiltered SVMMO. |
 
 <!--
 | 0x0000 | 30 Hz resampled data, no high-pass filter, no SVMMO.       |
@@ -427,10 +452,20 @@ Each sample is of the form `activity_sample`:
 > struct {
 >     uint16_t events;                    // @0 Event flags (see below)
 >     uint16_t prompts_steps;             // @2 `PPUUZZSS SSSSSSSS` Lower 10-bits: step count; next 2-bits: snooze-muted prompt count (0-3, saturates); next 2-bits: unworn-muted prompt count (0-3, saturates); top 2-bits: prompt count (0-3, saturates).
->     uint16_t mean_filtered_svmmo;       // @4 Mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
->     uint16_t mean_svmmo;                // @6 Mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
+>     uint16_t summary1;                // @4 See below (0xffff = invalid)
+>     uint16_t summary2;                // @6 See below (0xffff = invalid)
 > } // @8
 > ```
+
+The values of `summary1` and `summary2` depend on the `format`.
+
+1. `summary1`:
+
+    * `format = 0x0002`: `mean_filtered_svmmo`, the mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value) 
+
+    * (*TBC*) `format = 0x0003`: `heart_rate`, `XXXXNNNN MMMMMMMM`, lowest 8-bits mean HR bpm (saturated to 255), next 4-bits minimum delta HR below mean (saturate to 15 bpm), next 5-bits maximum delta HR above mean (saturate to 15 bpm).
+
+2. `summary2` is `mean_svmmo`: the mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
 
 <!-- Note: Offset `@4` was previously (format `0x0000`-`0x0001`): *Mean of the SVM values for the entire epoch*. -->
 
