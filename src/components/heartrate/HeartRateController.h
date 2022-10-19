@@ -31,6 +31,12 @@ namespace Pinetime {
 
       void SetService(Pinetime::Controllers::HeartRateService* service);
 
+#ifdef CUEBAND_HR_EPOCH
+      void SetHrEpoch(bool hrEpoch);
+      bool IsHrEpoch();
+      bool HrStats(int *meanBpm, int *minBpm, int *maxBpm);
+#endif
+
 #ifdef CUEBAND_BUFFER_RAW_HR
       bool IsRawMeasurement();
       void StartRaw();

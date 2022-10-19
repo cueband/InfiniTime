@@ -310,7 +310,7 @@ User subscribes to notifications on the device's *TX* channel to receive respons
 | Name                          | Activity Sync Status Characteristic              |
 | UUID                          | `0e1d0001-9d33-4e5e-aead-e062834bd8bb`           |
 | Read `status`                 | Query current activity log status.               |
-| Write `uint8_t[]`             | `"Erase!"`: resets the activity log.             |
+| Write `uint8_t[]`             | `"Erase!"`: resets the activity log, and returns the logging to the firmware defaults (write to the Activity Configuration to change this).  |
 |                               | `"Validate!"`: remotely validates the firmware (risky)  |
 |                               | `"Reset!"`: remotely resets the device (risky?)  |
 |                               | `"Reconnect!"`: trust the next connection if made within 120 seconds, e.g. for a separate DFU connection.  If disconnecting afterwards, wait a brief moment first to ensure this packet is transmitted.   |
@@ -395,9 +395,9 @@ Where `config` is:
 >     uint8_t  reserved;                  // @1 Reserved (=0)
 >     uint16_t format;                    // @2 Algorithm and logging format (see `format` below, =0x0002) -- read back status to see the actual format in use (the requested one may not be supported)
 >     uint16_t epochInterval;             // @4 Epoch interval (=60 seconds) -- read back status to see the actual interval in use (the requested one may not be supported)
->     uint8_t hrmDuration;                // @6 HR periodic sampling duration (seconds, 0=disabled)
->     uint8_t hrmStep;                    // @7 HR periodic sampling epoch step (seconds, 0=continuous)
->     //uint8_t  reserved[12];            // @8 Reserved
+>     uint16_t hrmInterval;               // @6 HR periodic sampling interval (seconds, 0=no interval)
+>     uint16_t hrmDuration;               // @8 HR periodic sampling duration (seconds, 0=disabled, >0 && >=interval continuous)
+>     //uint8_t  reserved[10];            // @10 Reserved
 > } // @20
 > ```
 
@@ -463,7 +463,7 @@ The values of `summary1` and `summary2` depend on the `format`.
 
     * `format = 0x0002`: `mean_filtered_svmmo`, the mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value) 
 
-    * (*TBC*) `format = 0x0003`: `heart_rate`, `XXXXNNNN MMMMMMMM`, lowest 8-bits mean HR bpm (saturated to 255), next 4-bits minimum delta HR below mean (saturate to 15 bpm), next 5-bits maximum delta HR above mean (saturate to 15 bpm).
+    * (*TBC*) `format = 0x0003`: `heart_rate`, `XXXXNNNN MMMMMMMM`, lowest 8-bits mean HR bpm (saturated to 254, 255=invalid), next 4-bits minimum delta HR below mean (saturate to 15 bpm), next 4-bits maximum delta HR above mean (saturate to 15 bpm).
 
 2. `summary2` is `mean_svmmo`: the mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
 

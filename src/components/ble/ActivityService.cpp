@@ -258,10 +258,9 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             int res = os_mbuf_append(ctxt->om, &status, sizeof(status));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
-        } if (attr_handle == configHandle) {
+        } else if (attr_handle == configHandle) {
             // Read activity configuration
-
-            uint8_t cfg[8];
+            uint8_t cfg[10];
 
             // @0 Version
             cfg[0] = 1; 
@@ -270,20 +269,24 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
             cfg[1] = 0; 
 
             // @2 Format
-            uint16_t format = CUEBAND_FORMAT_VERSION;
+            uint16_t format = activityController.getFormat();
             cfg[2] = (uint8_t)(format >> 0);
             cfg[3] = (uint8_t)(format >> 8);
 
             // @4 Epoch interval
-            uint16_t interval = CUEBAND_ACTIVITY_EPOCH_INTERVAL;
-            cfg[4] = (uint8_t)(interval >> 0);
-            cfg[5] = (uint8_t)(interval >> 8);
+            uint16_t epochInterval = activityController.getEpochInterval();
+            cfg[4] = (uint8_t)(epochInterval >> 0);
+            cfg[5] = (uint8_t)(epochInterval >> 8);
 
-// @6 HRM Duration
-cfg[6] = 0;
+            // @6 HRM interval
+            uint16_t hrmInterval = activityController.getHrmInterval();
+            cfg[6] = (uint8_t)(hrmInterval >> 0);
+            cfg[7] = (uint8_t)(hrmInterval >> 8);
 
-// @7 HRM Step
-cfg[7] = 0;
+            // @8 HRM duration
+            uint16_t hrmDuration = activityController.getHrmDuration();
+            cfg[8] = (uint8_t)(hrmDuration >> 0);
+            cfg[9] = (uint8_t)(hrmDuration >> 8);
 
             int res = os_mbuf_append(ctxt->om, &cfg, sizeof(cfg));
             return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
@@ -442,16 +445,15 @@ cfg[7] = 0;
             }
 
         } else if (attr_handle == configHandle && notifSize >= 8) {
-
             uint8_t version = data[0];
-
             if (version == 0) {
                 //uint8_t reserved = data[1];
-                //uint16_t format = (uint16_t)(data[2] | (data[3] << 8));
-                //uint16_t epochInterval = (uint16_t)(data[4] | (data[5] << 8));
-                //uint8_t hrmDuration = data[6];
-                //uint8_t hrmStep = data[7];
-                ;
+                uint16_t format = (uint16_t)(data[2] | (data[3] << 8));
+                uint16_t epochInterval = (uint16_t)(data[4] | (data[5] << 8));
+                uint16_t hrmInterval = (uint16_t)(data[6] | (data[7] << 8));
+                uint16_t hrmDuration = (uint16_t)(data[8] | (data[9] << 8));
+
+                activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration);
             }
 
         }

@@ -7,7 +7,14 @@
 #define IIR_RATE ACTIVITY_RATE
 #include "iir.h"
 
+#include "components/fs/FS.h"
+
 using namespace Pinetime::Controllers;
+
+#define ACTIVITY_CONFIG_FILENAME "ACTIVITY.CFG"
+#define ACTIVITY_CONFIG_MIN_VERSION 1
+#define ACTIVITY_CONFIG_VERSION 1
+#define ACTIVITY_CONFIG_SIZE (8 + 24)
 
 #define ACTIVITY_DATA_FILENAME "ACTV%04d.BIN"
 
@@ -30,15 +37,21 @@ ActivityController::ActivityController(Controllers::Settings& settingsController
             , Pinetime::Controllers::DateTime& dateTimeController
             , Pinetime::Controllers::MotorController& motorController
 #endif
+#ifdef CUEBAND_HR_EPOCH
+            , Pinetime::Controllers::HeartRateController& heartRateController
+#endif
 ) : settingsController {settingsController}, fs {fs} 
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
             , dateTimeController { dateTimeController }
             , motorController { motorController }
 #endif
+#ifdef CUEBAND_HR_EPOCH
+            , heartRateController { heartRateController }
+#endif
 {
 
   resampler_init(&this->resampler, CUEBAND_BUFFER_EFFECTIVE_RATE, ACTIVITY_RATE, 0, CUEBAND_AXES);
-
+  InitConfig();
 }
 
 static uint16_t sum_16(uint8_t *data, size_t count) {
@@ -59,6 +72,120 @@ static uint16_t int_sqrt32(uint32_t x) {
     }
     return res;
 }
+
+
+
+void ActivityController::InitConfig() {
+    ChangeConfig(ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT);
+    this->configChanged = 0;
+}
+
+int ActivityController::ReadConfig() {
+    int ret;
+    this->configChanged = 0;
+
+    // Restore previous config
+    lfs_file_t file_p = {0};
+    ret = fs.FileOpen(&file_p, ACTIVITY_CONFIG_FILENAME, LFS_O_RDONLY);
+    if (ret == LFS_ERR_CORRUPT) fs.FileDelete(ACTIVITY_CONFIG_FILENAME);    // No other sensible action?
+    if (ret != LFS_ERR_OK) {
+        return 1;
+    }
+
+    // Read header and config
+    uint8_t buffer[ACTIVITY_CONFIG_SIZE];
+    ret = fs.FileRead(&file_p, buffer, sizeof(buffer));
+    if (ret != sizeof(buffer)) {
+        fs.FileClose(&file_p);
+        return 2;
+    }
+
+    // Parse header
+    bool headerValid = (buffer[0] == 'A' && buffer[1] == 'C' && buffer[2] == 'T' && buffer[3] == 'V');
+    unsigned int fileVersion = buffer[4] | (buffer[5] << 8) | (buffer[6] << 16) | (buffer[7] << 24);
+    if (!headerValid || fileVersion < ACTIVITY_CONFIG_MIN_VERSION || fileVersion > ACTIVITY_CONFIG_VERSION) {
+        fs.FileClose(&file_p);
+        return 3;
+    }
+
+    fs.FileClose(&file_p);
+
+    // Config
+    uint16_t format  = buffer[8] | (buffer[9] << 8);
+    uint16_t epochInterval  = buffer[10] | (buffer[11] << 8);
+    uint16_t hrmInterval  = buffer[12] | (buffer[13] << 8);
+    uint16_t hrmDuration  = buffer[14] | (buffer[15] << 8);
+    ChangeConfig(format, epochInterval, hrmInterval, hrmDuration);
+
+    return 0;
+}
+
+void ActivityController::DeferWriteConfig() {
+    if (this->configChanged == 0) {
+        this->configChanged = 1;
+    }
+}
+
+bool ActivityController::ChangeConfig(uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration) {
+
+  // Default values
+  if (format == ACTIVITY_CONFIG_DEFAULT) format = CUEBAND_FORMAT_VERSION;
+  if (epochInterval == ACTIVITY_CONFIG_DEFAULT) epochInterval = CUEBAND_ACTIVITY_EPOCH_INTERVAL;
+  if (hrmInterval == ACTIVITY_CONFIG_DEFAULT) hrmInterval = CUEBAND_ACTIVITY_HRM_INTERVAL_DEFAULT;
+  if (hrmDuration == ACTIVITY_CONFIG_DEFAULT) hrmDuration = CUEBAND_ACTIVITY_HRM_DURATION_DEFAULT;
+
+  // Only specific formats are valid
+  if (format < CUEBAND_FORMAT_VERSION_MIN) format = CUEBAND_FORMAT_VERSION_MIN;
+  if (format > CUEBAND_FORMAT_VERSION_MAX) format = CUEBAND_FORMAT_VERSION_MAX;
+
+  // Changes -- user should call: DeferWriteConfig();
+  bool changed = (format != this->format || epochInterval != this->epochInterval || hrmInterval != this->hrmInterval || hrmDuration != this->hrmDuration);
+
+  this->format = format;
+  this->epochInterval = epochInterval;
+  this->hrmInterval = hrmInterval;
+  this->hrmDuration = hrmDuration;
+
+  return changed;
+}
+
+int ActivityController::WriteConfig() {
+    int ret;
+    if (!isInitialized) return 9;
+    this->configChanged = 0;
+
+    uint8_t buffer[ACTIVITY_CONFIG_SIZE];
+    memset(buffer, 0, sizeof(buffer));
+    buffer[0] = 'A'; buffer[1] = 'C'; buffer[2] = 'T'; buffer[3] = 'V'; 
+    buffer[4] = (uint8_t)ACTIVITY_CONFIG_VERSION; buffer[5] = (uint8_t)(ACTIVITY_CONFIG_VERSION >> 8); buffer[6] = (uint8_t)(ACTIVITY_CONFIG_VERSION >> 16); buffer[7] = (uint8_t)(ACTIVITY_CONFIG_VERSION >> 24); 
+    buffer[8] = (uint8_t)format; buffer[9] = (uint8_t)(format >> 8);
+    buffer[10] = (uint8_t)epochInterval; buffer[11] = (uint8_t)(epochInterval >> 8);
+    buffer[12] = (uint8_t)hrmInterval; buffer[13] = (uint8_t)(hrmInterval >> 8);
+    buffer[14] = (uint8_t)hrmDuration; buffer[15] = (uint8_t)(hrmDuration >> 8);
+    
+    // Open control points file for writing
+    lfs_file_t file_p = {0};
+    ret = fs.FileOpen(&file_p, ACTIVITY_CONFIG_FILENAME, LFS_O_WRONLY|LFS_O_CREAT|LFS_O_TRUNC|LFS_O_APPEND);
+    if (ret == LFS_ERR_CORRUPT) fs.FileDelete(ACTIVITY_CONFIG_FILENAME);    // No other sensible action?
+    if (ret != LFS_ERR_OK) {
+        return 1;
+    }
+
+    // Write header + buffer
+    ret = fs.FileWrite(&file_p, buffer, sizeof(buffer));
+    if (ret != sizeof(buffer)) {
+        fs.FileClose(&file_p);
+        return 2;
+    }
+
+    fs.FileClose(&file_p);
+
+    return 0;
+}
+
+
+
+
 
 // To allow streaming of resampled data
 #ifdef CUEBAND_STREAM_RESAMPLED
@@ -297,6 +424,10 @@ bool ActivityController::WriteEpoch() {
     // @2 Lower 10-bits: step count; next 2-bits: snooze-muted prompt count (0-3, saturates); next 2-bits: unworn-muted prompt count (0-3, saturates); top 2-bits: prompt count (0-3, saturates).
     data[2] = (uint8_t)steps; data[3] = (uint8_t)(steps >> 8);
 
+    // Summary values
+    uint16_t summary1 = 0xffff;
+    uint16_t summary2 = 0xffff;
+    
     // Calculate the mean SVM & SVMMO values
 #ifdef CUEBAND_ACTIVITY_HIGH_PASS
     uint32_t meanFilteredSvmMO;
@@ -330,14 +461,66 @@ bool ActivityController::WriteEpoch() {
     }
 
     // @4 Mean of the SVM values for the entire epoch
-#ifdef CUEBAND_ACTIVITY_HIGH_PASS
-    data[4] = (uint8_t)meanFilteredSvmMO; data[5] = (uint8_t)(meanFilteredSvmMO >> 8);
+    if (format == CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002) {
+      #ifdef CUEBAND_ACTIVITY_HIGH_PASS
+        summary1 = meanFilteredSvmMO;
+      #else
+        summary1 = meanSvm;
+      #endif
+    } else if (format == CUEBAND_FORMAT_VERSION_HR_RANGE_0003) {
+
+#ifdef CUEBAND_HR_EPOCH
+      // Get heart rate tracker stats and clear
+      int meanBpm = -1, minBpm = -1, maxBpm = -1;
+      bool hasData = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm);
+
+      int deltaMin = 0, deltaMax = 0;
+      if (hasData) {
+        // Calculate delta
+        deltaMin = meanBpm - minBpm;
+        deltaMax = maxBpm - meanBpm;
+
+        // Saturate
+        if (meanBpm < 0) meanBpm = 0;
+        if (meanBpm > 254) meanBpm = 254;
+        if (deltaMin < 0x0) deltaMin = 0x0;
+        if (deltaMin > 0xf) deltaMin = 0xf;
+        if (deltaMax < 0x0) deltaMax = 0x0;
+        if (deltaMax > 0xf) deltaMax = 0xf;
+      } else {
+        meanBpm = 0xff;
+        deltaMin = 0xf;
+        deltaMax = 0xf;
+      }
+
+      // heart_rate, XXXXNNNN MMMMMMMM
+      // lowest 8-bits mean HR bpm (saturated to 254, 255=invalid)
+      // next 4-bits minimum delta HR below mean (saturate to 15 bpm)
+      // next 4-bits maximum delta HR above mean (saturate to 15 bpm).
+      summary1 = (deltaMax << 12) | (deltaMin << 8) | meanBpm;
 #else
-    data[4] = (uint8_t)meanSvm; data[5] = (uint8_t)(meanSvm >> 8);
+      // Format reports HR, but HR sampling not enabled
+      summary1 = 0xffff;
 #endif
 
-    // @6 Mean of the abs(SVM-1) values for the entire epoch
-    data[6] = (uint8_t)meanSvmMO; data[7] = (uint8_t)(meanSvmMO >> 8);
+    } else {
+      summary1 = 0xffff;
+    }
+
+    // Mean of the abs(SVM-1) values for the entire epoch
+    if (format == CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002) {
+      summary2 = meanSvmMO;
+    } else if (format == CUEBAND_FORMAT_VERSION_HR_RANGE_0003) {
+      summary2 = meanSvmMO;
+    } else {
+      summary2 = 0xffff;
+    }
+
+    // @4 Summary1
+    data[4] = (uint8_t)summary1; data[5] = (uint8_t)(summary1 >> 8);
+
+    // @6 Summary2
+    data[6] = (uint8_t)summary2; data[7] = (uint8_t)(summary2 >> 8);
 
     countEpochs++;
   }
@@ -350,32 +533,50 @@ void ActivityController::TimeChanged(uint32_t time) {
 
   if (!isInitialized) return;
 
-  uint32_t currentEpoch = epochStartTime / epochInterval;
-  uint32_t epochNow = currentTime / epochInterval;
-  // Epoch has changed from the current one
-  if (epochNow != currentEpoch) {
-    // Write this epoch
-    WriteEpoch();
+#ifdef CUEBAND_HR_EPOCH
+  bool withinSampling = false;
+  if (hrmInterval > 0) {
+    uint32_t hrEpochOffset = currentTime % hrmInterval;
+    withinSampling = (hrEpochOffset < hrmDuration);
+  }
+  heartRateController.SetHrEpoch(withinSampling);
+#endif
 
-    uint32_t blockEpoch = blockStartTime / epochInterval;
+  if (epochInterval > 0) {
+    uint32_t currentEpoch = epochStartTime / epochInterval;
+    uint32_t epochNow = currentTime / epochInterval;
+    // Epoch has changed from the current one
+    if (epochNow != currentEpoch) {
+      // Write this epoch
+      WriteEpoch();
 
-    // If the block is full, or we're not in the correct sequence (e.g. the time changed)...
-    if (countEpochs >= ACTIVITY_MAX_SAMPLES || epochNow - blockEpoch != countEpochs) {
-      // ...store to drive
-      bool written = WriteActiveBlock();
-      // Advance
-      if (written) {
-        activeBlockLogicalIndex++;
+      uint32_t blockEpoch = blockStartTime / epochInterval;
+
+      // If the block is full, or we're not in the correct sequence (e.g. the time changed)...
+      if (countEpochs >= ACTIVITY_MAX_SAMPLES || epochNow - blockEpoch != countEpochs) {
+        // ...store to drive
+        bool written = WriteActiveBlock();
+        // Advance
+        if (written) {
+          activeBlockLogicalIndex++;
+        } else {
+          errWrite++;
+        }
+        // Begin a new block
+        StartNewBlock();
       } else {
-        errWrite++;
+        StartEpoch();
       }
-      // Begin a new block
-      StartNewBlock();
-    } else {
-      StartEpoch();
     }
   }
 
+  // Config change debounce
+  if (this->configChanged != 0) {
+      if (++this->configChanged >= 10) {
+          this->configChanged = 0;
+          WriteConfig();
+      }
+  }
 
 }
 
@@ -408,6 +609,10 @@ void ActivityController::DestroyData() {
     DeleteFile(file);
   }
 
+  // Erase config file and use default config
+  fs.FileDelete(ACTIVITY_CONFIG_FILENAME);
+  InitConfig();
+
   // Reset active block
   activeBlockLogicalIndex = 0;
   activeFile = 0;
@@ -418,12 +623,10 @@ void ActivityController::DestroyData() {
 }
 
 bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
-  uint16_t formatVersion = CUEBAND_FORMAT_VERSION;
-
   // Header
   activeBlock[0] = 'A'; activeBlock[1] = 'D';                                                                           // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
   activeBlock[2] = (uint8_t)(ACTIVITY_BLOCK_SIZE - 4); activeBlock[3] = (uint8_t)((ACTIVITY_BLOCK_SIZE - 4) >> 8);      // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
-  activeBlock[4] = (uint8_t)formatVersion; activeBlock[5] = (uint8_t)(formatVersion >> 8);                              // @4  0x00 = current format (8-bytes per sample)
+  activeBlock[4] = (uint8_t)format; activeBlock[5] = (uint8_t)(format >> 8);                                            // @4  0x00 = current format (8-bytes per sample)
   activeBlock[6] = (uint8_t)logicalIndex; activeBlock[7] = (uint8_t)(logicalIndex >> 8);                                // @6  Logical block identifier
   activeBlock[8] = (uint8_t)(logicalIndex >> 16); activeBlock[9] = (uint8_t)(logicalIndex >> 24);                       //     ...
   activeBlock[10] = deviceAddress[5]; activeBlock[11] = deviceAddress[4]; activeBlock[12] = deviceAddress[3];           // @10 Device ID (address)
@@ -432,8 +635,24 @@ bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
   activeBlock[18] = (uint8_t)(blockStartTime >> 16); activeBlock[19] = (uint8_t)(blockStartTime >> 24);                 //     ...
   activeBlock[20] = (uint8_t)(countEpochs > 255 ? 255 : countEpochs);                                                   // @20 Number of valid samples (up to 28 samples when 8-bytes each in a 256-byte block)
   activeBlock[21] = (uint8_t)(epochInterval > 255 ? 255 : epochInterval);                                               // @21 Epoch interval (seconds, = 60)
-  activeBlock[22] = (uint8_t)promptConfigurationId; activeBlock[25] = (uint8_t)(promptConfigurationId >> 8);            // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
-  activeBlock[24] = (uint8_t)(promptConfigurationId >> 16); activeBlock[25] = (uint8_t)(promptConfigurationId >> 24);   //     ...
+
+  if (format == CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002) {
+    activeBlock[22] = (uint8_t)promptConfigurationId; 
+    activeBlock[23] = (uint8_t)(promptConfigurationId >> 8);            // @22 Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch)
+    activeBlock[24] = (uint8_t)(promptConfigurationId >> 16); 
+    activeBlock[25] = (uint8_t)(promptConfigurationId >> 24);   //     ...
+  } else if (format == CUEBAND_FORMAT_VERSION_HR_RANGE_0003) {
+    activeBlock[22] = hrmInterval > 255 ? 255 : hrmInterval;
+    activeBlock[23] = hrmDuration > 255 ? 255 : hrmDuration;
+    activeBlock[24] = 0xff;
+    activeBlock[25] = 0xff;
+  } else {
+    activeBlock[22] = 0xff;
+    activeBlock[23] = 0xff;
+    activeBlock[24] = 0xff;
+    activeBlock[25] = 0xff;
+  }
+
   activeBlock[26] = lastBattery;                                                                                        // @26 Battery (0xff=unknown; bottom 7-bits: percentage, top-bit: power present)
   activeBlock[27] = accelerometerInfo;                                                                                  // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
   activeBlock[28] = lastTemperature;                                                                                    // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
@@ -752,9 +971,9 @@ void ActivityController::DebugText(char *debugText, bool additionalInfo) {
     p += sprintf(p, "S:%lu E:%lu C:%lu\n", blockStartTime, countEpochs, epochSumCount);
     p += sprintf(p, "smo:%lu\n", epochSumSvmMO);
 #ifdef CUEBAND_ACTIVITY_HIGH_PASS
-    p += sprintf(p, "i:%lu fts:%lu\n", epochInterval, epochSumFilteredSvmMO);
+    p += sprintf(p, "i:%d fts:%lu\n", epochInterval, epochSumFilteredSvmMO);
 #else
-    p += sprintf(p, "i:%lu sum:%lu\n", epochInterval, epochSumSvm);
+    p += sprintf(p, "i:%d sum:%lu\n", epochInterval, epochSumSvm);
 #endif
     p += sprintf(p, "er:%lu/%lu/%lu ew:%lu/%lu/%lu\n", errRead, errReadLast, errReadLogicalLast, errWrite, errWriteLastInitial, errWriteLast);
     int elapsed = currentTime - epochStartTime;
@@ -966,6 +1185,8 @@ void ActivityController::Init(uint32_t time, std::array<uint8_t, 6> deviceAddres
   activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
   activeFile = -1;
   isInitialized = false;
+
+  ReadConfig();
 
   InitialFileScan();
 }

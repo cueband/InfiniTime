@@ -89,6 +89,7 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
+#define CUEBAND_HR_EPOCH
 
 // Cue prompts
 #define CUEBAND_CUE_ENABLED
@@ -331,19 +332,56 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_DELAY_START 50          // Delay cue.band service initialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
 // Logging (30-40 days)
-#define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
 #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 512 // 512 = 128 kB, ~10 days/file;  
 #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 30-40 days
+
+#ifdef CUEBAND_ACTIVITY_EPOCH_INTERVAL
+    #ifdef CUEBAND_CONFIGURATION_WARNINGS
+        #warning "This build has a non-default CUEBAND_ACTIVITY_EPOCH_INTERVAL and must not be used for a release"
+    #endif
+#else
+    #define CUEBAND_ACTIVITY_EPOCH_INTERVAL 60  // 60
+#endif
+
+#ifdef CUEBAND_ACTIVITY_HRM_INTERVAL_DEFAULT
+    #ifdef CUEBAND_CONFIGURATION_WARNINGS
+        #warning "This build has a non-default CUEBAND_ACTIVITY_HRM_INTERVAL_DEFAULT and must not be used for a release"
+    #endif
+#else
+    #define CUEBAND_ACTIVITY_HRM_INTERVAL_DEFAULT 0
+#endif
+
+#ifdef CUEBAND_ACTIVITY_HRM_DURATION_DEFAULT
+    #ifdef CUEBAND_CONFIGURATION_WARNINGS
+        #warning "This build has a non-default CUEBAND_ACTIVITY_HRM_DURATION_DEFAULT and must not be used for a release"
+    #endif
+#else
+    #define CUEBAND_ACTIVITY_HRM_DURATION_DEFAULT 0
+#endif
+
+#ifdef CUEBAND_FORMAT_VERSION
+    #ifdef CUEBAND_CONFIGURATION_WARNINGS
+        #warning "This build has a non-default CUEBAND_FORMAT_VERSION and must not be used for a release"
+    #endif
+#else
+    #define CUEBAND_FORMAT_VERSION CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002
+#endif
 
 #define ACTIVITY_BLOCK_SIZE 256
 
 #define ACTIVITY_RATE 40    // Common activity monitor rate: 32 Hz (Philips Actiwatch Spectrum+/Pro/2, CamNtech Actiwave Motion, Minisun IDEEA, Fit.life Fitmeter, BodyMedia SenseWear); or 30 Hz (ActiGraph GT3X/GT1M)
 // Always store MEAN(SVMMO), additionally:
 #define CUEBAND_ACTIVITY_HIGH_PASS  // ...store MEAN(FILTER(SVMMO)), otherwise: store plain MEAN(SVM)
-#define CUEBAND_FORMAT_VERSION 0x0002
+
+#define CUEBAND_FORMAT_VERSION_MIN 0x0002
+#define CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002 0x0002
+#define CUEBAND_FORMAT_VERSION_HR_RANGE_0003 0x0003
+#define CUEBAND_FORMAT_VERSION_MAX 0x0003
+
 // 0x0000=30 Hz data, no high-pass filter, no SVMMO
 // 0x0001=30 Hz data, no high-pass filter, SVMMO present
 // 0x0002=40 Hz data, SVMMO, high-pass SVMMO
+// 0x0003=40 Hz, SVMMO, HR range
 
 #define CUEBAND_TX_COUNT 26    // Queue multiple notifications at once (hopefully to send more than one per connection interval)
 //#define CUEBAND_DEBUG_DUMMY_MISSING_BLOCKS

@@ -23,6 +23,17 @@ namespace Pinetime {
       void Work();
       void PushMessage(Messages msg);
 
+#ifdef CUEBAND_HR_EPOCH
+      void SetHrEpoch(bool hrEpoch) { this->hrEpoch = hrEpoch; }
+      bool IsHrEpoch() { return this->hrEpoch; }
+      // Get heart rate tracker stats and clear
+      bool HrStats(int *meanBpm, int *minBpm, int *maxBpm);
+      int sumBpm = 0;
+      int countBpm = 0;
+      int minBpm = 0;
+      int maxBpm = 0;
+#endif
+
 #ifdef CUEBAND_BUFFER_RAW_HR
       void SetRawMeasurement(bool rawMeasurement) { this->rawMeasurement = rawMeasurement; }
       bool IsRawMeasurement() { return this->rawMeasurement; }
@@ -48,6 +59,9 @@ namespace Pinetime {
       Controllers::Ppg ppg;
       bool measurementStarted = false;
 
+#ifdef CUEBAND_HR_EPOCH
+      bool hrEpoch = false;
+#endif
 #ifdef CUEBAND_BUFFER_RAW_HR
       bool rawMeasurement = false;
       uint8_t lastMeasurement = 0;

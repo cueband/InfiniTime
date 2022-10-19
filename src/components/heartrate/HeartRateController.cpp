@@ -34,6 +34,30 @@ void HeartRateController::SetService(Pinetime::Controllers::HeartRateService* se
   this->service = service;
 }
 
+#ifdef CUEBAND_HR_EPOCH
+void HeartRateController::SetHrEpoch(bool hrEpoch) {
+  if (task == nullptr) return;
+  bool currentlyRunning = IsHrEpoch();
+  if (!currentlyRunning && hrEpoch) {
+    Start();
+  }
+  if (currentlyRunning && !hrEpoch) {
+    Stop();
+  }
+  return task->SetHrEpoch(hrEpoch);
+}
+
+bool HeartRateController::IsHrEpoch() {
+  if (task == nullptr) return false;
+  return task->IsHrEpoch();
+}
+
+bool HeartRateController::HrStats(int *meanBpm, int *minBpm, int *maxBpm) {
+  if (task == nullptr) return false;
+  return task->HrStats(meanBpm, minBpm, maxBpm);
+}
+#endif
+
 #ifdef CUEBAND_BUFFER_RAW_HR
 bool HeartRateController::IsRawMeasurement() {
   if (task == nullptr) return false;

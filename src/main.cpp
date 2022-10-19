@@ -141,6 +141,9 @@ Pinetime::Controllers::ActivityController activityController {settingsController
   , dateTimeController
   , motorController
 #endif
+#ifdef CUEBAND_HR_EPOCH
+  , heartRateController
+#endif
 };
 #endif
 #ifdef CUEBAND_CUE_ENABLED

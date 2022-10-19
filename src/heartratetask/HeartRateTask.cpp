@@ -26,6 +26,36 @@ void HeartRateTask::Process(void* instance) {
   app->Work();
 }
 
+#ifdef CUEBAND_HR_EPOCH
+// Get heart rate tracker stats and clear
+bool HeartRateTask::HrStats(int *meanBpm, int *minBpm, int *maxBpm) {
+  bool hasData = this->countBpm > 0;
+
+  if (meanBpm != nullptr) {
+    if (hasData) *meanBpm = this->sumBpm / this->countBpm;
+    else *meanBpm = -1;
+  }
+
+  if (minBpm != nullptr) {
+    if (hasData) *minBpm = this->minBpm;
+    else *minBpm = -1;
+  }
+
+  if (maxBpm != nullptr) {
+    if (hasData) *maxBpm = this->maxBpm;
+    else *maxBpm = -1;
+  }
+
+  // Clear stats
+  this->sumBpm = 0;
+  this->countBpm = 0;
+  this->minBpm = 0;
+  this->maxBpm = 0;
+
+  return hasData;
+}
+#endif
+
 void HeartRateTask::Work() {
   int lastBpm = 0;
   while (true) {
@@ -42,6 +72,9 @@ void HeartRateTask::Work() {
     if (xQueueReceive(messageQueue, &msg, delay)) {
       switch (msg) {
         case Messages::GoToSleep:
+#ifdef CUEBAND_HR_EPOCH
+          if (IsHrEpoch()) break;
+#endif
 #ifdef CUEBAND_BUFFER_RAW_HR
           if (IsRawMeasurement()) break;
 #endif
@@ -49,6 +82,9 @@ void HeartRateTask::Work() {
           state = States::Idle;
           break;
         case Messages::WakeUp:
+#ifdef CUEBAND_HR_EPOCH
+          if (IsHrEpoch()) break;
+#endif
 #ifdef CUEBAND_BUFFER_RAW_HR
           if (IsRawMeasurement()) break;
 #endif
@@ -83,6 +119,16 @@ void HeartRateTask::Work() {
       ppg.Preprocess(static_cast<float>(heartRateSensor.ReadHrs()));
 #endif
       auto bpm = ppg.HeartRate();
+
+#ifdef CUEBAND_HR_EPOCH
+      // Add HR stats
+      if (IsHrEpoch() && bpm > 0) {
+        if (countBpm == 0 || bpm < minBpm) minBpm = bpm;
+        if (countBpm == 0 || bpm > maxBpm) maxBpm = bpm;
+        sumBpm += bpm;
+        countBpm++;
+      }
+#endif
 
       if (lastBpm == 0 && bpm == 0)
         controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
