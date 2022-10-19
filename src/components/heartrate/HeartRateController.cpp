@@ -34,7 +34,54 @@ void HeartRateController::SetService(Pinetime::Controllers::HeartRateService* se
   this->service = service;
 }
 
+#ifdef CUEBAND_HR_EPOCH
+void HeartRateController::SetHrEpoch(bool hrEpoch) {
+  if (task == nullptr) return;
+  bool currentlyRunning = IsHrEpoch();
+  if (!currentlyRunning && hrEpoch) {
+    Start();
+  }
+  if (currentlyRunning && !hrEpoch) {
+    Stop();
+  }
+  return task->SetHrEpoch(hrEpoch);
+}
+
+bool HeartRateController::IsHrEpoch() {
+  if (task == nullptr) return false;
+  return task->IsHrEpoch();
+}
+
+bool HeartRateController::HrStats(int *meanBpm, int *minBpm, int *maxBpm) {
+  if (task == nullptr) return false;
+  return task->HrStats(meanBpm, minBpm, maxBpm);
+}
+#endif
+
 #ifdef CUEBAND_BUFFER_RAW_HR
+bool HeartRateController::IsRawMeasurement() {
+  if (task == nullptr) return false;
+  return task->IsRawMeasurement();
+}
+
+void HeartRateController::StartRaw() {
+  if (task != nullptr) task->SetRawMeasurement(true);
+  Start();
+}
+
+void HeartRateController::StopRaw() {
+  Stop();
+  if (task != nullptr) task->SetRawMeasurement(false);
+}
+
+bool HeartRateController::BufferAdd(uint32_t measurement) {
+  if (task == nullptr) {
+    return false;
+  }
+  this->task->BufferAdd(measurement);
+  return true;
+}
+
 // If NULL pointer: count of buffer entries available since previous cursor position
 // otherwise: read from buffer from previous cursor position, return count, update cursor position
 size_t HeartRateController::BufferRead(uint32_t *data, size_t *cursor, size_t maxCount) {

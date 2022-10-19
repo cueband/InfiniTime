@@ -37,6 +37,9 @@
 // 0e1d0004-9d33-4e5e-aead-e062834bd8bb
 #define ACTIVITY_SERVICE_UUID_ENC_STATUS { 0xbb, 0xd8, 0x4b, 0x83, 0x62, 0xe0, 0xad, 0xae, 0x5e, 0x4e, 0x33, 0x9d, 0x04, 0x00, 0x1d, 0x0e }
 
+// 0e1d0005-9d33-4e5e-aead-e062834bd8bb
+#define ACTIVITY_SERVICE_UUID_CONFIG     { 0xbb, 0xd8, 0x4b, 0x83, 0x62, 0xe0, 0xad, 0xae, 0x5e, 0x4e, 0x33, 0x9d, 0x05, 0x00, 0x1d, 0x0e }
+
 namespace Pinetime {
   namespace System {
     class SystemTask;
@@ -66,8 +69,9 @@ namespace Pinetime {
       ble_uuid128_t activityBlockIdCharUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = ACTIVITY_SERVICE_UUID_BLOCK_ID};
       ble_uuid128_t activityBlockDataCharUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = ACTIVITY_SERVICE_UUID_BLOCK_DATA};
       ble_uuid128_t activityEncStatusCharUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = ACTIVITY_SERVICE_UUID_ENC_STATUS};
+      ble_uuid128_t activityConfigCharUuid {.u = {.type = BLE_UUID_TYPE_128}, .value = ACTIVITY_SERVICE_UUID_CONFIG};
 
-      struct ble_gatt_chr_def characteristicDefinition[5];
+      struct ble_gatt_chr_def characteristicDefinition[6];
       struct ble_gatt_svc_def serviceDefinition[2];
 
       Pinetime::System::SystemTask& m_system;
@@ -80,6 +84,7 @@ namespace Pinetime {
       uint16_t statusHandle;
       uint16_t encStatusHandle;
       uint16_t transmitHandle;
+      uint16_t configHandle;
 
       bool readPending = false;
       void StartRead();

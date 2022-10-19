@@ -31,7 +31,20 @@ namespace Pinetime {
 
       void SetService(Pinetime::Controllers::HeartRateService* service);
 
+#ifdef CUEBAND_HR_EPOCH
+      void SetHrEpoch(bool hrEpoch);
+      bool IsHrEpoch();
+      bool HrStats(int *meanBpm, int *minBpm, int *maxBpm);
+#endif
+
 #ifdef CUEBAND_BUFFER_RAW_HR
+      bool IsRawMeasurement();
+      void StartRaw();
+      void StopRaw();
+      
+      // Only for adding dummy test measurements
+      bool BufferAdd(uint32_t measurement);
+
       // If NULL pointer: count of buffer entries available since previous cursor position
       // otherwise: read from buffer from previous cursor position, return count, update cursor position
       size_t BufferRead(uint32_t *data, size_t *cursor, size_t maxCount);

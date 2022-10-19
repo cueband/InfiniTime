@@ -5,6 +5,10 @@
 
 using namespace Pinetime::Applications;
 
+#ifdef CUEBAND_BUFFER_RAW_HR
+#include "components/activity/compander.h"
+#endif
+
 HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor, Controllers::HeartRateController& controller)
   : heartRateSensor {heartRateSensor}, controller {controller}, ppg {} {
 }
@@ -22,6 +26,36 @@ void HeartRateTask::Process(void* instance) {
   app->Work();
 }
 
+#ifdef CUEBAND_HR_EPOCH
+// Get heart rate tracker stats and clear
+bool HeartRateTask::HrStats(int *meanBpm, int *minBpm, int *maxBpm) {
+  bool hasData = this->countBpm > 0;
+
+  if (meanBpm != nullptr) {
+    if (hasData) *meanBpm = this->sumBpm / this->countBpm;
+    else *meanBpm = -1;
+  }
+
+  if (minBpm != nullptr) {
+    if (hasData) *minBpm = this->minBpm;
+    else *minBpm = -1;
+  }
+
+  if (maxBpm != nullptr) {
+    if (hasData) *maxBpm = this->maxBpm;
+    else *maxBpm = -1;
+  }
+
+  // Clear stats
+  this->sumBpm = 0;
+  this->countBpm = 0;
+  this->minBpm = 0;
+  this->maxBpm = 0;
+
+  return hasData;
+}
+#endif
+
 void HeartRateTask::Work() {
   int lastBpm = 0;
   while (true) {
@@ -38,10 +72,22 @@ void HeartRateTask::Work() {
     if (xQueueReceive(messageQueue, &msg, delay)) {
       switch (msg) {
         case Messages::GoToSleep:
+#ifdef CUEBAND_HR_EPOCH
+          if (IsHrEpoch()) break;
+#endif
+#ifdef CUEBAND_BUFFER_RAW_HR
+          if (IsRawMeasurement()) break;
+#endif
           StopMeasurement();
           state = States::Idle;
           break;
         case Messages::WakeUp:
+#ifdef CUEBAND_HR_EPOCH
+          if (IsHrEpoch()) break;
+#endif
+#ifdef CUEBAND_BUFFER_RAW_HR
+          if (IsRawMeasurement()) break;
+#endif
           state = States::Running;
           if (measurementStarted) {
             lastBpm = 0;
@@ -66,22 +112,47 @@ void HeartRateTask::Work() {
 
     if (measurementStarted) {
 #ifdef CUEBAND_BUFFER_RAW_HR
-      auto hrs = heartRateSensor.ReadHrs();
-      auto als = heartRateSensor.ReadAls();
-      uint32_t hrmValue = (((uint32_t)als) << 16) | ((uint16_t)hrs);
-      hrmBuffer[numSamples++ % hrmCapacity] = hrmValue;
-      ppg.Preprocess(hrs);
+      uint32_t hrs = heartRateSensor.ReadHrs();
+      uint32_t als = heartRateSensor.ReadAls();
+      ppg.Preprocess(static_cast<float>(hrs));
 #else
       ppg.Preprocess(static_cast<float>(heartRateSensor.ReadHrs()));
 #endif
       auto bpm = ppg.HeartRate();
+
+#ifdef CUEBAND_HR_EPOCH
+      // Add HR stats
+      if (IsHrEpoch() && bpm > 0) {
+        if (countBpm == 0 || bpm < minBpm) minBpm = bpm;
+        if (countBpm == 0 || bpm > maxBpm) maxBpm = bpm;
+        sumBpm += bpm;
+        countBpm++;
+      }
+#endif
 
       if (lastBpm == 0 && bpm == 0)
         controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
       if (bpm != 0) {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
+#ifdef CUEBAND_BUFFER_RAW_HR
+lastMeasurement = lastBpm;
+lastMeasurementAge = 0;
+#endif
       }
+
+#ifdef CUEBAND_BUFFER_RAW_HR
+      if (lastMeasurementAge++ > 10 * 25) {
+        lastMeasurementAge = 0;
+        lastMeasurement = 0;
+      }
+#if 1   // Include BPM and companded ALS (only suitable for rough inspection), rather than raw ALS
+      uint32_t hrmValue = (lastMeasurement << 24) | ((uint32_t)compander_compress((uint16_t)als) << 16) | hrs;
+#else
+      uint32_t hrmValue = (als << 16) | hrs;
+#endif
+      BufferAdd(hrmValue);
+#endif
     }
   }
 }
@@ -114,6 +185,10 @@ void HeartRateTask::StopMeasurement() {
 }
 
 #ifdef CUEBAND_BUFFER_RAW_HR
+void HeartRateTask::BufferAdd(uint32_t measurement) {
+  hrmBuffer[numSamples++ % hrmCapacity] = measurement;
+}
+
 // If NULL pointer: count of buffer entries available since previous cursor position
 // otherwise: read from buffer from previous cursor position, return count, update cursor position
 size_t HeartRateTask::BufferRead(uint32_t *data, size_t *cursor, size_t maxCount) {

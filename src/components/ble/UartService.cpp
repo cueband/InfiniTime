@@ -476,7 +476,8 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
 
 #ifdef CUEBAND_BUFFER_RAW_HR
                 if (streamOptions & 1) {
-                    heartRateController.Start();
+                    hrCursor = 0;
+                    heartRateController.StartRaw();
                     streamingHr = true;
                 }
 #endif
@@ -997,7 +998,6 @@ bool Pinetime::Controllers::UartService::StreamSamples(const int16_t *samples, s
                 sampleHex[sampleLen++] = '\r';
                 sampleHex[sampleLen++] = '\n';
                 StreamAppend(sampleHex, sampleLen);
-
             }
 #endif
         }
@@ -1068,7 +1068,7 @@ void Pinetime::Controllers::UartService::StopStreaming() {
     }
 #ifdef CUEBAND_BUFFER_RAW_HR
     if (streamingHr) {
-        heartRateController.Stop();
+        heartRateController.StopRaw();
         streamingHr = false;
     }
 #endif

@@ -5,6 +5,8 @@
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
 
+#define ACTIVITY_CONFIG_DEFAULT 0xffff
+
 #include "components/settings/Settings.h"
 #include "components/fs/FS.h"
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
@@ -14,6 +16,10 @@
 
 #if defined(CUEBAND_BUFFER_ENABLED)
 #include "components/motion/MotionController.h"
+#endif
+
+#ifdef CUEBAND_HR_EPOCH
+#include "components/heartrate/HeartRateController.h"
 #endif
 
 #include <array>
@@ -74,6 +80,9 @@ namespace Pinetime {
             , Pinetime::Controllers::DateTime& dateTimeController
             , Pinetime::Controllers::MotorController& motorController
 #endif
+#ifdef CUEBAND_HR_EPOCH
+            , Pinetime::Controllers::HeartRateController& heartRateController
+#endif
       );
 
 #if defined(CUEBAND_BUFFER_ENABLED)
@@ -133,12 +142,23 @@ namespace Pinetime {
       uint32_t temp_transmit_count_all = 0;   // TODO: Remove this
       uint32_t temp_transmit_count = 0;   // TODO: Remove this
 
+      // Public configuration
+      uint16_t getFormat() { return format; }
+      uint16_t getEpochInterval() { return epochInterval; }
+      uint16_t getHrmInterval() { return hrmInterval; }
+      uint16_t getHrmDuration() { return hrmDuration; }
+      bool ChangeConfig(uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration);
+      void DeferWriteConfig();
+
     private:
       Pinetime::Controllers::Settings& settingsController;
       Pinetime::Controllers::FS& fs;
 #ifdef CUEBAND_TRACK_MOTOR_TIMES
       Pinetime::Controllers::DateTime& dateTimeController;
       Pinetime::Controllers::MotorController& motorController;
+#endif
+#ifdef CUEBAND_HR_EPOCH
+      Pinetime::Controllers::HeartRateController& heartRateController;
 #endif
 
       std::array<uint8_t, 6> deviceAddress;
@@ -160,6 +180,18 @@ namespace Pinetime {
 
       bool isInitialized = false;
 
+      // Activity Configuration
+      uint16_t format = CUEBAND_FORMAT_VERSION;  // Algorithm and logging format (see `format` below, =0x0002) -- read back status to see the actual format in use (the requested one may not be supported)
+      uint16_t epochInterval = CUEBAND_ACTIVITY_EPOCH_INTERVAL; // 60;  // Epoch interval (=60 seconds) -- read back status to see the actual interval in use (the requested one may not be supported)
+      uint16_t hrmInterval = 0;                 // HR periodic sampling interval (seconds, 0=no interval)
+      uint16_t hrmDuration = 0;                 // HR periodic sampling duration (seconds, 0=disabled, >0 && >=interval continuous)
+
+      uint32_t configChanged = 0;               // Debounce config changes before writing
+
+      void InitConfig();
+      int ReadConfig();
+      int WriteConfig();
+
       ActivityMeta meta[CUEBAND_ACTIVITY_FILES] = {0};
 
       uint32_t activeBlockLogicalIndex = ACTIVITY_BLOCK_INVALID;
@@ -169,9 +201,6 @@ namespace Pinetime {
       uint8_t accelerometerInfo = 0;
 
       resampler_t resampler;
-
-      // Config
-      uint32_t epochInterval = CUEBAND_ACTIVITY_EPOCH_INTERVAL; // 60;
 
       // Block-level data
       uint8_t activeBlock[ACTIVITY_BLOCK_SIZE] __attribute__((aligned(8)));
