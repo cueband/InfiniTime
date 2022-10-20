@@ -98,6 +98,7 @@ namespace Pinetime {
 
       bool IsInitialized() { return isInitialized; }
       void DebugText(char *debugText, bool additionalInfo);  // requires ~200 byte buffer
+      void DebugTextConfig(char *debugText);
 
       // Get range of blocks available, read
       uint32_t BlockCount();
@@ -159,6 +160,10 @@ namespace Pinetime {
 #endif
 #ifdef CUEBAND_HR_EPOCH
       Pinetime::Controllers::HeartRateController& heartRateController;
+      // Only for debugging status
+      bool hrWithinSampling = false;
+      uint32_t hrEpochOffset = 0;
+      int debugMeanBpm = -1, debugDeltaMin = -1, debugDeltaMax = -1;
 #endif
 
       std::array<uint8_t, 6> deviceAddress;

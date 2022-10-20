@@ -460,6 +460,10 @@ bool ActivityController::WriteEpoch() {
       meanSvmMO = 0xffff;
     }
 
+#ifdef CUEBAND_HR_EPOCH
+debugMeanBpm = -1; debugDeltaMin = -1; debugDeltaMax = -1;
+#endif
+
     // @4 Mean of the SVM values for the entire epoch
     if (format == CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002) {
       #ifdef CUEBAND_ACTIVITY_HIGH_PASS
@@ -472,7 +476,8 @@ bool ActivityController::WriteEpoch() {
 #ifdef CUEBAND_HR_EPOCH
       // Get heart rate tracker stats and clear
       int meanBpm = -1, minBpm = -1, maxBpm = -1;
-      bool hasData = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm);
+      int hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
+      bool hasData = hrCount > 0;
 
       int deltaMin = 0, deltaMax = 0;
       if (hasData) {
@@ -492,6 +497,8 @@ bool ActivityController::WriteEpoch() {
         deltaMin = 0xf;
         deltaMax = 0xf;
       }
+
+debugMeanBpm = meanBpm; debugDeltaMin = deltaMin; debugDeltaMax = deltaMax;
 
       // heart_rate, XXXXNNNN MMMMMMMM
       // lowest 8-bits mean HR bpm (saturated to 254, 255=invalid)
@@ -534,12 +541,12 @@ void ActivityController::TimeChanged(uint32_t time) {
   if (!isInitialized) return;
 
 #ifdef CUEBAND_HR_EPOCH
-  bool withinSampling = false;
+  hrWithinSampling = false;
   if (hrmInterval > 0) {
-    uint32_t hrEpochOffset = currentTime % hrmInterval;
-    withinSampling = (hrEpochOffset < hrmDuration);
+    hrEpochOffset = currentTime % hrmInterval;
+    hrWithinSampling = (hrEpochOffset < hrmDuration);
   }
-  heartRateController.SetHrEpoch(withinSampling);
+  heartRateController.SetHrEpoch(hrWithinSampling);
 #endif
 
   if (epochInterval > 0) {
@@ -940,6 +947,22 @@ bool ActivityController::AppendPhysicalBlock(int physicalFile, uint32_t logicalB
   fs.FileClose(&file_p);
 
   return true;
+}
+
+void ActivityController::DebugTextConfig(char *debugText) {
+  char *p = debugText;
+  p += sprintf(p, "fmt:%04X e:%d\n", format, epochInterval);
+  p += sprintf(p, "hr:%d/%d\n", hrmInterval, hrmDuration);
+  p += sprintf(p, "samp:%s @%d\n", hrWithinSampling ? "t" : "f", (int)hrEpochOffset);
+  
+  // Get heart rate tracker stats and clear
+  int meanBpm = -1, minBpm = -1, maxBpm = -1;
+  bool hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
+  p += sprintf(p, "data:%d bpm:%d\n", hrCount, meanBpm);
+  p += sprintf(p, "min:%d max:%d\n", minBpm, maxBpm);
+
+  // Last recorded
+  p += sprintf(p, "last:%d -%d +%d\n", debugMeanBpm, debugDeltaMin, debugDeltaMax);
 }
 
 void ActivityController::DebugText(char *debugText, bool additionalInfo) {

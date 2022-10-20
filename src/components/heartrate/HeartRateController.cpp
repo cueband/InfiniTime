@@ -52,9 +52,9 @@ bool HeartRateController::IsHrEpoch() {
   return task->IsHrEpoch();
 }
 
-bool HeartRateController::HrStats(int *meanBpm, int *minBpm, int *maxBpm) {
+int HeartRateController::HrStats(int *meanBpm, int *minBpm, int *maxBpm, bool clear) {
   if (task == nullptr) return false;
-  return task->HrStats(meanBpm, minBpm, maxBpm);
+  return task->HrStats(meanBpm, minBpm, maxBpm, clear);
 }
 #endif
 

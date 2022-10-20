@@ -424,6 +424,31 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
             } else if (data[0] == 'B') {  // Battery
                 sprintf(resp, "B:%d%%\r\n", batteryController.PercentRemaining());
 
+            } else if (data[0] == 'C') { // Activity configuration
+#ifdef CUEBAND_ACTIVITY_ENABLED
+                if (data[1] != '?' && data[1] != '\0' && data[1] != '\r' && data[1] != '\n') {
+                    // e.g. "C3,,60,10"
+                    int params[] = { ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT };  // [format, epochInterval, hrmInterval, hrmDuration]
+                    char *p = (char *)data + 1;
+                    if (*p == ':' || *p == ' ') p++; // Skip initial colon or space
+                    for (size_t i = 0; i < sizeof(params)/sizeof(params[0]); i++) {
+                        if (*p == '\r' || *p == '\n' || *p == '\0') break;
+                        if (*p == '-' || (*p >= '0' && *p <= '9')) {
+                            params[i] = (int)strtol(p, &p, 0);
+                        }
+                        if (*p == ' ' || *p == ',') p++;
+                    }
+                    uint16_t format = params[0];
+                    uint16_t epochInterval = params[1];
+                    uint16_t hrmInterval = params[2];
+                    uint16_t hrmDuration = params[3];
+                    activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration);
+                }
+                sprintf(resp, "C:%d,%d,%d,%d\r\n", activityController.getFormat(), activityController.getEpochInterval(), activityController.getHrmInterval(), activityController.getHrmDuration());
+#else
+                sprintf(resp, "?Disabled\r\n");
+#endif
+
             } else if (data[0] == 'E') {  // Erase (E<passcode>)
 #if defined(CUEBAND_ACTIVITY_ENABLED) || defined(CUEBAND_CUE_ENABLED)
                 if (data[1] == '!' && data[2] == '\0') {

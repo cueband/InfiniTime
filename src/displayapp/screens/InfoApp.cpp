@@ -185,6 +185,7 @@ int InfoApp::ScreenCount() {
   screenCount++;  // cue details
 #endif
 #ifdef CUEBAND_ACTIVITY_ENABLED
+  screenCount++;  // activity debug - config
   screenCount++;  // activity debug - basic
   #ifdef CUEBAND_DEBUG_ACTIVITY
     screenCount++;  // activity debug - additional
@@ -279,6 +280,9 @@ void InfoApp::Update() {
 #endif
 
 #ifdef CUEBAND_ACTIVITY_ENABLED
+  if (screen == thisScreen++) {
+    activityController.DebugTextConfig(debugText);   // activity config
+  }
   if (screen == thisScreen++) {
     activityController.DebugText(debugText, false);   // basic info
   }

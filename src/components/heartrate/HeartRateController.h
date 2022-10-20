@@ -34,7 +34,7 @@ namespace Pinetime {
 #ifdef CUEBAND_HR_EPOCH
       void SetHrEpoch(bool hrEpoch);
       bool IsHrEpoch();
-      bool HrStats(int *meanBpm, int *minBpm, int *maxBpm);
+      int HrStats(int *meanBpm, int *minBpm, int *maxBpm, bool clear);
 #endif
 
 #ifdef CUEBAND_BUFFER_RAW_HR

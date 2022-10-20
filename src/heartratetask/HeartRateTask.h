@@ -27,7 +27,7 @@ namespace Pinetime {
       void SetHrEpoch(bool hrEpoch) { this->hrEpoch = hrEpoch; }
       bool IsHrEpoch() { return this->hrEpoch; }
       // Get heart rate tracker stats and clear
-      bool HrStats(int *meanBpm, int *minBpm, int *maxBpm);
+      int HrStats(int *meanBpm, int *minBpm, int *maxBpm, bool clear);
       int sumBpm = 0;
       int countBpm = 0;
       int minBpm = 0;
