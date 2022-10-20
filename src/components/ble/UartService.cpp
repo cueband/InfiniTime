@@ -442,7 +442,10 @@ int Pinetime::Controllers::UartService::OnCommand(uint16_t conn_handle, uint16_t
                     uint16_t epochInterval = params[1];
                     uint16_t hrmInterval = params[2];
                     uint16_t hrmDuration = params[3];
-                    activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration);
+                    if (activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration)) {
+                        activityController.NewBlock();
+                        activityController.DeferWriteConfig();
+                    }
                 }
                 sprintf(resp, "C:%d,%d,%d,%d\r\n", activityController.getFormat(), activityController.getEpochInterval(), activityController.getHrmInterval(), activityController.getHrmDuration());
 #else

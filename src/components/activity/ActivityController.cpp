@@ -561,16 +561,7 @@ void ActivityController::TimeChanged(uint32_t time) {
 
       // If the block is full, or we're not in the correct sequence (e.g. the time changed)...
       if (countEpochs >= ACTIVITY_MAX_SAMPLES || epochNow - blockEpoch != countEpochs) {
-        // ...store to drive
-        bool written = WriteActiveBlock();
-        // Advance
-        if (written) {
-          activeBlockLogicalIndex++;
-        } else {
-          errWrite++;
-        }
-        // Begin a new block
-        StartNewBlock();
+        NewBlock();
       } else {
         StartEpoch();
       }
@@ -957,7 +948,7 @@ void ActivityController::DebugTextConfig(char *debugText) {
   
   // Get heart rate tracker stats and clear
   int meanBpm = -1, minBpm = -1, maxBpm = -1;
-  bool hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
+  bool hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, false);
   p += sprintf(p, "data:%d bpm:%d\n", hrCount, meanBpm);
   p += sprintf(p, "min:%d max:%d\n", minBpm, maxBpm);
 
@@ -1023,6 +1014,24 @@ void ActivityController::DebugText(char *debugText, bool additionalInfo) {
 
   }
   return;
+}
+
+// New block required: if any epochs are stored, write block; begin new block.
+void ActivityController::NewBlock() {
+  if (!isInitialized) return;
+  // If any epochs are stored
+  if (countEpochs > 0) {
+    // ...store to drive
+    bool written = WriteActiveBlock();
+    // Advance
+    if (written) {
+      activeBlockLogicalIndex++;
+    } else {
+      errWrite++;
+    }
+  }
+  // Begin a new block
+  StartNewBlock();
 }
 
 // Write block: seek to block location (append additional bytes if location after end, or wrap-around if file maximum size or no more drive space)

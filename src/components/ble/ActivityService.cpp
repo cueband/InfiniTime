@@ -453,7 +453,10 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 uint16_t hrmInterval = (uint16_t)(data[6] | (data[7] << 8));
                 uint16_t hrmDuration = (uint16_t)(data[8] | (data[9] << 8));
 
-                activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration);
+                if (activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration)) {
+                    activityController.NewBlock();
+                    activityController.DeferWriteConfig();
+                }
             }
 
         }
