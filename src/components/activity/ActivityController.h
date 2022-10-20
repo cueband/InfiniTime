@@ -148,8 +148,9 @@ namespace Pinetime {
       uint16_t getEpochInterval() { return epochInterval; }
       uint16_t getHrmInterval() { return hrmInterval; }
       uint16_t getHrmDuration() { return hrmDuration; }
-      bool ChangeConfig(uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration);
+      bool ChangeConfig(uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration);     // Temporarily change config, returns true if there was a difference (caller should now call DeferWriteConfig)
       void DeferWriteConfig();
+      void NewBlock();                            // New block required (old full, or config changed): if any epochs are stored, write block; begin new block.
 
     private:
       Pinetime::Controllers::Settings& settingsController;
