@@ -61,7 +61,7 @@ Standard BLE services that will be used:
   * Characteristic: `00001534-1212-efde-1523-785feabcd123` (R)
 
 
-Other standard services (not likely to be used):
+Other useful services (some standard):
 
 * Service: Alert Notification Service `00001811-0000-1000-8000-00805f9b34fb`
   * Characteristic: New Alert `00002a46-0000-1000-8000-00805f9b34fb` (W)
@@ -70,10 +70,20 @@ Other standard services (not likely to be used):
 * Service: Immediate Alert `00001802-0000-1000-8000-00805f9b34fb`
   * Characteristic: Alert level `00002a06-0000-1000-8000-00805f9b34fb` (W/NORESPONSE)
 
-<!--
 * Service: Heart Rate `0000180d-0000-1000-8000-00805f9b34fb`
   * Characteristic: Heart Rate Measurement `00002a37-0000-1000-8000-00805f9b34fb` (R/CCCD/NOTIFY)
--->
+
+* Service: Filesystem Service / Adafruit File Transfer `0000FEBB-0000-1000-8000-00805f9b34fb` (0xFEBB)
+  * Characteristic: Version (32-bit) `ADAF0100-4669-6C65-5472-616E73666572` (R)
+  * Characteristic: Raw Transfer `ADAF0200-4669-6C65-5472-616E73666572` (W/NORESPONSE,NOTIFY)
+
+
+Possible options to add:
+
+* Service: Security Test `59462f12-9543-9999-12c8-58b459a2712d` (`0x2F12`)
+  * Characteristic: Random Number Generator (generates a random 32-bit number when read, can only be read over an encrypted connection) `5c3a659e-897e-45e1-b016-007107c96df6`
+  * Characteristic: Static Value (can always be read): `5c3a659e-897e-45e1-b016-007107c96df7`
+  * Characteristic: Static Value Auth (can only be written over an encrypted connection): `5c3a659e-897e-45e1-b016-007107c96df8`
 
 
 ## Additional Feature: Cueing
@@ -391,12 +401,12 @@ Where `config` is:
 
 > ```c
 > struct {
->     uint8_t  version;                   // @0 Configuration format version (=1)
+>     uint8_t  version;                   // @0 Configuration type/format/version (=1)
 >     uint8_t  reserved;                  // @1 Reserved (=0)
->     uint16_t format;                    // @2 Algorithm and logging format (see `format` below, =0x0002) -- read back status to see the actual format in use (the requested one may not be supported)
+>     uint16_t format;                    // @2 Algorithm and logging format (see `format` below: 0x0002=original activity, 0x0003=with HR) -- read back status to see the actual format in use (the requested one may not be supported)
 >     uint16_t epochInterval;             // @4 Epoch interval (=60 seconds) -- read back status to see the actual interval in use (the requested one may not be supported)
->     uint16_t hrmInterval;               // @6 HR periodic sampling interval (seconds, 0=no interval)
->     uint16_t hrmDuration;               // @8 HR periodic sampling duration (seconds, 0=disabled, >0 && >=interval continuous)
+>     uint16_t hrmInterval;               // @6 HR periodic sampling interval (seconds, 0=no interval, e.g. 60 seconds)
+>     uint16_t hrmDuration;               // @8 HR periodic sampling duration (seconds, 0=disabled, >0 && >=interval continuous; e.g. 15 seconds)
 >     //uint8_t  reserved[10];            // @10 Reserved
 > } // @20
 > ```
@@ -557,6 +567,14 @@ A response may be prefixed with:
 
 * `B` - Battery
   > `B:<battery_percentage>%`
+
+* `C?` - Activity Configuration query
+  > `C:<format>,<epoch>,<hrmInterval>,<hrmDuration>`
+
+* `C <format>,<epoch>,<hrmInterval>,<hrmDuration>` - Activity Configuration set
+  > `C:<format>,<epoch>,<hrmInterval>,<hrmDuration>`
+
+  Where all values are ASCII decimal only.  Example: `C3,,60,15` enables format `0x0003` (storing HR data), with an HR duration of 15 seconds in every 60 second interval.  Example: `C,,,,` resets the configuration to the built-in default. 
 
 * `E` - Erase
   > `Erase all`
