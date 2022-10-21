@@ -948,7 +948,7 @@ void ActivityController::DebugTextConfig(char *debugText) {
   
   // Get heart rate tracker stats and clear
   int meanBpm = -1, minBpm = -1, maxBpm = -1;
-  bool hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, false);
+  int hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, false);
   p += sprintf(p, "data:%d bpm:%d\n", hrCount, meanBpm);
   p += sprintf(p, "min:%d max:%d\n", minBpm, maxBpm);
 
