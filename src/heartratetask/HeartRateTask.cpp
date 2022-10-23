@@ -71,6 +71,15 @@ void HeartRateTask::Work() {
     } else
       delay = portMAX_DELAY;
 
+#if 1     // Always use a shorter delay while in HR epoch or raw measurements.
+#ifdef CUEBAND_HR_EPOCH
+    if (IsHrEpoch()) delay = 40;
+#endif
+#ifdef CUEBAND_BUFFER_RAW_HR
+    if (IsRawMeasurement()) delay = 40;
+#endif
+#endif
+
     if (xQueueReceive(messageQueue, &msg, delay)) {
       switch (msg) {
         case Messages::GoToSleep:
