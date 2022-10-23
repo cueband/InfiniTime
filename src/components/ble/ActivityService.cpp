@@ -444,9 +444,9 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 }
             }
 
-        } else if (attr_handle == configHandle && notifSize >= 8) {
+        } else if (attr_handle == configHandle && notifSize >= 10) {
             uint8_t version = data[0];
-            if (version == 0) {
+            if (version == 0 || version == 1) {
                 //uint8_t reserved = data[1];
                 uint16_t format = (uint16_t)(data[2] | (data[3] << 8));
                 uint16_t epochInterval = (uint16_t)(data[4] | (data[5] << 8));
