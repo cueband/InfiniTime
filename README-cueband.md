@@ -401,7 +401,7 @@ Where `config` is:
 
 > ```c
 > struct {
->     uint8_t  version;                   // @0 Configuration type/format/version (=1)
+>     uint8_t  version;                   // @0 Configuration type/format/version (read/write as =1; =0 will also work when writing for backwards-compatibility)
 >     uint8_t  reserved;                  // @1 Reserved (=0)
 >     uint16_t format;                    // @2 Algorithm and logging format (see `format` below: 0x0002=original activity, 0x0003=with HR) -- read back status to see the actual format in use (the requested one may not be supported)
 >     uint16_t epochInterval;             // @4 Epoch interval (=60 seconds) -- read back status to see the actual interval in use (the requested one may not be supported)
