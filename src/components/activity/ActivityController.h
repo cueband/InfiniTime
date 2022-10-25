@@ -164,7 +164,11 @@ namespace Pinetime {
       // Only for debugging status
       bool hrWithinSampling = false;
       uint32_t hrEpochOffset = 0;
-      int debugMeanBpm = -1, debugDeltaMin = -1, debugDeltaMax = -1;
+#if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+      int debugMeanBpm[CUEBAND_DEBUG_PREVIOUS_BPM] = { -1, -1, -1, -1, -1 };
+      int debugDeltaMin[CUEBAND_DEBUG_PREVIOUS_BPM] = { -1, -1, -1, -1, -1 };
+      int debugDeltaMax[CUEBAND_DEBUG_PREVIOUS_BPM] = { -1, -1, -1, -1, -1 };
+#endif
 #endif
 
       std::array<uint8_t, 6> deviceAddress;

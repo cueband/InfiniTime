@@ -90,6 +90,8 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 // Activity monitoring
 #define CUEBAND_ACTIVITY_ENABLED
 #define CUEBAND_HR_EPOCH
+//#define CUEBAND_HR_SAMPLING_SHORT_DELAY     // Always use a short delay while sampling
+#define CUEBAND_DEBUG_PREVIOUS_BPM 5        // Store recent entries for debugging
 
 // Cue prompts
 #define CUEBAND_CUE_ENABLED

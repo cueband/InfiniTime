@@ -461,7 +461,14 @@ bool ActivityController::WriteEpoch() {
     }
 
 #ifdef CUEBAND_HR_EPOCH
-debugMeanBpm = -1; debugDeltaMin = -1; debugDeltaMax = -1;
+#if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+for (int i = CUEBAND_DEBUG_PREVIOUS_BPM - 1; i > 0; i--) {
+  debugMeanBpm[i] = debugMeanBpm[i - 1];
+  debugDeltaMin[i] = debugDeltaMin[i - 1];
+  debugDeltaMax[i] = debugDeltaMax[i - 1];
+}
+debugMeanBpm[0] = -1; debugDeltaMin[0] = -1; debugDeltaMax[0] = -1;
+#endif
 #endif
 
     // @4 Mean of the SVM values for the entire epoch
@@ -498,7 +505,9 @@ debugMeanBpm = -1; debugDeltaMin = -1; debugDeltaMax = -1;
         deltaMax = 0xf;
       }
 
-debugMeanBpm = meanBpm; debugDeltaMin = deltaMin; debugDeltaMax = deltaMax;
+#if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+debugMeanBpm[0] = meanBpm; debugDeltaMin[0] = deltaMin; debugDeltaMax[0] = deltaMax;
+#endif
 
       // heart_rate, XXXXNNNN MMMMMMMM
       // lowest 8-bits mean HR bpm (saturated to 254, 255=invalid)
@@ -952,8 +961,12 @@ void ActivityController::DebugTextConfig(char *debugText) {
   p += sprintf(p, "data:%d bpm:%d\n", hrCount, meanBpm);
   p += sprintf(p, "min:%d max:%d\n", minBpm, maxBpm);
 
-  // Last recorded
-  p += sprintf(p, "last:%d -%d +%d\n", debugMeanBpm, debugDeltaMin, debugDeltaMax);
+  // Recently recorded values
+#if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+  for (int i = 0; i < CUEBAND_DEBUG_PREVIOUS_BPM; i++) {
+    p += sprintf(p, "l[%d]:%d -%d +%d\n", i, debugMeanBpm[i], debugDeltaMin[i], debugDeltaMax[i]);
+  }
+#endif
 }
 
 void ActivityController::DebugText(char *debugText, bool additionalInfo) {

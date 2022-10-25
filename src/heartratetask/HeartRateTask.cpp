@@ -71,7 +71,7 @@ void HeartRateTask::Work() {
     } else
       delay = portMAX_DELAY;
 
-#if 1     // Always use a shorter delay while in HR epoch or raw measurements.
+#if CUEBAND_HR_SAMPLING_SHORT_DELAY  // Use a shorter delay while in HR epoch or raw measurements.
 #ifdef CUEBAND_HR_EPOCH
     if (IsHrEpoch()) delay = 40;
 #endif
