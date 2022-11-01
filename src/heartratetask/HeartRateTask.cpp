@@ -29,7 +29,7 @@ void HeartRateTask::Process(void* instance) {
 #ifdef CUEBAND_HR_EPOCH
 // Get heart rate tracker stats and clear
 int HeartRateTask::HrStats(int *meanBpm, int *minBpm, int *maxBpm, bool clear) {
-  int count = this->countBpm > 0;
+  int count = this->countBpm;
 
   if (meanBpm != nullptr) {
     if (count > 0) *meanBpm = this->sumBpm / this->countBpm;
