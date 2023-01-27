@@ -29,7 +29,7 @@ void HeartRateTask::Process(void* instance) {
 #ifdef CUEBAND_HR_EPOCH
 // Get heart rate tracker stats and clear
 int HeartRateTask::HrStats(int *meanBpm, int *minBpm, int *maxBpm, bool clear) {
-  int count = this->countBpm > 0;
+  int count = this->countBpm;
 
   if (meanBpm != nullptr) {
     if (count > 0) *meanBpm = this->sumBpm / this->countBpm;
@@ -71,7 +71,7 @@ void HeartRateTask::Work() {
     } else
       delay = portMAX_DELAY;
 
-#if CUEBAND_HR_SAMPLING_SHORT_DELAY  // Use a shorter delay while in HR epoch or raw measurements.
+#ifdef CUEBAND_HR_SAMPLING_SHORT_DELAY  // Use a shorter delay while in HR epoch or raw measurements.
 #ifdef CUEBAND_HR_EPOCH
     if (IsHrEpoch()) delay = 40;
 #endif
