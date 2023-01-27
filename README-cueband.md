@@ -412,7 +412,7 @@ Where `config` is:
 > ```
 
 
-### Device Activity Log Block Format
+### Device Activity Log Block Format: Version <= 0x0003
 
 The device activity log blocks are of the form `activity_log`:
 
@@ -473,12 +473,11 @@ The values of `summary1` and `summary2` depend on the `format`.
 
     * `format = 0x0002`: `mean_filtered_svmmo`, the mean of the *filter(abs(SVM-1))* values for the entire epoch, using a high-pass filter at 0.5 Hz (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value) 
 
-    * (*TBC*) `format = 0x0003`: `heart_rate`, `XXXXNNNN MMMMMMMM`, lowest 8-bits mean HR bpm (saturated to 254, 255=invalid), next 4-bits minimum delta HR below mean (saturate to 15 bpm), next 4-bits maximum delta HR above mean (saturate to 15 bpm).
+    * `format = 0x0003`: `heart_rate`, `XXXXNNNN MMMMMMMM`, lowest 8-bits mean HR bpm (saturated to 254, 255=invalid), next 4-bits minimum delta HR below mean (saturate to 15 bpm), next 4-bits maximum delta HR above mean (saturate to 15 bpm).
 
 2. `summary2` is `mean_svmmo`: the mean of the *abs(SVM-1)* values for the entire epoch (0xffff = invalid, e.g. too few samples; 0xfffe = saturated/clipped value)
 
 <!-- Note: Offset `@4` was previously (format `0x0000`-`0x0001`): *Mean of the SVM values for the entire epoch*. -->
-
 
 The `events` flags are bitwise flags and defined as follows:
 
@@ -499,6 +498,63 @@ The `events` flags are bitwise flags and defined as follows:
 > const uint16_t ACTIVITY_EVENT_CUE_MANUAL          = 0x2000;  // @b13 Cue: temporary manual cueing in use
 > const uint16_t ACTIVITY_EVENT_CUE_SNOOZE          = 0x4000;  // @b14 Cue: temporary manual snooze in use
 > const uint16_t ACTIVITY_EVENT_FACE_DOWN           = 0x8000;  // @b15 Activity: Watch was detected as face-down during the epoch (potentially not worn / manually snoozed?)
+> ```
+
+
+### Device Activity Log Block Format: Version = 0x0080 - Micro-Epoch Format
+
+The device activity log blocks are of the form `activity_log`:
+
+> ```c
+> const size_t BLOCK_SIZE = 256;
+> const size_t SAMPLE_CAPACITY = ((BLOCK_SIZE-30-2)/80);  // =3
+> 
+> struct {
+>     // @0 Header (30 bytes)
+>     uint16_t   block_type;              // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
+>     uint16_t   block_length;            // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
+>     uint16_t   format;                  // @4  0x0080 = micro-epoch format
+>     uint32_t   block_id;                // @6  Logical block identifier
+>     uint8_t[6] device_id;               // @10 Device ID (address)
+>     uint32_t   timestamp;               // @16 Seconds since epoch for the first sample
+>     uint8_t    count;                   // @3  Number of valid samples (up to 3 samples when 74-bytes each in a 256-byte block)
+>     uint8_t    epoch_interval;          // @21 Macro epoch interval (seconds, = 60)
+>     uint32_t   configuration;           // @22 First byte is HR epoch interval, second byte is HR duration, third/fourth bytes reserved
+>     uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=power-present, lower 7-bits: percentage)
+>     uint8_t    accelerometer;           // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
+>     int8_t     temperature;             // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
+>     uint8_t    firmware;                // @29 Firmware version
+> 
+>     // @30 Body (BLOCK_SIZE-30-2-2=222 bytes)
+>     macro_epoch_sample sample[SAMPLE_CAPACITY];// @30 Samples (74-bytes each; (BLOCK_SIZE-30-2-2)/74 = 3 count) at epoch interval from start time
+> 
+>     // @(BLOCK_SIZE-2-2=252) Reserved (2 bytes)
+>     uint16_t   reserved;                // @(BLOCK-SIZE-2-2=252)
+> 
+>     // @(BLOCK_SIZE-2=254) Checksum (2 bytes)
+>     uint16_t   checksum;                // @(BLOCK-SIZE-2=254)
+> } // @(BLOCK_SIZE)
+
+Each macro-epoch sample is of the form `macro_epoch_sample`:
+
+> ```c
+> struct {
+>     uint16_t meanAccel[3];              // @0  Mean X/Y/Z (e.g. calibration stationary points)
+> // !!! Does the below need to be a larger/scaled value???
+>     uint16_t sdAccel[3];                // @6 SD X/Y/Z (for wear-time and calibration stationary points)
+>     uint8_t reserved[14];               // @12 reserved
+>     micro_epoch_sample microEpochs[12]; // @26 12x4-byte 5-second micro-epochs (48 bytes)
+> } // @74
+> ```
+
+Each micro-epoch sample is of the form `micro_epoch_sample`:
+
+> ```c
+> struct {
+>     uint16_t meanAccel[3];              // @0 ENMO (perhaps high- or band-pass filtered?)
+>     uint8_t bpm;                        // @2 HR value (perhaps interval instead?)
+>     uint8_t steps;                      // @3 step count (5-bits), reserved (3-bits)
+> } // @4
 > ```
 
 

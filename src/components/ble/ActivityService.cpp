@@ -453,9 +453,11 @@ int Pinetime::Controllers::ActivityService::OnCommand(uint16_t conn_handle, uint
                 uint16_t hrmInterval = (uint16_t)(data[6] | (data[7] << 8));
                 uint16_t hrmDuration = (uint16_t)(data[8] | (data[9] << 8));
 
-                if (activityController.ChangeConfig(format, epochInterval, hrmInterval, hrmDuration)) {
-                    activityController.NewBlock();
+                if (activityController.ChangeConfig(false, format, epochInterval, hrmInterval, hrmDuration)) {
+                    activityController.FlushBlock();
+                    activityController.ChangeConfig(true, format, epochInterval, hrmInterval, hrmDuration);
                     activityController.DeferWriteConfig();
+                    activityController.StartNewBlock();
                 }
             }
 

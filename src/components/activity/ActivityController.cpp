@@ -76,7 +76,7 @@ static uint16_t int_sqrt32(uint32_t x) {
 
 
 void ActivityController::InitConfig() {
-    ChangeConfig(ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT);
+    ChangeConfig(true, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT, ACTIVITY_CONFIG_DEFAULT);
     this->configChanged = 0;
 }
 
@@ -115,7 +115,7 @@ int ActivityController::ReadConfig() {
     uint16_t epochInterval  = buffer[10] | (buffer[11] << 8);
     uint16_t hrmInterval  = buffer[12] | (buffer[13] << 8);
     uint16_t hrmDuration  = buffer[14] | (buffer[15] << 8);
-    ChangeConfig(format, epochInterval, hrmInterval, hrmDuration);
+    ChangeConfig(true, format, epochInterval, hrmInterval, hrmDuration);
 
     return 0;
 }
@@ -126,7 +126,7 @@ void ActivityController::DeferWriteConfig() {
     }
 }
 
-bool ActivityController::ChangeConfig(uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration) {
+bool ActivityController::ChangeConfig(bool makeChange, uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration) {
 
   // Default values
   if (format == ACTIVITY_CONFIG_DEFAULT) format = CUEBAND_FORMAT_VERSION;
@@ -141,10 +141,12 @@ bool ActivityController::ChangeConfig(uint16_t format, uint16_t epochInterval, u
   // Changes -- user should call: DeferWriteConfig();
   bool changed = (format != this->format || epochInterval != this->epochInterval || hrmInterval != this->hrmInterval || hrmDuration != this->hrmDuration);
 
-  this->format = format;
-  this->epochInterval = epochInterval;
-  this->hrmInterval = hrmInterval;
-  this->hrmDuration = hrmDuration;
+  if (makeChange) {
+    this->format = format;
+    this->epochInterval = epochInterval;
+    this->hrmInterval = hrmInterval;
+    this->hrmDuration = hrmDuration;
+  }
 
   return changed;
 }
@@ -570,7 +572,8 @@ void ActivityController::TimeChanged(uint32_t time) {
 
       // If the block is full, or we're not in the correct sequence (e.g. the time changed)...
       if (countEpochs >= ACTIVITY_MAX_SAMPLES || epochNow - blockEpoch != countEpochs) {
-        NewBlock();
+        FlushBlock();
+        StartNewBlock();
       } else {
         StartEpoch();
       }
@@ -1029,22 +1032,23 @@ void ActivityController::DebugText(char *debugText, bool additionalInfo) {
   return;
 }
 
-// New block required: if any epochs are stored, write block; begin new block.
-void ActivityController::NewBlock() {
-  if (!isInitialized) return;
-  // If any epochs are stored
-  if (countEpochs > 0) {
-    // ...store to drive
-    bool written = WriteActiveBlock();
-    // Advance
-    if (written) {
-      activeBlockLogicalIndex++;
-    } else {
-      errWrite++;
+// Flush old block: if any epochs are stored, write block -- caller must typically call StartNewBlock();
+bool ActivityController::FlushBlock() {
+  bool written = false;
+  if (!isInitialized) {
+    // If any epochs are stored
+    if (countEpochs > 0) {
+      // ...store to drive
+      written = WriteActiveBlock();
+      // Advance
+      if (written) {
+        activeBlockLogicalIndex++;
+      } else {
+        errWrite++;
+      }
     }
   }
-  // Begin a new block
-  StartNewBlock();
+  return written;
 }
 
 // Write block: seek to block location (append additional bytes if location after end, or wrap-around if file maximum size or no more drive space)
@@ -1084,6 +1088,9 @@ bool ActivityController::WriteActiveBlock() {
       DeleteFile(activeFile);
     }
   }
+
+  // Written
+  countEpochs = 0;
 
   return written;
 }

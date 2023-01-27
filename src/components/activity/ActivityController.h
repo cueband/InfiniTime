@@ -148,9 +148,10 @@ namespace Pinetime {
       uint16_t getEpochInterval() { return epochInterval; }
       uint16_t getHrmInterval() { return hrmInterval; }
       uint16_t getHrmDuration() { return hrmDuration; }
-      bool ChangeConfig(uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration);     // Temporarily change config, returns true if there was a difference (caller should now call DeferWriteConfig)
+      bool ChangeConfig(bool makeChange, uint16_t format, uint16_t epochInterval, uint16_t hrmInterval, uint16_t hrmDuration);     // Temporarily change config, returns true if there was a difference (caller should now call DeferWriteConfig)
       void DeferWriteConfig();
-      void NewBlock();                            // New block required (old full, or config changed): if any epochs are stored, write block; begin new block.
+      bool FlushBlock(); // New block required (block full, or config changed): if any epochs are stored, write block
+      void StartNewBlock();
 
     private:
       Pinetime::Controllers::Settings& settingsController;
@@ -179,7 +180,6 @@ namespace Pinetime {
       uint32_t ReadPhysicalBlock(int physicalFile, uint32_t physicalBlockNumber, uint8_t *buffer);  // Get physical block number and, if buffer given, read block data
       bool AppendPhysicalBlock(int physicalFile, uint32_t logicalBlockNumber, uint8_t *buffer);
 
-      void StartNewBlock();
       bool WriteActiveBlock();                    // Write active block
       bool FinalizeBlock(uint32_t logicalIndex);  // Write into buffer (even if partial) -- used before storing/transmitting
 
