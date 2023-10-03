@@ -64,12 +64,14 @@ void HeartRateTask::Work() {
     Messages msg;
     uint32_t delay;
     if (state == States::Running) {
-      if (measurementStarted)
-        delay = 40;
-      else
+      if (measurementStarted) {
+        delay = ppg.deltaTms;
+      } else {
         delay = 100;
-    } else
+      }     
+    } else {
       delay = portMAX_DELAY;
+    }
 
 #ifdef CUEBAND_HR_SAMPLING_SHORT_DELAY  // Use a shorter delay while in HR epoch or raw measurements.
 #ifdef CUEBAND_HR_EPOCH
@@ -125,11 +127,39 @@ void HeartRateTask::Work() {
 #ifdef CUEBAND_BUFFER_RAW_HR
       uint32_t hrs = heartRateSensor.ReadHrs();
       uint32_t als = heartRateSensor.ReadAls();
-      ppg.Preprocess(static_cast<float>(hrs));
+      int8_t ambient = ppg.Preprocess(hrs, als);
 #else
-      ppg.Preprocess(static_cast<float>(heartRateSensor.ReadHrs()));
+      int8_t ambient = ppg.Preprocess(heartRateSensor.ReadHrs(), heartRateSensor.ReadAls());
 #endif
       auto bpm = ppg.HeartRate();
+
+      // If ambient light detected or a reset requested (bpm < 0)
+      if (ambient > 0) {
+        // Reset all DAQ buffers
+        ppg.Reset(true);
+        // Force state to NotEnoughData (below)
+        lastBpm = 0;
+        bpm = 0;
+      } else if (bpm < 0) {
+        // Reset all DAQ buffers except HRS buffer
+        ppg.Reset(false);
+        // Set HR to zero and update
+        bpm = 0;
+        controller.Update(Controllers::HeartRateController::States::Running, bpm);
+      }
+
+      if (lastBpm == 0 && bpm == 0) {
+        controller.Update(Controllers::HeartRateController::States::NotEnoughData, bpm);
+      }
+
+      if (bpm != 0) {
+        lastBpm = bpm;
+        controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
+#ifdef CUEBAND_BUFFER_RAW_HR
+lastMeasurement = lastBpm;
+lastMeasurementAge = 0;
+#endif
+      }
 
 #ifdef CUEBAND_HR_EPOCH
       // Add HR stats
@@ -140,17 +170,6 @@ void HeartRateTask::Work() {
         countBpm++;
       }
 #endif
-
-      if (lastBpm == 0 && bpm == 0)
-        controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
-      if (bpm != 0) {
-        lastBpm = bpm;
-        controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
-#ifdef CUEBAND_BUFFER_RAW_HR
-lastMeasurement = lastBpm;
-lastMeasurementAge = 0;
-#endif
-      }
 
 #ifdef CUEBAND_BUFFER_RAW_HR
       if (lastMeasurementAge++ > 10 * 25) {
@@ -183,12 +202,13 @@ void HeartRateTask::StartMeasurement() {
   numSamples = 0;
 #endif
   heartRateSensor.Enable();
+  ppg.Reset(true);
   vTaskDelay(100);
-  ppg.SetOffset(static_cast<float>(heartRateSensor.ReadHrs()));
 }
 
 void HeartRateTask::StopMeasurement() {
   heartRateSensor.Disable();
+  ppg.Reset(true);
   vTaskDelay(100);
 #ifdef CUEBAND_BUFFER_RAW_HR
   numSamples = 0;
