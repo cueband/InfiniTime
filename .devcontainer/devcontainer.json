@@ -4,17 +4,22 @@
 	// "name": "Pinetime",
 	// "image": "feabhas/pinetime-dev"
 	"build": {
-		"dockerfile": "Dockerfile",
+		"dockerfile": "Dockerfile"
 		// Update 'VARIANT' to pick an Debian / Ubuntu OS version: debian-10, debian-9, ubuntu-20.04, ubuntu-18.04
 		// "args": { "VARIANT": "ubuntu-20.04" }
 	},
 	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
 
+	"containerEnv": { 
+		"SOURCES_DIR": "${containerWorkspaceFolder}"
+	},
+
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash",
 		"editor.formatOnSave": false,
-		"clang-format.executable": "clang-format-12"
+		"clang-format.executable": "clang-format-12",
+		"debug.javascript.autoAttachFilter": "disabled"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.

@@ -1,5 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:latest 
-#    ^[cueband: MacOS M1+]^
+FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq \
@@ -12,63 +11,65 @@ RUN apt-get update -qq \
       make \
       python3 \
       python3-pip \
+      python-is-python3 \
       tar \
       unzip \
-      wget \ 
+      wget \
       curl \
-      dos2unix \
-      clang-format-12 \
-      clang-tidy \
-      locales \
-      libncurses5 \
-# aarch64 packages
+      # aarch64 packages
       libffi-dev \
       libssl-dev \
-      python3-dev \ 
-      rustc \
+      python3-dev \
+      git \
+      apt-utils \
+      pkg-config \
+      libpixman-1-dev \
+      libcairo2-dev \
+      libpango-1.0-0 \
+      ibpango1.0-dev \
+      libpangocairo-1.0-0 \
+    && curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/cache/apt/* /var/lib/apt/lists/*;
-    
-#SET LOCALE 
-RUN locale-gen en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8 
+
+# Git needed for PROJECT_GIT_COMMIT_HASH variable setting
 
 RUN pip3 install adafruit-nrfutil
-# required for McuBoot
-RUN pip3 install setuptools_rust
+RUN pip3 install -Iv cryptography==3.3
+RUN pip3 install cbor
 
-WORKDIR /opt/
-# build.sh knows how to compile but it problimatic on Win10
-COPY build.sh .
-RUN chmod +x build.sh
-# create_build_openocd.sh uses cmake to crate to build directory
-COPY create_build_openocd.sh .
-RUN chmod +x create_build_openocd.sh
+# build.sh knows how to compile
+COPY build.sh /opt/
+
 # Lets get each in a separate docker layer for better downloads
 # GCC
-# RUN bash -c "source /opt/build.sh; GetGcc;"
-RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 -O - | tar -xj -C /opt
+RUN bash -c "source /opt/build.sh; GetGcc;"
 # NrfSdk
-# RUN bash -c "source /opt/build.sh; GetNrfSdk;"
-RUN wget -q "https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v15.x.x/nRF5_SDK_15.3.0_59ac345.zip" -O /tmp/nRF5_SDK_15.3.0_59ac345
-RUN unzip -q /tmp/nRF5_SDK_15.3.0_59ac345 -d /opt
-RUN rm /tmp/nRF5_SDK_15.3.0_59ac345
+RUN bash -c "source /opt/build.sh; GetNrfSdk;"
 # McuBoot
-# RUN bash -c "source /opt/build.sh; GetMcuBoot;"
-RUN git clone https://github.com/mcu-tools/mcuboot.git
-RUN pip3 install -r ./mcuboot/scripts/requirements.txt
+RUN bash -c "source /opt/build.sh; GetMcuBoot;"
 
+###ENV SOURCES_DIR /sources
+###CMD ["/opt/build.sh"]
 
-### cueband: fix for lv_font_conv
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -  &&  apt-get install -y nodejs  ## [cueband]
-RUN npm i -g lv_font_conv@1.5.2
-RUN apt install python-is-python3
-###
+RUN chmod a+rx /opt/build.sh
 
+### Added
+RUN npm install -g typescript@5.0.4
+
+RUN npm i ts-node@10.9.1 -g
+###RUN npm i @swc/core -g
+###RUN npm i @swc/core@1.3.88 -g
+RUN npm i @swc/core@1.3.82 -g
+RUN npm i lv_img_conv@0.3.0 -g
+RUN npm i lv_font_conv@1.5.2 -g
 
 RUN adduser infinitime
 
-ENV NRF5_SDK_PATH /opt/nRF5_SDK_15.3.0_59ac345
-ENV ARM_NONE_EABI_TOOLCHAIN_PATH /opt/gcc-arm-none-eabi-9-2020-q2-update
-ENV SOURCES_DIR /workspaces/InfiniTime
+#ENV SOURCES_DIR /workspaces/InfiniTime
+# .devcontainer.json -- "containerEnv": { "SOURCES_DIR": "${containerWorkspaceFolder}" },
+
+# /opt/build.sh pinetime-app
+
+# [ "$(basename $PWD)" == 'build' ] || cd build; cmake .. -DARM_NONE_EABI_TOOLCHAIN_PATH=$ARM_NONE_EABI_TOOLCHAIN_PATH -DNRF5_SDK_PATH=$NRF5_SDK_PATH
+# make
