@@ -70,7 +70,7 @@
             "target": "172.255.255.1:3333",  // host.docker.internal localhost 172.255.255.1
             "remote": true,
             "cwd": "${workspaceRoot}", 
-            "gdbpath": "/opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gdb",
+            "gdbpath": "${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin/arm-none-eabi-gdb",
             //  -nx --batch -ex 'target extended-remote ${GDB_CLIENT_TARGET_REMOTE}' -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'kill' ${EXECUTABLE_FILE_NAME}.hex
             "debugger_args": [
                 "file ./build/src/pinetime-app-1.10.0.hex",
@@ -117,7 +117,7 @@
             "target": "host.docker.internal:3333",  // host.docker.internal localhost 172.255.255.1
             "remote": true,
             "cwd": "${workspaceRoot}", 
-            "gdbpath": "/opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gdb",
+            "gdbpath": "${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin/arm-none-eabi-gdb",
             //  -nx --batch -ex 'target extended-remote ${GDB_CLIENT_TARGET_REMOTE}' -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'kill' ${EXECUTABLE_FILE_NAME}.hex
             "debugger_args": [
                 "file ./build/src/pinetime-app-1.10.0.hex",
