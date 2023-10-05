@@ -525,6 +525,9 @@ void cblog(const char *str);
 #if defined(CUEBAND_DEBUG_ADV_LOG)
     #warning "This is a build for debugging advertising - CUEBAND_DEBUG_ADV_LOG"
 #endif
+#if defined(CUEBAND_TRUSTED_CONNECTION) && !defined(CUEBAND_LOCAL_KEY)
+  #warning "CUEBAND_LOCAL_KEY not specified in cueband.local.h -- using empty key"
+#endif
 #endif
 
 // SystemTask.cpp:

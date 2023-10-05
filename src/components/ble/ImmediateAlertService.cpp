@@ -16,6 +16,7 @@ namespace {
     return immediateAlertService->OnAlertLevelChanged(conn_handle, attr_handle, ctxt);
   }
 
+  [[maybe_unused]]  // [cueband]
   const char* ToString(ImmediateAlertService::Levels level) {
     switch (level) {
       case ImmediateAlertService::Levels::NoAlert:
@@ -63,8 +64,8 @@ int ImmediateAlertService::OnAlertLevelChanged(uint16_t connectionHandle, uint16
   if (!systemTask.GetBleController().IsTrusted()) return 0;
 #endif
 #ifdef CUEBAND_DISABLE_NOTIFICATIONS
-if (false)
-#endif
+  // Ignore writes
+#else
   if (attributeHandle == alertLevelHandle) {
     if (context->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
       auto alertLevel = static_cast<Levels>(context->om->om_data[0]);
@@ -78,6 +79,6 @@ if (false)
       systemTask.PushMessage(Pinetime::System::Messages::OnNewNotification);
     }
   }
-
+#endif
   return 0;
 }

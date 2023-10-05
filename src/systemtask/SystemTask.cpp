@@ -554,7 +554,7 @@ void SystemTask::Work() {
     NoInit_BackUpTime = dateTimeController.CurrentDateTime();
 
     // [cueband] 1 Hz events
-    uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
+    [[maybe_unused]] uint32_t now = std::chrono::duration_cast<std::chrono::seconds>(dateTimeController.CurrentDateTime().time_since_epoch()).count();
 #if (defined(CUEBAND_CUE_ENABLED) || defined(CUEBAND_ACTIVITY_ENABLED) || defined(CUEBAND_TRUSTED_CONNECTION))
 #ifdef CUEBAND_CUE_ENABLED
     uint32_t uptime = dateTimeController.Uptime().count();

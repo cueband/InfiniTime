@@ -8,7 +8,8 @@ using namespace Pinetime::Controllers;
 #if defined(CUEBAND_LOCAL_KEY)
   static const char *cueband_key = CUEBAND_LOCAL_KEY;
 #else
-  #warning "CUEBAND_LOCAL_KEY not specified in cueband.local.h -- using empty key"
+  // (Warning moved to cueband.h)
+  //#warning "CUEBAND_LOCAL_KEY not specified in cueband.local.h -- using empty key"
   static const char *cueband_key = "";
 #endif
 

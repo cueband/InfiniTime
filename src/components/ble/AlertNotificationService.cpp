@@ -52,8 +52,8 @@ int AlertNotificationService::OnAlert(uint16_t conn_handle, uint16_t attr_handle
 #endif
 
 #ifdef CUEBAND_DISABLE_NOTIFICATIONS
-if (false)
-#endif
+  // ignore writes
+#else
   if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
     constexpr size_t stringTerminatorSize = 1; // end of string '\0'
     constexpr size_t headerSize = 3;
@@ -90,6 +90,7 @@ if (false)
     notificationManager.Push(std::move(notif));
     systemTask.PushMessage(event);
   }
+#endif
   return 0;
 }
 
