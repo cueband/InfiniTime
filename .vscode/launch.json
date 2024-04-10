@@ -128,6 +128,9 @@
             },
         },
 
+
+        // MAC:  /opt/homebrew/bin/openocd -f interface/stlink.cfg -f target/nrf52.cfg -c "bindto localhost"
+
         {   // "make FLASH_pinetime-app"
             "name": "🐳⚡ [host] cue.band - flash and disconnect",
             "type": "gdb",
