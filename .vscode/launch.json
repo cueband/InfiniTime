@@ -20,7 +20,8 @@
             "postRestartCommands": [
                 "break main",
                 "continue"
-            ]
+            ],
+            //"cmakeDebugType": "gdb"
         },
         {
             "name": "Debug - Openocd Local",
@@ -40,7 +41,8 @@
             "postRestartCommands": [
                 "break main",
                 "continue"
-            ]
+            ],
+            //"cmakeDebugType": "gdb"
         },
         {
             "cwd": "${workspaceRoot}",
@@ -59,6 +61,7 @@
                 "interface/stlink.cfg",
                 "target/nrf52.cfg"
             ],
+            //"cmakeDebugType": "gdb"
         }
         ,
 */
@@ -84,7 +87,9 @@
                 "load",
                 "continue", // "kill"
                 "disconnect", // "detach",
-            ]
+            ],
+            //"cmakeDebugType": "gdb",
+            "showDevDebugOutput": "raw",
         },
         {
             // See: https://lonesometraveler.github.io/2020/03/27/debug.html
@@ -106,7 +111,8 @@
             "postRestartCommands": [
                 "break main",
                 "continue"
-            ]
+            ],
+            //"cmakeDebugType": "cortex-debug",
         },
 
         {   // "make FLASH_pinetime-app"
@@ -131,7 +137,9 @@
                 "load",
                 "continue", // "kill"
                 "disconnect", // "detach",
-            ]
+            ],
+            //"cmakeDebugType": "gdb",
+            "showDevDebugOutput": "raw",
         },
         {
             // See: https://lonesometraveler.github.io/2020/03/27/debug.html
@@ -153,7 +161,8 @@
             "postRestartCommands": [
                 "break main",
                 "continue"
-            ]
+            ],
+            //"cmakeDebugType": "cortex-debug",
         },
 
     ]

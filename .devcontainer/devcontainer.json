@@ -28,7 +28,8 @@
 		"ms-vscode.cmake-tools",
 		"marus25.cortex-debug",
 		"notskm.clang-tidy",
-		"mjohns.clang-format"
+		"mjohns.clang-format",
+		"webfreak.debug",  // "Native Debug" for type="gdb"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

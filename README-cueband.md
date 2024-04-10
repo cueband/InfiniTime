@@ -787,3 +787,13 @@ Control point commands used in TC project:
 * [ ] ...(move task list here)...
 
 -->
+
+
+<!--
+```bash
+# remove old `build` directory, rebuild container
+git submodule update --init --recursive
+/opt/build.sh
+# CMake extension: Project Status / Delete Cache and Reconfigure
+```
+-->
