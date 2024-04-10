@@ -66,10 +66,10 @@
         ,
 */
         {   // "make FLASH_pinetime-app"
-            "name": "[wsl] cue.band - flash and disconnect",
+            "name": "🪟⚡  [wsl] cue.band - flash and disconnect",
             "type": "gdb",
             "request": "attach",
-            "executable": "${workspaceRoot}/build/src/pinetime-app-1.10.0.out",  // "${workspaceRoot}/build/src/pinetime-app-1.10.0.out", // "${command:cmake.launchTargetPath}", 
+            "executable": "${command:cmake.launchTargetPath}",  // "${workspaceRoot}/build/src/pinetime-app-1.10.0.out", // "${command:cmake.launchTargetPath}", 
             "target": "172.21.80.1:3333",  // host.docker.internal localhost 172.255.255.1 172.21.80.1
             "remote": true,
             "cwd": "${workspaceRoot}", 
@@ -79,6 +79,7 @@
             //    "file ${command:cmake.launchTargetPath}", // ./build/src/pinetime-app-1.10.0.hex  ${command:cmake.launchTargetPath}
             //],
             "internalConsoleOptions": "openOnSessionStart",
+            "console": "internalConsole",
             "autorun": [
                 "file ${command:cmake.launchTargetPath}", // ./build/src/pinetime-app-1.10.0.hex  ${command:cmake.launchTargetPath}
                 "target extended-remote 172.21.80.1:3333",  // host.docker.internal localhost 172.255.255.1 172.21.80.1
@@ -91,10 +92,15 @@
             ],
             //"cmakeDebugType": "gdb",
             //"showDevDebugOutput": "raw",
+            "presentation": {
+                "hidden": false,
+                "group": "WSL",
+                "order": 1
+            },
         },
         {
             // See: https://lonesometraveler.github.io/2020/03/27/debug.html
-            "name": "[wsl] cue.band - debug",
+            "name": "🪟🐜 [wsl] cue.band - debug",
             "type":"cortex-debug",
             "cortex-debug.armToolchainPath":"${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin",
             "cwd": "${workspaceRoot}",
@@ -108,29 +114,37 @@
             "svdFile": "${workspaceRoot}/nrf52.svd",
             "runToMain": true,
             "internalConsoleOptions": "openOnSessionStart",
+            "console": "internalConsole",
             // Work around for stopping at main on restart
             "postRestartCommands": [
                 "break main",
                 "continue"
             ],
             //"cmakeDebugType": "cortex-debug",
+            "presentation": {
+                "hidden": false,
+                "group": "WSL",
+                "order": 2
+            },
         },
 
         {   // "make FLASH_pinetime-app"
-            "name": "[mac] cue.band - flash and disconnect",
+            "name": "🐳⚡ [host] cue.band - flash and disconnect",
             "type": "gdb",
             "request": "attach",
-            "executable": "${workspaceRoot}/build/src/pinetime-app-1.10.0.out",  // "${workspaceRoot}/build/src/pinetime-app-1.10.0.out", // "${command:cmake.launchTargetPath}", 
+            "executable": "${command:cmake.launchTargetPath}",  // "${workspaceRoot}/build/src/pinetime-app-1.10.0.out", // "${command:cmake.launchTargetPath}", 
             "target": "host.docker.internal:3333",  // host.docker.internal localhost 172.255.255.1 172.21.80.1
             "remote": true,
             "cwd": "${workspaceRoot}", 
             "gdbpath": "${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin/arm-none-eabi-gdb",
             //  -nx --batch -ex 'target extended-remote ${GDB_CLIENT_TARGET_REMOTE}' -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'kill' ${EXECUTABLE_FILE_NAME}.hex
-            "debugger_args": [
-                "file ./build/src/pinetime-app-1.10.0.hex",
-            ],
+            //"debugger_args": [
+            //    "file ./build/src/pinetime-app-1.10.0.hex",
+            //],
             "internalConsoleOptions": "openOnSessionStart",
+            "console": "internalConsole",
             "autorun": [
+                "file ${command:cmake.launchTargetPath}", // ./build/src/pinetime-app-1.10.0.hex  ${command:cmake.launchTargetPath}
                 "target extended-remote host.docker.internal:3333",  // host.docker.internal localhost 172.255.255.1 172.21.80.1
                 //"symbol-file ./build/src/pinetime-app-1.10.0.out",
                 "monitor reset halt", // "monitor swdp_scan",
@@ -141,10 +155,15 @@
             ],
             //"cmakeDebugType": "gdb",
             //"showDevDebugOutput": "raw",
+            "presentation": {
+                "hidden": false,
+                "group": "host.docker",
+                "order": 1
+            },
         },
         {
             // See: https://lonesometraveler.github.io/2020/03/27/debug.html
-            "name": "[mac] cue.band - debug",
+            "name": "🐳🐜 [host] cue.band - debug",
             "type":"cortex-debug",
             "cortex-debug.armToolchainPath":"${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin",
             "cwd": "${workspaceRoot}",
@@ -158,12 +177,18 @@
             "svdFile": "${workspaceRoot}/nrf52.svd",
             "runToMain": true,
             "internalConsoleOptions": "openOnSessionStart",
+            "console": "internalConsole",
             // Work around for stopping at main on restart
             "postRestartCommands": [
                 "break main",
                 "continue"
             ],
             //"cmakeDebugType": "cortex-debug",
+            "presentation": {
+                "hidden": false,
+                "group": "host.docker",
+                "order": 2
+            },
         },
 
     ]
