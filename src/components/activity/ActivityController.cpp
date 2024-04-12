@@ -483,6 +483,7 @@ bool ActivityController::WriteMicroEpoch() {
     int stepCount = (epochSteps > 31) ? 31 : epochSteps;
 
     // Micro-epoch fields
+    // TODO: Should this be filtered or unfiltered?
     data[0] = (unsigned char)(meanFilteredSvmMO & 0xff);
     data[1] = (unsigned char)((meanFilteredSvmMO >> 8) & 0xff);
     data[2] = (unsigned char)meanBpm;
@@ -505,9 +506,14 @@ bool ActivityController::WriteEpoch() {
     memset(data, 0xff, 44);
     data[0] = (uint8_t)epochStartTime; data[1] = (uint8_t)(epochStartTime >> 8);                          // @0 Seconds since epoch for the first sample
     data[2] = (uint8_t)(epochStartTime >> 16); data[3] = (uint8_t)(epochStartTime >> 24);                 //     ...
-    // TODO: Remaining summary fields (@4-@43)
+    // TODO: Additional summary fields (@4-@43)
+    // (6) mean x/y/z (e.g. for calibration of stationary points, orientation)
+    // (6) SD x/y/z (e.g. for wear-time and calibration of stationary points)
+    // (6) filtered SVM x/y/z
+    // (6) unfiltered SVM x/y/z
+    // (2) temperature
 
-    // 12x 5-second micro epoch reports
+    // (48) 12x 5-second micro epoch reports
     memcpy(data + 44, microEpochBuffer, MICRO_EPOCH_BUFFER_SIZE);
 
 #else
