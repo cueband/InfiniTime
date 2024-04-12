@@ -9,6 +9,7 @@
     #endif
 #else
 
+#define CUEBAND_HR_LOGGER
 
 //#define CUEBAND_LOG
 
@@ -31,12 +32,16 @@
 */
 
 // This is the cueband-specific version/revision -- the InfiniTime version is in CUEBAND_PROJECT_VERSION_{MAJOR,MINOR,PATCH}
-#define CUEBAND_VERSION_NUMBER 22  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
+#define CUEBAND_VERSION_NUMBER 23  // 1-byte public firmware release number (stored in block format); see also CUEBAND_FORMAT_VERSION
 #define CUEBAND_REVISION_NUMBER 0  // Revision number (only appears in user-visible version string, but not in block format)
 #define CUEBAND_VERSION "" CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_VERSION_NUMBER) "." CUEBAND_STRINGIZE_STRINGIZE(CUEBAND_REVISION_NUMBER) "." CUEBAND_PROJECT_COMMIT_HASH  // User-visible revision string
 #define CUEBAND_APPLICATION_TYPE 0x0002 // Only returned in UART device query
 
-#define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
+#ifdef CUEBAND_HR_LOGGER
+    #define CUEBAND_DEVICE_NAME "Logger-######"  // "InfiniTime" // "InfiniTime-######"
+#else
+    #define CUEBAND_DEVICE_NAME "CueBand-######"  // "InfiniTime" // "InfiniTime-######"
+#endif
 #define CUEBAND_SERIAL_ADDRESS
 
 #define CUEBAND_TRUSTED_CONNECTION      // Determine if a connection is trusted (required)
@@ -94,7 +99,9 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 #define CUEBAND_DEBUG_PREVIOUS_BPM 5        // Store recent entries for debugging
 
 // Cue prompts
-#define CUEBAND_CUE_ENABLED
+#ifndef CUEBAND_HR_LOGGER
+    #define CUEBAND_CUE_ENABLED
+#endif
 
 #define CUEBAND_DEFAULT_SCREEN_TIMEOUT 30000    // 15000 // Ideally matching one of the options in SettingDisplay.cpp
 
@@ -333,9 +340,15 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
 
 #define CUEBAND_DELAY_START 50          // Delay cue.band service initialization (main loop iterations) -- 50 from start = approx. 3-5 seconds.
 
-// Logging (30-40 days)
-#define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 512 // 512 = 128 kB, ~10 days/file;  
-#define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 30-40 days
+#ifdef CUEBAND_HR_LOGGER
+    // Logging (8 days)
+    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 480 // 480 = 122880 bytes, 1 day/file;  
+    #define CUEBAND_ACTIVITY_FILES 8            // 7-8 files gives 7 days minimum
+#else
+    // Logging (30-40 days)
+    #define CUEBAND_ACTIVITY_MAXIMUM_BLOCKS 512 // 512 = 128 kB, ~10 days/file;  
+    #define CUEBAND_ACTIVITY_FILES 4            // 3-4 files gives 30-40 days
+#endif
 
 #ifdef CUEBAND_ACTIVITY_EPOCH_INTERVAL
     #ifdef CUEBAND_CONFIGURATION_WARNINGS
@@ -366,19 +379,31 @@ extern unsigned char cuebandGlobalScratchBuffer[CUEBAND_GLOBAL_SCRATCH_BUFFER] _
         #warning "This build has a non-default CUEBAND_FORMAT_VERSION and must not be used for a release"
     #endif
 #else
-    #define CUEBAND_FORMAT_VERSION CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002
+    #ifdef CUEBAND_HR_LOGGER
+        #define CUEBAND_FORMAT_VERSION CUEBAND_FORMAT_VERSION_MICRO_EPOCHS_0080
+    #else
+        #define CUEBAND_FORMAT_VERSION CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002
+    #endif
 #endif
 
 #define ACTIVITY_BLOCK_SIZE 256
 
-#define ACTIVITY_RATE 40    // Common activity monitor rate: 32 Hz (Philips Actiwatch Spectrum+/Pro/2, CamNtech Actiwave Motion, Minisun IDEEA, Fit.life Fitmeter, BodyMedia SenseWear); or 30 Hz (ActiGraph GT3X/GT1M)
+#ifdef CUEBAND_HR_LOGGER
+    #define ACTIVITY_RATE 50
+#else
+    #define ACTIVITY_RATE 40    // Common activity monitor rate: 32 Hz (Philips Actiwatch Spectrum+/Pro/2, CamNtech Actiwave Motion, Minisun IDEEA, Fit.life Fitmeter, BodyMedia SenseWear); or 30 Hz (ActiGraph GT3X/GT1M)
+#endif
 // Always store MEAN(SVMMO), additionally:
 #define CUEBAND_ACTIVITY_HIGH_PASS  // ...store MEAN(FILTER(SVMMO)), otherwise: store plain MEAN(SVM)
 
-#define CUEBAND_FORMAT_VERSION_MIN 0x0002
 #define CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002 0x0002
 #define CUEBAND_FORMAT_VERSION_HR_RANGE_0003 0x0003
 #define CUEBAND_FORMAT_VERSION_MICRO_EPOCHS_0080 0x0080
+#ifdef CUEBAND_HR_LOGGER
+    #define CUEBAND_FORMAT_VERSION_MIN 0x0080
+#else
+    #define CUEBAND_FORMAT_VERSION_MIN 0x0002
+#endif
 #define CUEBAND_FORMAT_VERSION_MAX 0xfffe   // unused
 
 // 0x0000=30 Hz data, no high-pass filter, no SVMMO

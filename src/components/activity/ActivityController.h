@@ -44,9 +44,15 @@
 #define ACTIVITY_EVENT_CUE_SNOOZE          0x4000 // Cue: temporary manual snooze in use
 #define ACTIVITY_EVENT_FACE_DOWN           0x8000 // Activity: Watch was detected as face-down during the epoch 
 
-#define ACTIVITY_HEADER_SIZE 30
-#define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 480 (512 - 30 bytes header - 2 bytes checksum)
-#define ACTIVITY_SAMPLE_SIZE 8
+#ifdef CUEBAND_HR_LOGGER
+      #define ACTIVITY_HEADER_SIZE 14
+      #define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 240 (256 - 14 bytes header - 2 bytes checksum)
+      #define ACTIVITY_SAMPLE_SIZE 80     // 60-second macro epochs
+#else
+      #define ACTIVITY_HEADER_SIZE 30
+      #define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 224 (256 - 30 bytes header - 2 bytes checksum)
+      #define ACTIVITY_SAMPLE_SIZE 8
+#endif
 
 #ifdef CUEBAND_MAXIMUM_SAMPLES_PER_BLOCK
       // Overridden for debug purposes
@@ -187,11 +193,22 @@ namespace Pinetime {
 
       void StartEpoch();
       bool WriteEpoch();
+      #ifdef CUEBAND_HR_LOGGER
+            bool WriteMicroEpoch();
+            #define MICRO_EPOCH_INTERVAL 5
+            #define MICRO_EPOCH_ENTRY_SIZE 4
+            #define MICRO_EPOCH_COUNT (CUEBAND_ACTIVITY_EPOCH_INTERVAL / MICRO_EPOCH_INTERVAL)
+            #define MICRO_EPOCH_BUFFER_SIZE (MICRO_EPOCH_COUNT * MICRO_EPOCH_ENTRY_SIZE)
+            unsigned char microEpochBuffer[MICRO_EPOCH_BUFFER_SIZE];
+      #endif
 
       bool isInitialized = false;
 
       // Activity Configuration
       uint16_t format = CUEBAND_FORMAT_VERSION;  // Algorithm and logging format (see `format` below, =0x0002) -- read back status to see the actual format in use (the requested one may not be supported)
+      #ifdef CUEBAND_HR_LOGGER
+            uint16_t microEpochInterval = MICRO_EPOCH_INTERVAL; // 5;  // Micro epoch interval (=5 seconds)
+      #endif
       uint16_t epochInterval = CUEBAND_ACTIVITY_EPOCH_INTERVAL; // 60;  // Epoch interval (=60 seconds) -- read back status to see the actual interval in use (the requested one may not be supported)
       uint16_t hrmInterval = 0;                 // HR periodic sampling interval (seconds, 0=no interval)
       uint16_t hrmDuration = 0;                 // HR periodic sampling duration (seconds, 0=disabled, >0 && >=interval continuous)
@@ -219,6 +236,10 @@ namespace Pinetime {
       uint32_t promptConfigurationId = (uint32_t)-1;
       uint32_t blockStartTime = 0;
       uint32_t countEpochs = 0;
+
+      #ifdef CUEBAND_HR_LOGGER
+            uint32_t currentMicroEpoch = 0;
+      #endif
 
       // Current epoch
       uint32_t epochStartTime = 0;

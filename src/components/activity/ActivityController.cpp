@@ -406,12 +406,152 @@ void ActivityController::StartEpoch() {
   epochPromptCount = 0;
   epochSnoozeMutedPromptCount = 0;
   epochUnwornMutedPromptCount = 0;
+
+  #ifdef CUEBAND_HR_LOGGER
+    if (microEpochInterval > 0) {
+      memset(microEpochBuffer, 0xff, MICRO_EPOCH_BUFFER_SIZE);
+      currentMicroEpoch = (currentTime - epochStartTime) / microEpochInterval;
+    }
+  #endif
 }
+
+#ifdef CUEBAND_HR_LOGGER
+bool ActivityController::WriteMicroEpoch() {
+  if (currentMicroEpoch < MICRO_EPOCH_COUNT && microEpochInterval > 0) {
+    unsigned char *data = microEpochBuffer + (currentMicroEpoch * MICRO_EPOCH_ENTRY_SIZE);
+
+#ifdef CUEBAND_HR_EPOCH
+      #if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+        for (int i = CUEBAND_DEBUG_PREVIOUS_BPM - 1; i > 0; i--) {
+          debugMeanBpm[i] = debugMeanBpm[i - 1];
+          debugDeltaMin[i] = debugDeltaMin[i - 1];
+          debugDeltaMax[i] = debugDeltaMax[i - 1];
+        }
+        debugMeanBpm[0] = -1; debugDeltaMin[0] = -1; debugDeltaMax[0] = -1;
+      #endif
+#endif
+
+#ifdef CUEBAND_HR_EPOCH
+      // Get heart rate tracker stats and clear
+      int meanBpm = -1, minBpm = -1, maxBpm = -1;
+      int hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
+      bool hasData = hrCount > 0;
+
+      int deltaMin = 0, deltaMax = 0;
+      if (hasData) {
+        // Calculate delta
+        deltaMin = meanBpm - minBpm;
+        deltaMax = maxBpm - meanBpm;
+
+        // Saturate
+        if (meanBpm < 0) meanBpm = 0;
+        if (meanBpm > 254) meanBpm = 254;
+        if (deltaMin < 0x0) deltaMin = 0x0;
+        if (deltaMin > 0xf) deltaMin = 0xf;
+        if (deltaMax < 0x0) deltaMax = 0x0;
+        if (deltaMax > 0xf) deltaMax = 0xf;
+      } else {
+        meanBpm = 0xff;
+        deltaMin = 0xf;
+        deltaMax = 0xf;
+      }
+
+      #if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+      debugMeanBpm[0] = meanBpm; debugDeltaMin[0] = deltaMin; debugDeltaMax[0] = deltaMax;
+      #endif
+#endif
+
+    #ifndef CUEBAND_ACTIVITY_HIGH_PASS
+      #error "High pass filter expected"
+    #endif
+    // Calculate the mean SVM & SVMMO values
+    uint32_t meanFilteredSvmMO;
+    uint32_t meanSvmMO;
+    if (epochSumCount >= ACTIVITY_RATE * epochInterval * 50 / 100) {
+      // At least half of the expected samples were made, use the mean value.
+      meanFilteredSvmMO = epochSumFilteredSvmMO / epochSumCount;
+      meanSvmMO = epochSumSvmMO / epochSumCount;
+      // Saturate/clip to maximum allowed
+      if (meanFilteredSvmMO > 0xfffe) meanFilteredSvmMO = 0xfffe;
+      if (meanSvmMO > 0xfffe) meanSvmMO = 0xfffe;
+    } else {
+      // Less than half of the expected samples were made, use the invalid value
+      meanFilteredSvmMO = 0xffff;
+      meanSvmMO = 0xffff;
+    }
+
+    int stepCount = (epochSteps > 31) ? 31 : epochSteps;
+
+    // Micro-epoch fields
+    data[0] = (unsigned char)(meanFilteredSvmMO & 0xff);
+    data[1] = (unsigned char)((meanFilteredSvmMO >> 8) & 0xff);
+    data[2] = (unsigned char)meanBpm;
+    data[3] = (unsigned char)(stepCount);
+
+  }
+  currentMicroEpoch++;
+}
+#endif
 
 bool ActivityController::WriteEpoch() {
   if (countEpochs < ACTIVITY_MAX_SAMPLES)
   {
     uint8_t *data = activeBlock + ACTIVITY_HEADER_SIZE + (countEpochs * ACTIVITY_SAMPLE_SIZE);
+
+
+#ifdef CUEBAND_HR_LOGGER
+
+    // Epoch summary data
+    memset(data, 0xff, 44);
+    data[0] = (uint8_t)epochStartTime; data[1] = (uint8_t)(epochStartTime >> 8);                          // @0 Seconds since epoch for the first sample
+    data[2] = (uint8_t)(epochStartTime >> 16); data[3] = (uint8_t)(epochStartTime >> 24);                 //     ...
+    // TODO: Remaining summary fields (@4-@43)
+
+    // 12x 5-second micro epoch reports
+    memcpy(data + 44, microEpochBuffer, MICRO_EPOCH_BUFFER_SIZE);
+
+#else
+
+#ifdef CUEBAND_HR_EPOCH
+      #if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+        for (int i = CUEBAND_DEBUG_PREVIOUS_BPM - 1; i > 0; i--) {
+          debugMeanBpm[i] = debugMeanBpm[i - 1];
+          debugDeltaMin[i] = debugDeltaMin[i - 1];
+          debugDeltaMax[i] = debugDeltaMax[i - 1];
+        }
+        debugMeanBpm[0] = -1; debugDeltaMin[0] = -1; debugDeltaMax[0] = -1;
+      #endif
+#endif
+
+#ifdef CUEBAND_HR_EPOCH
+      // Get heart rate tracker stats and clear
+      int meanBpm = -1, minBpm = -1, maxBpm = -1;
+      int hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
+      bool hasData = hrCount > 0;
+
+      int deltaMin = 0, deltaMax = 0;
+      if (hasData) {
+        // Calculate delta
+        deltaMin = meanBpm - minBpm;
+        deltaMax = maxBpm - meanBpm;
+
+        // Saturate
+        if (meanBpm < 0) meanBpm = 0;
+        if (meanBpm > 254) meanBpm = 254;
+        if (deltaMin < 0x0) deltaMin = 0x0;
+        if (deltaMin > 0xf) deltaMin = 0xf;
+        if (deltaMax < 0x0) deltaMax = 0x0;
+        if (deltaMax > 0xf) deltaMax = 0xf;
+      } else {
+        meanBpm = 0xff;
+        deltaMin = 0xf;
+        deltaMax = 0xf;
+      }
+
+      #if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
+      debugMeanBpm[0] = meanBpm; debugDeltaMin[0] = deltaMin; debugDeltaMax[0] = deltaMax;
+      #endif
+#endif
 
     // `PPUUZZSS SSSSSSSS`
     uint16_t steps = 0;
@@ -462,17 +602,6 @@ bool ActivityController::WriteEpoch() {
       meanSvmMO = 0xffff;
     }
 
-#ifdef CUEBAND_HR_EPOCH
-#if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
-for (int i = CUEBAND_DEBUG_PREVIOUS_BPM - 1; i > 0; i--) {
-  debugMeanBpm[i] = debugMeanBpm[i - 1];
-  debugDeltaMin[i] = debugDeltaMin[i - 1];
-  debugDeltaMax[i] = debugDeltaMax[i - 1];
-}
-debugMeanBpm[0] = -1; debugDeltaMin[0] = -1; debugDeltaMax[0] = -1;
-#endif
-#endif
-
     // @4 Mean of the SVM values for the entire epoch
     if (format == CUEBAND_FORMAT_VERSION_ORIGINAL_ACTIVITY_0002) {
       #ifdef CUEBAND_ACTIVITY_HIGH_PASS
@@ -483,34 +612,6 @@ debugMeanBpm[0] = -1; debugDeltaMin[0] = -1; debugDeltaMax[0] = -1;
     } else if (format == CUEBAND_FORMAT_VERSION_HR_RANGE_0003) {
 
 #ifdef CUEBAND_HR_EPOCH
-      // Get heart rate tracker stats and clear
-      int meanBpm = -1, minBpm = -1, maxBpm = -1;
-      int hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
-      bool hasData = hrCount > 0;
-
-      int deltaMin = 0, deltaMax = 0;
-      if (hasData) {
-        // Calculate delta
-        deltaMin = meanBpm - minBpm;
-        deltaMax = maxBpm - meanBpm;
-
-        // Saturate
-        if (meanBpm < 0) meanBpm = 0;
-        if (meanBpm > 254) meanBpm = 254;
-        if (deltaMin < 0x0) deltaMin = 0x0;
-        if (deltaMin > 0xf) deltaMin = 0xf;
-        if (deltaMax < 0x0) deltaMax = 0x0;
-        if (deltaMax > 0xf) deltaMax = 0xf;
-      } else {
-        meanBpm = 0xff;
-        deltaMin = 0xf;
-        deltaMax = 0xf;
-      }
-
-#if defined(CUEBAND_DEBUG_PREVIOUS_BPM) && (CUEBAND_DEBUG_PREVIOUS_BPM > 0)
-debugMeanBpm[0] = meanBpm; debugDeltaMin[0] = deltaMin; debugDeltaMax[0] = deltaMax;
-#endif
-
       // heart_rate, XXXXNNNN MMMMMMMM
       // lowest 8-bits mean HR bpm (saturated to 254, 255=invalid)
       // next 4-bits minimum delta HR below mean (saturate to 15 bpm)
@@ -539,6 +640,7 @@ debugMeanBpm[0] = meanBpm; debugDeltaMin[0] = deltaMin; debugDeltaMax[0] = delta
 
     // @6 Summary2
     data[6] = (uint8_t)summary2; data[7] = (uint8_t)(summary2 >> 8);
+#endif
 
     countEpochs++;
   }
@@ -559,6 +661,17 @@ void ActivityController::TimeChanged(uint32_t time) {
   }
   heartRateController.SetHrEpoch(hrWithinSampling);
 #endif
+
+  #ifdef CUEBAND_HR_LOGGER
+    if (microEpochInterval > 0 && epochInterval > 0) {
+      uint32_t microEpochNow = (currentTime - epochStartTime) / microEpochInterval;
+      // Micro-epoch has changed from the current one
+      if (microEpochNow != currentMicroEpoch) {
+        // Write this micro-epoch
+        WriteMicroEpoch();
+      }
+    }
+  #endif
 
   if (epochInterval > 0) {
     uint32_t currentEpoch = epochStartTime / epochInterval;
@@ -633,6 +746,17 @@ void ActivityController::DestroyData() {
 }
 
 bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
+
+#ifdef CUEBAND_HR_LOGGER
+  // Header 14 bytes
+  activeBlock[0] = 'h';                                                                           // @0  ASCII 'h' 
+  activeBlock[1] = (uint8_t)format; 
+  activeBlock[2] = (uint8_t)logicalIndex; activeBlock[3] = (uint8_t)(logicalIndex >> 8);                                // @2  Logical block identifier
+  activeBlock[4] = (uint8_t)(logicalIndex >> 16); activeBlock[5] = (uint8_t)(logicalIndex >> 24);                       //     ...
+  activeBlock[6] = deviceAddress[5]; activeBlock[7] = deviceAddress[4]; activeBlock[8] = deviceAddress[3];              // @6 Device ID (address)
+  activeBlock[9] = deviceAddress[2]; activeBlock[10] = deviceAddress[1]; activeBlock[11] = deviceAddress[0];            //     ...
+  activeBlock[12] = 0x00; activeBlock[13] = 0x00;                                                                       // @12 Spare
+#else
   // Header
   activeBlock[0] = 'A'; activeBlock[1] = 'D';                                                                           // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
   activeBlock[2] = (uint8_t)(ACTIVITY_BLOCK_SIZE - 4); activeBlock[3] = (uint8_t)((ACTIVITY_BLOCK_SIZE - 4) >> 8);      // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
@@ -667,6 +791,7 @@ bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
   activeBlock[27] = accelerometerInfo;                                                                                  // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
   activeBlock[28] = lastTemperature;                                                                                    // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
   activeBlock[29] = CUEBAND_VERSION_NUMBER;                                                                             // @29 Firmware version
+#endif
 
   // Payload
   //memset(activeBlock + ACTIVITY_HEADER_SIZE, 0x00, ACTIVITY_PAYLOAD_SIZE);
