@@ -65,6 +65,7 @@
         }
         ,
 */
+/*
         {   // "make FLASH_pinetime-app"
             "name": "🪟⚡  [wsl] cue.band - flash and disconnect",
             "type": "gdb",
@@ -127,12 +128,13 @@
                 "order": 2
             },
         },
+*/
 
-
+        // WIN:  "D:\SDK\xpack-openocd-0.11.0-1\bin\openocd.exe" -f interface/stlink.cfg -f target/nrf52.cfg -c "bindto 127.0.0.1"
         // MAC:  /opt/homebrew/bin/openocd -f interface/stlink.cfg -f target/nrf52.cfg -c "bindto localhost"
 
-        {   // "make FLASH_pinetime-app"
-            "name": "🐳⚡ [host] cue.band - flash and disconnect",
+        {   // 🐳 "make FLASH_pinetime-app"
+            "name": "⚡ cue.band - flash and disconnect",
             "type": "gdb",
             "request": "attach",
             "executable": "${command:cmake.launchTargetPath}",  // "${workspaceRoot}/build/src/pinetime-app-1.10.0.out", // "${command:cmake.launchTargetPath}", 
@@ -166,7 +168,7 @@
         },
         {
             // See: https://lonesometraveler.github.io/2020/03/27/debug.html
-            "name": "🐳🐜 [host] cue.band - debug",
+            "name": "🐜 cue.band - debug",
             "type":"cortex-debug",
             "cortex-debug.armToolchainPath":"${env:ARM_NONE_EABI_TOOLCHAIN_PATH}/bin",
             "cwd": "${workspaceRoot}",
