@@ -417,6 +417,7 @@ void ActivityController::StartEpoch() {
 
 #ifdef CUEBAND_HR_LOGGER
 bool ActivityController::WriteMicroEpoch() {
+  bool written = false;
   if (currentMicroEpoch < MICRO_EPOCH_COUNT && microEpochInterval > 0) {
     unsigned char *data = microEpochBuffer + (currentMicroEpoch * MICRO_EPOCH_ENTRY_SIZE);
 
@@ -467,7 +468,7 @@ bool ActivityController::WriteMicroEpoch() {
     // Calculate the mean SVM & SVMMO values
     uint32_t meanFilteredSvmMO;
     uint32_t meanSvmMO;
-    if (epochSumCount >= ACTIVITY_RATE * epochInterval * 50 / 100) {
+    if (epochSumCount >= ACTIVITY_RATE * microEpochInterval * 50 / 100) {
       // At least half of the expected samples were made, use the mean value.
       meanFilteredSvmMO = epochSumFilteredSvmMO / epochSumCount;
       meanSvmMO = epochSumSvmMO / epochSumCount;
@@ -489,8 +490,10 @@ bool ActivityController::WriteMicroEpoch() {
     data[2] = (unsigned char)meanBpm;
     data[3] = (unsigned char)(stepCount);
 
+    written = true;
   }
   currentMicroEpoch++;
+  return written;
 }
 #endif
 
