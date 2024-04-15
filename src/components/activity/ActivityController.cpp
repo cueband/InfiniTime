@@ -430,9 +430,7 @@ bool ActivityController::WriteMicroEpoch() {
         }
         debugMeanBpm[0] = -1; debugDeltaMin[0] = -1; debugDeltaMax[0] = -1;
       #endif
-#endif
 
-#ifdef CUEBAND_HR_EPOCH
       // Get heart rate tracker stats and clear
       int meanBpm = -1, minBpm = -1, maxBpm = -1;
       int hrCount = heartRateController.HrStats(&meanBpm, &minBpm, &maxBpm, true);
@@ -483,6 +481,17 @@ bool ActivityController::WriteMicroEpoch() {
 
     int stepCount = (epochSteps > 31) ? 31 : epochSteps;
 
+    // Reset micro epoch stats
+#ifdef CUEBAND_ACTIVITY_HIGH_PASS
+    epochSumFilteredSvmMO = 0;
+#else
+    epochSumSvm = 0;
+#endif
+    epochSumSvmMO = 0;
+    epochSumCount = 0;
+    epochEvents = 0x0000;
+    epochSteps = 0;
+
     // Micro-epoch fields
     // TODO: Should this be filtered or unfiltered?
     data[0] = (unsigned char)(meanFilteredSvmMO & 0xff);
@@ -502,18 +511,17 @@ bool ActivityController::WriteEpoch() {
   {
     uint8_t *data = activeBlock + ACTIVITY_HEADER_SIZE + (countEpochs * ACTIVITY_SAMPLE_SIZE);
 
-
 #ifdef CUEBAND_HR_LOGGER
 
     // Epoch summary data
     memset(data, 0xff, MICRO_EPOCH_OFFSET); // @0-25
-    //data[0] = (uint8_t)epochStartTime; data[1] = (uint8_t)(epochStartTime >> 8);                          // @0 Seconds since epoch for the first sample
-    //data[2] = (uint8_t)(epochStartTime >> 16); data[3] = (uint8_t)(epochStartTime >> 24);                 //     ...
-    // TODO: Additional summary fields (@4-@43)
-    // (6) mean x/y/z (e.g. for calibration of stationary points, orientation)
-    // (6) SD x/y/z (e.g. for wear-time and calibration of stationary points)
-    // (6) filtered SVM x/y/z
-    // (6) unfiltered SVM x/y/z
+
+    // TODO: Additional summary fields (@0-@25)
+    // * (6 bytes) mean x/y/z (e.g. calibration stationary points, orientation)
+    // * (6 bytes) SD x/y/z (for wear-time and calibration stationary points)
+    // * (6 bytes) ??? unfiltered axis magnitude x/y/z
+    // * (6 bytes) ??? filtered axis magnitude x/y/z
+    // * (2 bytes) ??? steps / HR signal reliability (swap with steps in micro epoch???)
 
     // @26 (48) 12x 5-second micro epoch reports
     memcpy(data + MICRO_EPOCH_OFFSET, microEpochBuffer, MICRO_EPOCH_BUFFER_SIZE);
@@ -965,7 +973,6 @@ uint32_t ActivityController::ReadPhysicalBlock(int physicalFile, uint32_t physic
     // Ignore version: header[4] header[5]
     readBlockId = (uint32_t)header[6] | ((uint32_t)header[7] << 8) | ((uint32_t)header[8] << 16) | ((uint32_t)header[9] << 24);
   }
-  // TODO: Make compatible with new format block IDs
 
   // Return block ID if valid
   if (blockOk) {
