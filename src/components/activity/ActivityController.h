@@ -37,20 +37,20 @@
 #define ACTIVITY_EVENT_RESTART             0x0080 // First epoch after device restart (or event logging restarted?)
 #define ACTIVITY_EVENT_NOT_WORN            0x0100 // Activity: Device considered not worn
 #define ACTIVITY_EVENT_ASLEEP              0x0200 // Activity: Wearer considered asleep
-#define ACTIVITY_EVENT_CUE_DISABLED        0x0400 // Cue: scheduled cueing disabled
-#define ACTIVITY_EVENT_CUE_CONFIGURATION   0x0800 // Cue: new configuration written
-#define ACTIVITY_EVENT_CUE_OPENED          0x1000 // Cue: user opened app
-#define ACTIVITY_EVENT_CUE_MANUAL          0x2000 // Cue: temporary manual cueing in use
-#define ACTIVITY_EVENT_CUE_SNOOZE          0x4000 // Cue: temporary manual snooze in use
+#ifdef CUEBAND_CUE_ENABLED
+      #define ACTIVITY_EVENT_CUE_DISABLED        0x0400 // Cue: scheduled cueing disabled
+      #define ACTIVITY_EVENT_CUE_CONFIGURATION   0x0800 // Cue: new configuration written
+      #define ACTIVITY_EVENT_CUE_OPENED          0x1000 // Cue: user opened app
+      #define ACTIVITY_EVENT_CUE_MANUAL          0x2000 // Cue: temporary manual cueing in use
+      #define ACTIVITY_EVENT_CUE_SNOOZE          0x4000 // Cue: temporary manual snooze in use
+#endif
 #define ACTIVITY_EVENT_FACE_DOWN           0x8000 // Activity: Watch was detected as face-down during the epoch 
 
+#define ACTIVITY_HEADER_SIZE 30
+#define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 224 (256 - 30 bytes header - 2 bytes checksum)
 #ifdef CUEBAND_HR_LOGGER
-      #define ACTIVITY_HEADER_SIZE 14
-      #define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 240 (256 - 14 bytes header - 2 bytes checksum)
-      #define ACTIVITY_SAMPLE_SIZE 80     // 60-second macro epochs
+      #define ACTIVITY_SAMPLE_SIZE 74     // 60-second macro epochs
 #else
-      #define ACTIVITY_HEADER_SIZE 30
-      #define ACTIVITY_PAYLOAD_SIZE (ACTIVITY_BLOCK_SIZE - ACTIVITY_HEADER_SIZE - 2) // 224 (256 - 30 bytes header - 2 bytes checksum)
       #define ACTIVITY_SAMPLE_SIZE 8
 #endif
 
@@ -195,10 +195,11 @@ namespace Pinetime {
       bool WriteEpoch();
       #ifdef CUEBAND_HR_LOGGER
             bool WriteMicroEpoch();
-            #define MICRO_EPOCH_INTERVAL 5
-            #define MICRO_EPOCH_ENTRY_SIZE 4
-            #define MICRO_EPOCH_COUNT (CUEBAND_ACTIVITY_EPOCH_INTERVAL / MICRO_EPOCH_INTERVAL)
-            #define MICRO_EPOCH_BUFFER_SIZE (MICRO_EPOCH_COUNT * MICRO_EPOCH_ENTRY_SIZE)
+            #define MICRO_EPOCH_INTERVAL 5                                                      // 5 second intervals
+            #define MICRO_EPOCH_ENTRY_SIZE 4                                                    // 4-byte samples
+            #define MICRO_EPOCH_COUNT (CUEBAND_ACTIVITY_EPOCH_INTERVAL / MICRO_EPOCH_INTERVAL)  // (60/5=) 12 epochs
+            #define MICRO_EPOCH_BUFFER_SIZE (MICRO_EPOCH_COUNT * MICRO_EPOCH_ENTRY_SIZE)        // 48-byte buffer
+            #define MICRO_EPOCH_OFFSET (ACTIVITY_SAMPLE_SIZE - MICRO_EPOCH_BUFFER_SIZE)         // (74-48=) @26-byte offset
             unsigned char microEpochBuffer[MICRO_EPOCH_BUFFER_SIZE];
       #endif
 

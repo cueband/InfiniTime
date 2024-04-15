@@ -430,14 +430,24 @@ The device activity log blocks are of the form `activity_log`:
 >     uint32_t   timestamp;               // @16 Seconds since epoch for the first sample
 >     uint8_t    count;                   // @20 Number of valid samples (up to 28 samples when 8-bytes each in a 256-byte block)
 >     uint8_t    epoch_interval;          // @21 Epoch interval (seconds, = 60)
+>#ifdef HR
+>     uint32_t   reserved;                // @22 (reserved) =0xffffffff
+>#else
 >     uint32_t   prompt_configuration;    // @22 Format 0x0002: Active prompt configuration ID (may remove: this is just as a diagnostic as it can change during epoch); Format 0x0003, first byte is HR epoch interval, second byte is HR duration.
+>#endif
 >     uint8_t    battery;                 // @26 Battery (0xff=unknown; top-bit=power-present, lower 7-bits: percentage)
 >     uint8_t    accelerometer;           // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
 >     int8_t     temperature;             // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
 >     uint8_t    firmware;                // @29 Firmware version
 > 
+>#ifdef HR
+>     // @30 Body (BLOCK_SIZE-30-2-2=222 bytes; macro epoch size 74; 3 macro epochs)
+>     macro_epoch sample[SAMPLE_CAPACITY];// @30 Samples (74-bytes each; 3 count) at epoch interval from start time
+>     uint8_t    spare[2];                // @(BLOCK-SIZE-2-2=252) @22 (reserved) =0xff
+>#else
 >     // @30 Body (BLOCK_SIZE-30-2=224 bytes)
 >     activity_sample sample[SAMPLE_CAPACITY];// @30 Samples (8-bytes each; (BLOCK_SIZE-30-2)/8 = 28 count) at epoch interval from start time
+>#endif
 > 
 >     // @(BLOCK_SIZE-2=254) Checksum (2 bytes)
 >     uint16_t   checksum;                // @(BLOCK-SIZE-2=254)

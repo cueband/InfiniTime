@@ -506,18 +506,17 @@ bool ActivityController::WriteEpoch() {
 #ifdef CUEBAND_HR_LOGGER
 
     // Epoch summary data
-    memset(data, 0xff, 44);
-    data[0] = (uint8_t)epochStartTime; data[1] = (uint8_t)(epochStartTime >> 8);                          // @0 Seconds since epoch for the first sample
-    data[2] = (uint8_t)(epochStartTime >> 16); data[3] = (uint8_t)(epochStartTime >> 24);                 //     ...
+    memset(data, 0xff, MICRO_EPOCH_OFFSET); // @0-25
+    //data[0] = (uint8_t)epochStartTime; data[1] = (uint8_t)(epochStartTime >> 8);                          // @0 Seconds since epoch for the first sample
+    //data[2] = (uint8_t)(epochStartTime >> 16); data[3] = (uint8_t)(epochStartTime >> 24);                 //     ...
     // TODO: Additional summary fields (@4-@43)
     // (6) mean x/y/z (e.g. for calibration of stationary points, orientation)
     // (6) SD x/y/z (e.g. for wear-time and calibration of stationary points)
     // (6) filtered SVM x/y/z
     // (6) unfiltered SVM x/y/z
-    // (2) temperature
 
-    // (48) 12x 5-second micro epoch reports
-    memcpy(data + 44, microEpochBuffer, MICRO_EPOCH_BUFFER_SIZE);
+    // @26 (48) 12x 5-second micro epoch reports
+    memcpy(data + MICRO_EPOCH_OFFSET, microEpochBuffer, MICRO_EPOCH_BUFFER_SIZE);
 
 #else
 
@@ -756,16 +755,6 @@ void ActivityController::DestroyData() {
 
 bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
 
-#ifdef CUEBAND_HR_LOGGER
-  // Header 14 bytes
-  activeBlock[0] = 'h';                                                                           // @0  ASCII 'h' 
-  activeBlock[1] = (uint8_t)format; 
-  activeBlock[2] = (uint8_t)logicalIndex; activeBlock[3] = (uint8_t)(logicalIndex >> 8);                                // @2  Logical block identifier
-  activeBlock[4] = (uint8_t)(logicalIndex >> 16); activeBlock[5] = (uint8_t)(logicalIndex >> 24);                       //     ...
-  activeBlock[6] = deviceAddress[5]; activeBlock[7] = deviceAddress[4]; activeBlock[8] = deviceAddress[3];              // @6 Device ID (address)
-  activeBlock[9] = deviceAddress[2]; activeBlock[10] = deviceAddress[1]; activeBlock[11] = deviceAddress[0];            //     ...
-  activeBlock[12] = 0x00; activeBlock[13] = 0x00;                                                                       // @12 Spare
-#else
   // Header
   activeBlock[0] = 'A'; activeBlock[1] = 'D';                                                                           // @0  ASCII 'A' and 'D' as little-endian (= 0x4441)
   activeBlock[2] = (uint8_t)(ACTIVITY_BLOCK_SIZE - 4); activeBlock[3] = (uint8_t)((ACTIVITY_BLOCK_SIZE - 4) >> 8);      // @2  Bytes following the type/length (BLOCK_SIZE-4=252)
@@ -789,6 +778,11 @@ bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
     activeBlock[23] = hrmDuration > 255 ? 255 : hrmDuration;
     activeBlock[24] = 0xff;
     activeBlock[25] = 0xff;
+  } else if (format == CUEBAND_FORMAT_VERSION_MICRO_EPOCHS_0080) {
+    activeBlock[22] = hrmInterval > 255 ? 255 : hrmInterval;
+    activeBlock[23] = hrmDuration > 255 ? 255 : hrmDuration;
+    activeBlock[24] = 0xff;
+    activeBlock[25] = 0xff;
   } else {
     activeBlock[22] = 0xff;
     activeBlock[23] = 0xff;
@@ -800,10 +794,14 @@ bool ActivityController::FinalizeBlock(uint32_t logicalIndex) {
   activeBlock[27] = accelerometerInfo;                                                                                  // @27 Accelerometer (bottom 2 bits sensor type; next 2 bits reserved for future use; next 2 bits reserved for rate information; top 2 bits reserved for scaling information).
   activeBlock[28] = lastTemperature;                                                                                    // @28 Temperature (degrees C, signed 8-bit value, 0x80=unknown)
   activeBlock[29] = CUEBAND_VERSION_NUMBER;                                                                             // @29 Firmware version
-#endif
 
   // Payload
   //memset(activeBlock + ACTIVITY_HEADER_SIZE, 0x00, ACTIVITY_PAYLOAD_SIZE);
+
+  // Spare bytes
+  if (ACTIVITY_HEADER_SIZE + (ACTIVITY_MAX_SAMPLES * ACTIVITY_SAMPLE_SIZE) + 2 < ACTIVITY_BLOCK_SIZE) {
+    memset(activeBlock + ACTIVITY_HEADER_SIZE + (ACTIVITY_MAX_SAMPLES * ACTIVITY_SAMPLE_SIZE), 0xff, ACTIVITY_BLOCK_SIZE - (ACTIVITY_HEADER_SIZE + (ACTIVITY_MAX_SAMPLES * ACTIVITY_SAMPLE_SIZE) + 2));  // Spare
+  }
 
   // Checksum
   uint16_t checksum = (uint16_t)(-sum_16(activeBlock, ACTIVITY_BLOCK_SIZE - 2));
@@ -960,18 +958,24 @@ uint32_t ActivityController::ReadPhysicalBlock(int physicalFile, uint32_t physic
   }
 
   // Check header
-  if (header[0] != 'A' || header[1] != 'D' || header[2] + (header[3] << 8) != (ACTIVITY_BLOCK_SIZE - 4)) {
+  bool blockOk = false;
+  uint32_t readBlockId = ACTIVITY_BLOCK_INVALID;
+  if (header[0] == 'A' && header[1] == 'D' && header[2] + (header[3] << 8) == (ACTIVITY_BLOCK_SIZE - 4)) {
+    blockOk = true;
+    // Ignore version: header[4] header[5]
+    readBlockId = (uint32_t)header[6] | ((uint32_t)header[7] << 8) | ((uint32_t)header[8] << 16) | ((uint32_t)header[9] << 24);
+  }
+  // TODO: Make compatible with new format block IDs
+
+  // Return block ID if valid
+  if (blockOk) {
+    return readBlockId;
+  } else {
     if (buffer != nullptr) memset(buffer, 0xFF, ACTIVITY_BLOCK_SIZE);
     errRead++;
     errReadLast = 7;
     return ACTIVITY_BLOCK_INVALID;
   }
-
-  // Ignore version: header[4] header[5]
-  
-  // Extract block id
-  uint32_t readBlockId = (uint32_t)header[6] | ((uint32_t)header[7] << 8) | ((uint32_t)header[8] << 16) | ((uint32_t)header[9] << 24);
-  return readBlockId;
 }
 
 // Read logical block, can include active block, always fills buffer (0xff if not found), returns true if requested block was read correctly.
